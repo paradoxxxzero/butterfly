@@ -1,0 +1,124 @@
+/* line 1, ../sass/main.sass */
+body {
+  padding-bottom: 40px;
+  color: #5a5a5a;
+}
+
+/* line 5, ../sass/main.sass */
+.navbar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+/* line 11, ../sass/main.sass */
+.navbar-wrapper .container {
+  padding-left: 0;
+  padding-right: 0;
+}
+/* line 14, ../sass/main.sass */
+.navbar-wrapper .navbar {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* line 18, ../sass/main.sass */
+.carousel {
+  height: 500px;
+  margin-bottom: 60px;
+}
+
+/* line 22, ../sass/main.sass */
+.carousel-caption {
+  z-index: 10;
+}
+
+/* line 25, ../sass/main.sass */
+.carousel .item {
+  height: 500px;
+  background-color: #777777;
+}
+
+/* line 29, ../sass/main.sass */
+.carousel-inner > .item > img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  height: 500px;
+}
+
+/* line 36, ../sass/main.sass */
+.marketing {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+/* line 39, ../sass/main.sass */
+.marketing .col-lg-4 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+/* line 42, ../sass/main.sass */
+.marketing h2 {
+  font-weight: normal;
+}
+/* line 44, ../sass/main.sass */
+.marketing .col-lg-4 p {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+/* line 48, ../sass/main.sass */
+.featurette-divider {
+  margin: 80px 0;
+}
+
+/* line 51, ../sass/main.sass */
+.featurette-heading {
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+@media (min-width: 768px) {
+  /* line 57, ../sass/main.sass */
+  .marketing {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* line 60, ../sass/main.sass */
+  .navbar-wrapper {
+    margin-top: 20px;
+  }
+  /* line 62, ../sass/main.sass */
+  .navbar-wrapper .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  /* line 65, ../sass/main.sass */
+  .navbar-wrapper .navbar {
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 4px;
+  }
+
+  /* line 69, ../sass/main.sass */
+  .carousel-caption p {
+    margin-bottom: 20px;
+    font-size: 21px;
+    line-height: 1.4;
+  }
+
+  /* line 73, ../sass/main.sass */
+  .featurette-heading {
+    font-size: 50px;
+  }
+}
+@media (min-width: 992px) {
+  /* line 77, ../sass/main.sass */
+  .featurette-heading {
+    margin-top: 120px;
+  }
+}
