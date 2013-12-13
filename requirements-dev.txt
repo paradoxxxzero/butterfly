@@ -1,3 +1,4 @@
 wdb
 log_colorizer
 wsreload
+cutter

@@ -1,4 +1,9 @@
 import logging
+try:
+    from log_colorizer import make_colored_stream_handler
+    logging.root.handlers = [make_colored_stream_handler()]
+except ImportError:
+    print('log colorizer not found')
 
 host = 'apparatus.l'
 port = 2001
@@ -11,22 +16,11 @@ except ImportError:
     pass
 
 from app import app
-try:
-    from log_colorizer import make_colored_stream_handler
-    handler = make_colored_stream_handler()
-    handler.setLevel(logging.DEBUG)
+app.logger.setLevel(logging.DEBUG)
 
-    del app.logger.handlers[:]
-    app.logger.addHandler(handler)
-    app.logger.setLevel(logging.DEBUG)
+del app.logger.handlers[:]
+logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 
-    import werkzeug
-    werkzeug._internal._log(
-        'debug', 'Need to log something before deleting handler -_-')
-    del logging.getLogger('werkzeug').handlers[:]
-    logging.getLogger('werkzeug').addHandler(handler)
-except:
-    print('log colorizer not found')
 
 werkzeug_debugger = True
 try:
