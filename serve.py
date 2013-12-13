@@ -1,13 +1,11 @@
-import logging
-try:
-    from log_colorizer import make_colored_stream_handler
-    logging.root.handlers = [make_colored_stream_handler()]
-except ImportError:
-    print('log colorizer not found')
+#!/usr/bin/env python
 
 host = 'apparatus.l'
 port = 2001
 url = "http://%s:%d/*" % (host, port)
+
+from log_colorizer import colorize
+colorize()
 
 try:
     from wdb.ext import add_w_builtin
@@ -15,12 +13,13 @@ try:
 except ImportError:
     pass
 
+import logging
 from app import app
 app.logger.setLevel(logging.DEBUG)
 
 del app.logger.handlers[:]
-logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 
+logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 
 werkzeug_debugger = True
 try:

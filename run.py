@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from multiprocessing import Process
 from subprocess import call
 from glob import glob
