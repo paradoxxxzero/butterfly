@@ -1,39 +1,39 @@
 #!/usr/bin/env python
 from multiprocessing import Process
-from subprocess import call
+from subprocess import Popen
 from glob import glob
+import shlex
+
+commands = [
+    'coffee -wcb -j app/static/javascripts/main.js ' +
+    ' '.join(glob('app/static/coffees/*.coffee')),
+    'compass watch app/static',
+    'python serve.py'
+]
 
 
-class CompassWatch(Process):
+class Run(Process):
     daemon = True
 
-    def run(self):
-        call(['compass', 'watch', 'app/static'])
-
-
-class CoffeeScript(Process):
-    daemon = True
+    def __init__(self, command, *args, **kwargs):
+        super(Run, self).__init__(*args, **kwargs)
+        self.cmd = command
 
     def run(self):
-        call(['coffee',
-              '-wcb',
-              '-j', 'app/static/javascripts/main.js'] +
-             glob('app/static/coffees/*.coffee'))
+        self.proc = Popen(shlex.split(self.cmd))
+        try:
+            self.proc.wait()
+        except KeyboardInterrupt:
+            pass
 
+process = [Run(cmd) for cmd in commands]
+for proc in process:
+    print('Lauching %s' % proc.cmd.split(' ')[0])
+    proc.start()
 
-class Server(Process):
-    daemon = True
-
-    def run(self):
-        call(['python', 'serve.py'])
-
-
-print('Lauching compass')
-CompassWatch().start()
-
-print('Lauching coffee')
-CoffeeScript().start()
-
-print('Lauching server')
-server = Server()
-server.start()
+try:
+    for proc in process:
+        proc.join()
+    print('Joined')
+except KeyboardInterrupt:
+    print('\nGot [ctrl]+[c] -- bye bye')
