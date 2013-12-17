@@ -1,12 +1,9 @@
 from selenium import webdriver
 from pytest import fixture
-from time import sleep
-from multiprocessing import Process, active_children, Lock
-from signal import signal, SIGUSR1, SIGKILL
-import atexit
-import os
+from multiprocessing import Process, Lock
 import re
 import sys
+
 try:
     from wdb.ext import add_w_builtin
     add_w_builtin()
@@ -31,10 +28,16 @@ def pytest_report_teststatus(report):
         fs_path[browser].append(report.fspath)
         sys.stdout.write('\t' + browser + '\t')
 
-if not os.environ.get('SELENIUM_BROWSERS_VISIBLE'):
-    from pyvirtualdisplay import Display
-    display = Display(visible=0, size=(1440, 900))
-    display.start()
+
+def pytest_addoption(parser):
+    parser.addoption("--display", action="store_true")
+
+
+def pytest_configure(config):
+    if not config.getoption("--display"):
+        from pyvirtualdisplay import Display
+        display = Display(visible=0, size=(1440, 900))
+        display.start()
 
 
 class App(Process):
@@ -87,8 +90,9 @@ def app(request):
     request.addfinalizer(end_app)
     return app
 
+
 @fixture(scope='session', params=('firefox', 'chrome'))
-def s(request, app): # s = Selenium Browser
+def s(request, app):  # s = Selenium Browser
     browser = getattr(webdriver, request.param.capitalize())()
 
     def close_browser():
@@ -99,7 +103,6 @@ def s(request, app): # s = Selenium Browser
     return browser
 
 
-@atexit.register
-def quit():
+def pytest_unconfigure(config):
     if display:
         display.stop()
