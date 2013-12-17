@@ -3,3 +3,5 @@ log_colorizer
 wsreload
 cutter
 pytest
+selenium
+pyvirtualdisplay
