@@ -2,6 +2,7 @@
 from multiprocessing import Process
 from subprocess import Popen
 from glob import glob
+import time
 import shlex
 
 commands = [
@@ -20,9 +21,12 @@ class Run(Process):
         self.cmd = command
 
     def run(self):
-        self.proc = Popen(shlex.split(self.cmd))
         try:
-            self.proc.wait()
+            while True:
+                self.proc = Popen(shlex.split(self.cmd))
+                self.proc.wait()
+                print(self.cmd + ' exited. Relaunching in 250ms')
+                time.sleep(.25)
         except KeyboardInterrupt:
             pass
 
