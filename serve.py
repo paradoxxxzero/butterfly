@@ -40,9 +40,9 @@ else:
     monkey_patch_http_server({'url': url}, callback=log)
     app.logger.debug('HTTPServer monkey patched for url %s' % url)
 
-    files = ['app/static/javascripts/*',
-             'app/static/stylesheets/*',
-             'app/templates/*']
+    files = ['app/static/javascripts/',
+             'app/static/stylesheets/',
+             'app/templates/']
     watch({'url': url}, files, unwatch_at_exit=True)
 
 app.run(

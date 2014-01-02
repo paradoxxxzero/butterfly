@@ -1,7 +1,11 @@
 from selenium import webdriver
 from pytest import fixture
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, active_children
+from cutter import attr_cut
+from time import sleep
+import atexit
 import re
+import os
 import sys
 
 try:
@@ -10,8 +14,10 @@ try:
 except ImportError:
     pass
 
+
 display = None
 fs_path = {}
+browsers = ['firefox', 'chrome']
 
 
 def pytest_report_teststatus(report):
@@ -31,6 +37,7 @@ def pytest_report_teststatus(report):
 
 def pytest_addoption(parser):
     parser.addoption("--display", action="store_true")
+    parser.addoption("--browser", action="append")
 
 
 def pytest_configure(config):
@@ -38,6 +45,8 @@ def pytest_configure(config):
         from pyvirtualdisplay import Display
         display = Display(visible=0, size=(1440, 900))
         display.start()
+    if config.getoption("--browser"):
+        browsers[:] = config.getoption("--browser")
 
 
 class App(Process):
@@ -58,13 +67,12 @@ class App(Process):
         def new_serve_forever(self):
             print('Release lock')
             l.release()
-            # from signal import SIGUSR1
-            # os.kill(ppid, SIGUSR1)
             old_serve_forever(self)
 
         HTTPServer.serve_forever = new_serve_forever
-
+        os.environ['APP_TESTING'] = 'YES'
         from app import app
+
         app.run(
             debug=True,
             threaded=True,
@@ -91,7 +99,48 @@ def app(request):
     return app
 
 
-@fixture(scope='session', params=('firefox', 'chrome'))
+class ElementWrapper(object):
+    def __init__(self, element):
+        self.element = element
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return getattr(self, attr)
+        return getattr(self.element, attr)
+
+    def find(self, selector):
+        return attr_cut(
+            map(ElementWrapper,
+                self.element.find_elements_by_css_selector(selector)))
+    __call__ = find
+
+    def type(self, keys):
+        self.clear()
+        self.send_keys(keys)
+
+
+class BrowserWrapper(object):
+
+    def __init__(self, browser):
+        self.browser = browser
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return getattr(self, attr)
+        return getattr(self.browser, attr)
+
+    def go(self, url):
+        if url.startswith('/'):
+            url = url[1:]
+        self.browser.get('http://localhost:29013/' + url)
+
+    def __call__(self, selector):
+        return attr_cut(
+            map(ElementWrapper,
+                self.browser.find_elements_by_css_selector(selector)))
+
+
+@fixture(scope='session', params=browsers)
 def s(request, app):  # s = Selenium Browser
     browser = getattr(webdriver, request.param.capitalize())()
 
@@ -100,9 +149,13 @@ def s(request, app):  # s = Selenium Browser
 
     request.addfinalizer(close_browser)
     app.wait_for_lock()
-    return browser
+    return BrowserWrapper(browser)
 
 
-def pytest_unconfigure(config):
+@atexit.register
+def killall():
     if display:
         display.stop()
+    for child in active_children():
+        os.kill(child.pid, SIGKILL)
+
