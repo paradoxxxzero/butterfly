@@ -2,7 +2,7 @@ from selenium import webdriver
 from pytest import fixture
 from multiprocessing import Process, Lock, active_children
 from cutter import attr_cut
-from time import sleep
+from signal import SIGKILL
 import atexit
 import re
 import os
