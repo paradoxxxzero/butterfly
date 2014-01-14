@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
+    {% include "_ie.html" %}
+
+    <title>Apparatus</title>
+    <link href="{{ static_url('stylesheets/bootstrap/bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ static_url('stylesheets/main.css') }}" rel="stylesheet">
+  </head>
+
+  <body>
+    {% include "_nav.html" %}
+
+    <section id="myCarousel" class="carousel slide" data-ride="carousel">
+      <ol class="carousel-indicators">
+        <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+        <li data-target="#myCarousel" data-slide-to="1"></li>
+        <li data-target="#myCarousel" data-slide-to="2"></li>
+      </ol>
+      <div class="carousel-inner">
+        {% for i in range(3) %}
+          <article class="item{{ ' active' if i == 0 else '' }}">
+            <div class="container">
+              <div class="carousel-caption">
+                <h1>Title</h1>
+                <p>Venenatis nullam purus fusce sed et, pellentesque dolor venenatis at donec. Pretium quam, rhoncus sed tempus dictum. Neque ut tincidunt vestibulum vel et, inceptos vestibulum blandit, pellentesque praesent sit. Posuere in praesent, volutpat accumsan felis ut veritatis metus, leo amet purus pede semper in ornare. Convallis sollicitudin at dapibus, phasellus eros felis aliquet nulla amet, in in et tristique enim. Justo gravida nulla rhoncus, faucibus est in lacus sollicitudin fringilla sed, aliquet eu magna morbi lectus nulla pede. Mi pellentesque dictumst nam suspendisse vero. Metus ut elit mauris sollicitudin elit, malesuada semper pede elementum. Id aliquet magna consequat nulla, erat amet et pharetra lacinia quisque vitae. Suspendisse luctus, in malesuada pellentesque, porta dui orci dui eget lorem. </p>
+                <p>
+                  <a class="btn btn-lg btn-primary" href="#" role="button">Okay</a>
+                </p>
+              </div>
+            </div>
+          </article>
+        {% end %}
+      </div>
+      <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+      </a>
+      <a class="right carousel-control" href="#myCarousel" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right"></span>
+      </a>
+    </section>
+
+    <section class="container">
+      <article class="row">
+        {% for i in range(3) %}
+          <div class="col-lg-4">
+            <h2>Title</h2>
+            <p>Lorem ipsum dolor sit amet, aliquet porttitor tortor mattis nec mauris, duis nunc accumsan vel. Eget neque suspendisse nonummy turpis, tempus urna cum vestibulum lectus. Ut elit lectus neque, elementum nulla curabitur faucibus, qui augue cubilia. Neque erat nullam ullamco massa habitasse dolor, erat at sed donec vulputate sodales. Et elementum arcu vel blandit ultrices, eu quam, eget nunc ultricies quam tincidunt aenean. Et sem massa ac, egestas justo tempus nam nulla ac mauris, est neque maecenas imperdiet per ipsum. A beatae neque et incidunt mollis ipsum. Nulla lorem. Ullamcorper quisque commodo elit a elementum, suscipit etiam faucibus ante, suspendisse aliquet sed non, nec tellus mauris. Purus urna euismod, viverra etiam dis elit, phasellus quam wisi posuere lorem porttitor, pulvinar consequat nec eu fringilla malesuada. Nec leo dignissim lacus egestas nunc, lorem magna, sodales laoreet dignissim. A facilisis, quisque tristique lorem, gravida risus etiam, in lacinia, congue et nunc at.</p>
+            <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+          </div>
+        {% end %}
+      </article>
+
+      <hr class="featurette-divider">
+      {% for i in range(3) %}
+        <article class="row featurette">
+          {% if i % 2 %}
+            <div class="col-md-5">
+              <img src="http://lorempixel.com/g/400/400#{{ i }}" />
+            </div>
+          {% end %}
+            <div class="col-md-7">
+              <h2 class="featurette-heading">Title <span class="text-muted">Subtitle</span></h2>
+              <p class="lead">Lead</p>
+            </div>
+          {% if i % 2 == 0 %}
+            <div class="col-md-5">
+              <img src="http://lorempixel.com/g/400/400#{{ i }}" />
+            </div>
+          {% end %}
+          <hr class="featurette-divider">
+        </article>
+      {% end %}
+
+      <footer>
+        <p class="pull-right"><a href="#">Back to top</a></p>
+        <p>&copy; 2013 Company, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+      </footer>
+    </section>
+
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="{{ static_url('javascripts/bootstrap.min.js') }}"></script>
+    <script src="{{ static_url('javascripts/main.js') }}"></script>
+  </body>
+</html>
