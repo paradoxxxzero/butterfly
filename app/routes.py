@@ -42,7 +42,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             env["TERM"] = "xterm"
             env["COLORTERM"] = "wsterm"
             command = os.getenv('SHELL')
-            env["SHELL"] = command[0]
+            env["SHELL"] = command
             p = Popen(command, env=env)
             p.wait()
             self.log.info('Exiting...')

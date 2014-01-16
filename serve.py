@@ -10,7 +10,7 @@ import tornado.options
 import tornado.ioloop
 
 tornado.options.define("secret", default='secret', help="Secret")
-tornado.options.define("debug", default=True, help="Debug mode")
+tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("host", default='wsterm.l', help="Server host")
 tornado.options.define("port", default=11112, type=int, help="Server port")
 

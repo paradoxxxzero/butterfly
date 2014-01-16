@@ -11,7 +11,7 @@ $ ->
           screenKeys: true
         )
         term.on "data", (data) ->
-          ws.send 'SH|' + data
+            ws.send 'SH|' + data
 
         term.on "title", (title) ->
           document.title = title

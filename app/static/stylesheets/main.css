@@ -17,7 +17,12 @@ body main {
 body main .terminal {
   /* margin: .5em */
   flex: 1;
-  font-family: monospace;
+  font-family: "Droid Sans Mono", monospace;
   outline: none;
   color: #cccccc;
+}
+/* line 22, ../sass/main.sass */
+body main .terminal-cursor {
+  color: #222222;
+  background-color: #cccccc;
 }
