@@ -11,15 +11,14 @@ import tornado.ioloop
 
 tornado.options.define("secret", default='secret', help="Secret")
 tornado.options.define("debug", default=True, help="Debug mode")
-tornado.options.define("host", default='apparatus.l', help="Server host")
-tornado.options.define("port", default=2001, type=int, help="Server port")
+tornado.options.define("host", default='wsterm.l', help="Server host")
+tornado.options.define("port", default=11112, type=int, help="Server port")
 
-host = 'apparatus.l'
 tornado.options.parse_command_line()
 
 
 from logging import getLogger
-log = getLogger('apparatus')
+log = getLogger('wsterm')
 log.setLevel(10 if tornado.options.options.debug else 30)
 
 log.debug('Starting server')

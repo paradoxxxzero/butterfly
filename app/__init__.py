@@ -2,7 +2,9 @@ import os
 import tornado.web
 import tornado.options
 import tornado.web
+from logging import getLogger
 
+log = getLogger('wsterm')
 
 application = tornado.web.Application(
     debug=tornado.options.options.debug,
