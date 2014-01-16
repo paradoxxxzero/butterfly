@@ -1,27 +1,48 @@
-ws = null
+term = ws = null
+cols = rows = null
 
 $ ->
+
     ws = new WebSocket 'ws://' + document.location.host + '/ws'
-    ws.onopen = -> console.log "WebSocket open", arguments
-    ws.onclose = -> console.log "WebSocket closed", arguments
+    ws.onopen = ->
+        console.log "WebSocket open", arguments
+        term = new Terminal(
+          visualBell: true
+          screenKeys: true
+        )
+        term.on "data", (data) ->
+          ws.send 'SH|' + data
+
+        term.on "title", (title) ->
+          document.title = title
+
+        term.open $('main').get(0)
+        $('.terminal').attr('style', '')
+        $(window).trigger 'resize'
+
+
+    ws.onclose = ->
+        if term
+            term.destroy()
+        console.log "WebSocket closed", arguments
+
     ws.onerror = -> console.log "WebSocket error", arguments
     ws.onmessage = (event) ->
-        $('.term code').html($('.term code').html() + event.data)
+        term.write event.data
 
-    $('html,body').on('keypress', (event) ->
-        code = event.keyCode
-        ws.send(String.fromCharCode(code))
-        event.preventDefault()
-        event.stopPropagation()
-        return false
-    ).on('keydown', (event) ->
-        code = event.keyCode
-        return if code == 17
-        if event.ctrlKey
-            code -= 64
-            ws.send(String.fromCharCode(code))
+    $(window).resize ->
+        $main = $('main')
+        $termtest = $('<div>').addClass('terminal')
+        $test = $('<div>').css(display: 'inline-block').text('0123456789')
+        $termtest.append($test)
 
-            event.preventDefault()
-            event.stopPropagation()
-            return false
-    )
+        $main.append($termtest)
+        ew = $test.outerWidth() / 10
+        eh = $test.outerHeight()
+        $termtest.remove()
+        w = $main.outerWidth()
+        h = $main.outerHeight()
+        cols = Math.floor(w / ew)
+        rows = Math.floor(h / eh)
+        term.resize cols, rows
+        ws.send "RS|#{cols},#{rows}"

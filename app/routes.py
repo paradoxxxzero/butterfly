@@ -3,7 +3,6 @@ import os
 import io
 import sys
 import struct
-import signal
 import fcntl
 import termios
 import tornado.websocket
@@ -24,9 +23,7 @@ class Index(Route):
 @url(r'/ws')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
-    def open(self):
-        self.log.info('Websocket opened')
-
+    def pty(self):
         pid, fd = pty.fork()
         if pid == 0:
             # Child
@@ -79,10 +76,22 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             )
             ioloop.add_handler(fd, self.shell, ioloop.READ)
 
+    def open(self):
+        self.log.info('Websocket opened')
+        self.pty()
+
     def on_message(self, message):
-        self.log.info('WRIT<%s' % message)
-        self.writer.write(message)
-        self.writer.flush()
+        if message.startswith('RS|'):
+            message = message[3:]
+            cols, rows = map(int, message.split(','))
+            s = struct.pack("HHHH", rows, cols, 0, 0)
+            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
+            self.log.info('SIZE (%d, %d)' % (cols, rows))
+        elif message.startswith('SH|'):
+            message = message[3:]
+            self.log.info('WRIT<%r' % message)
+            self.writer.write(message)
+            self.writer.flush()
 
     def shell(self, fd, events):
         if events & ioloop.READ:
@@ -90,15 +99,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 read = self.reader.read()
             except IOError:
-                self.log.info('READ>%s' % read)
+                self.log.info('READ>%r' % read)
                 self.write_message('Exited')
                 return
 
-            self.log.info('READ>%s' % read)
+            self.log.info('READ>%r' % read)
             self.write_message(read)
 
     def on_close(self):
         self.writer.write('')
+        self.writer.flush()
         os.close(self.fd)
         os.waitpid(self.pid, 0)
         self.log.info('Websocket closed')

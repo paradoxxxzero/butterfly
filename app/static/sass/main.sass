@@ -1,18 +1,20 @@
+$bg: #222
+$fg: #ccc
 
 html, body
   height: 100%
 
 body
-  color: #5a5a5a
+  background-color: $bg
 
   main
     display: flex
+    height: 100%
     flex-direction: column
 
-    .term
+    .terminal
+      /* margin: .5em
       flex: 1
-      code
-        white-space: pre-line
-
-    #prompt
-      border: 1px solid #777
+      font-family: monospace
+      outline: none
+      color: $fg

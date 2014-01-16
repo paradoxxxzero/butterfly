@@ -1,26 +1,23 @@
-/* line 2, ../sass/main.sass */
+/* line 4, ../sass/main.sass */
 html, body {
   height: 100%;
 }
 
-/* line 5, ../sass/main.sass */
+/* line 7, ../sass/main.sass */
 body {
-  color: #5a5a5a;
+  background-color: #222222;
 }
-/* line 8, ../sass/main.sass */
+/* line 10, ../sass/main.sass */
 body main {
   display: flex;
+  height: 100%;
   flex-direction: column;
 }
-/* line 12, ../sass/main.sass */
-body main .term {
+/* line 15, ../sass/main.sass */
+body main .terminal {
+  /* margin: .5em */
   flex: 1;
-}
-/* line 14, ../sass/main.sass */
-body main .term code {
-  white-space: pre-line;
-}
-/* line 17, ../sass/main.sass */
-body main #prompt {
-  border: 1px solid #777777;
+  font-family: monospace;
+  outline: none;
+  color: #cccccc;
 }
