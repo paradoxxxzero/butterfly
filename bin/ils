@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+import os
+import mimetypes
+
+print('\x1b]99;')
+
+out = ''
+i = 0
+
+for f in os.listdir(os.getcwd()):
+    if 'image' in (mimetypes.guess_type(f)[0] or ''):
+        out += '<img src="/file/%s" alt="%s" width="100px" height="100px" />' % (
+            os.path.abspath(f), f)
+        i += 1
+        if i % 5 == 0:
+            out += '\n'
+
+print(out)
+
+print('\x07')

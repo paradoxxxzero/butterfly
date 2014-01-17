@@ -4,6 +4,7 @@ import io
 import sys
 import struct
 import fcntl
+import mimetypes
 import termios
 import tornado.websocket
 import tornado.process
@@ -18,6 +19,14 @@ ioloop = tornado.ioloop.IOLoop.instance()
 class Index(Route):
     def get(self):
         return self.render('index.html')
+
+
+@url(r'/file/(.+)')
+class File(Route):
+    def get(self, file):
+        self.add_header('Content-Type', mimetypes.guess_type(file)[0])
+        with open(file, 'rb') as fd:
+            self.write(fd.read())
 
 
 @url(r'/ws')
@@ -43,6 +52,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             env["COLORTERM"] = "wsterm"
             command = os.getenv('SHELL')
             env["SHELL"] = command
+            env["PATH"] = "%s:%s" % (
+                os.path.abspath(os.path.join(
+                    os.path.dirname(__file__), '..', 'bin')), env["PATH"])
             p = Popen(command, env=env)
             p.wait()
             self.log.info('Exiting...')
