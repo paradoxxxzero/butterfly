@@ -5,7 +5,7 @@ html, body {
 
 /* line 7, ../sass/main.sass */
 body {
-  background-color: #222222;
+  background-color: #110f13;
 }
 /* line 10, ../sass/main.sass */
 body main {
@@ -19,10 +19,15 @@ body main .terminal {
   flex: 1;
   font-family: "Droid Sans Mono", monospace;
   outline: none;
-  color: #cccccc;
+  color: #f4ead5;
+  /* text-shadow: 0 0 10px */
 }
 /* line 22, ../sass/main.sass */
+body main .terminal span {
+  /* text-shadow: 0 0 10px */
+}
+/* line 26, ../sass/main.sass */
 body main .terminal-cursor {
-  color: #222222;
-  background-color: #cccccc;
+  color: #110f13;
+  background-color: #f4ead5;
 }

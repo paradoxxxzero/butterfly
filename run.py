@@ -3,13 +3,14 @@ from multiprocessing import Process
 from subprocess import Popen
 from glob import glob
 import time
+import sys
 import shlex
 
 commands = [
     'coffee -wcb -j app/static/javascripts/main.js ' +
     ' '.join(glob('app/static/coffees/*.coffee')),
     'compass watch app/static',
-    'python serve.py'
+    'python serve.py ' + ' '.join(sys.argv[1:])
 ]
 
 
