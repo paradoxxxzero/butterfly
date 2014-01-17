@@ -3,15 +3,12 @@ html, body {
   height: 100%;
 }
 
-/* line 7, ../sass/main.sass */
-body {
-  background-color: #110f13;
-}
-/* line 10, ../sass/main.sass */
+/* line 9, ../sass/main.sass */
 body main {
   display: flex;
   height: 100%;
   flex-direction: column;
+  background-color: black;
 }
 /* line 15, ../sass/main.sass */
 body main .terminal {
@@ -19,14 +16,15 @@ body main .terminal {
   flex: 1;
   font-family: "Droid Sans Mono", monospace;
   outline: none;
+  background-color: #110f13;
   color: #f4ead5;
   /* text-shadow: 0 0 10px */
 }
-/* line 22, ../sass/main.sass */
+/* line 23, ../sass/main.sass */
 body main .terminal span {
   /* text-shadow: 0 0 10px */
 }
-/* line 26, ../sass/main.sass */
+/* line 27, ../sass/main.sass */
 body main .terminal-cursor {
   color: #110f13;
   background-color: #f4ead5;
