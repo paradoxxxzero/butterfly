@@ -33,22 +33,15 @@ class File(Route):
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def pty(self):
-        pid, fd = pty.fork()
-        if pid == 0:
+        self.pid, self.fd = pty.fork()
+        if self.pid == 0:
             # Child
             try:
-                fd_list = [int(i) for i in os.listdir('/proc/self/fd')]
-            except OSError:
-                fd_list = range(256)
-            # Close all file descriptors other than
-            # stdin, stdout, and stderr (0, 1, 2)
-            for i in [i for i in fd_list if i > 2]:
-                try:
-                    os.close(i)
-                except OSError:
-                    pass
+                os.closerange(3, 256)
+            except:
+                pass
             env = os.environ
-            env["TERM"] = "xterm"
+            env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "wsterm"
             command = os.getenv('SHELL')
             env["SHELL"] = command
@@ -57,39 +50,35 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     os.path.dirname(__file__), '..', 'bin')), env["PATH"])
             p = Popen(command, env=env)
             p.wait()
-            self.log.info('Exiting...')
             sys.exit(0)
         else:
-            self.pid = pid
-            self.fd = fd
             self.log.debug('Adding handler')
-            fcntl.fcntl(fd, fcntl.F_SETFL, os.O_NONBLOCK)
+            fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
             # Set the size of the terminal window:
             s = struct.pack("HHHH", 80, 80, 0, 0)
-            fcntl.ioctl(fd, termios.TIOCSWINSZ, s)
+            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
+
+            def utf8_error(e):
+                self.log.error(e)
 
             self.reader = io.open(
-                fd,
-                'rt',
-                buffering=1024,
-                newline="",
-                encoding='UTF-8',
-                closefd=False,
-                errors='handle_special'
-            )
-            self.writer = io.open(
-                fd,
-                'wt',
-                buffering=1024,
-                newline="",
-                encoding='UTF-8',
+                self.fd,
+                'rb',
+                buffering=0,
                 closefd=False
             )
-            ioloop.add_handler(fd, self.shell, ioloop.READ)
+            self.writer = io.open(
+                self.fd,
+                'wt',
+                encoding='utf-8',
+                closefd=False
+            )
+            ioloop.add_handler(self.fd, self.shell, ioloop.READ | ioloop.ERROR)
 
     def open(self):
         self.log.info('Websocket opened')
+        self.set_nodelay(True)
         self.pty()
 
     def on_message(self, message):
@@ -107,18 +96,24 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def shell(self, fd, events):
         if events & ioloop.READ:
-            self.log.info('shell %d: %d' % (fd, events))
             try:
                 read = self.reader.read()
             except IOError:
                 self.log.info('READ>%r' % read)
-                self.write_message('Exited')
+                self.write_message('DIE')
                 return
 
             self.log.info('READ>%r' % read)
-            self.write_message(read)
+            self.write_message(read.decode('utf-8', 'replace'))
+
+        if events & ioloop.ERROR:
+            self.log.info('Closing due to ioloop fd handler error')
+            # Terminated
+            self.close()
 
     def on_close(self):
+        if self.pid == 0:
+            return
         self.writer.write('')
         self.writer.flush()
         os.close(self.fd)

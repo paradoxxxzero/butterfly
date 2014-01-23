@@ -1,6 +1,10 @@
 $bg: #110f13
 $fg: #f4ead5
 
+$shadow: 6px
+$shadow-alpha: .5
+
+
 html, body
   height: 100%
 
@@ -19,11 +23,72 @@ body
       outline: none
       background-color: $bg
       color: $fg
-      /* text-shadow: 0 0 10px
-      span
-        /* text-shadow: 0 0 10px
+      text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
+
+.cursor
+  box-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
+
+/* Terminal styles
+.bold
+  font-weight: bold
+
+.underline
+  text-decoration: underline
+
+.blink
+  text-decoration: blink
+
+.invisible
+  visibility: hidden
+
+.reverse-video, .cursor
+  color: $bg
+  background-color: $fg
+
+=termcolor($i, $color)
+  .bg-color-#{$i}
+    background-color: $color
+    &.reverse-video, .cursor
+      color: $color !important
+
+  .fg-color-#{$i}
+    color: $color
+    &.reverse-video, .cursor
+      background-color: $color !important
+
+    text-shadow: 0 0 $shadow rgba($color, $shadow-alpha)
 
 
-    .terminal-cursor
-      color: $bg
-      background-color: $fg
++termcolor(0, #2e3436)
++termcolor(1, #cc0000)
++termcolor(2, #4e9a06)
++termcolor(3, #c4a000)
++termcolor(4, #3465a4)
++termcolor(5, #75507b)
++termcolor(6, #06989a)
++termcolor(7, #d3d7cf)
++termcolor(8, #555753)
++termcolor(9, #ef2929)
++termcolor(10, #8ae234)
++termcolor(11, #fce94f)
++termcolor(12, #729fcf)
++termcolor(13, #ad7fa8)
++termcolor(14, #34e2e2)
++termcolor(15, #eeeeec)
+
+$st: 00, 95, 135, 175, 215, 255
+
+@for $i from 0 through 215
+  $r: nth($st, 1 + floor(($i / 36) % 6))
+  $g: nth($st, 1 + floor(($i / 6) % 6))
+  $b: nth($st, 1 + $i % 6)
+  +termcolor($i + 16, rgb($r, $g, $b))
+
+@for $i from 0 through 23
+  $l: 8 + $i * 10
+  +termcolor($i + 232, rgb($l, $l, $l))
+
+
+/* ??
++termcolor(256, $bg)
++termcolor(257, $fg)

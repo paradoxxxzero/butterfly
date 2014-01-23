@@ -11,7 +11,8 @@ $(function() {
     console.log("WebSocket open", arguments);
     term = new Terminal({
       visualBell: true,
-      screenKeys: true
+      screenKeys: true,
+      scrollback: -1
     });
     term.on("data", function(data) {
       return ws.send('SH|' + data);
@@ -27,7 +28,8 @@ $(function() {
     if (term) {
       term.destroy();
     }
-    return console.log("WebSocket closed", arguments);
+    console.log("WebSocket closed", arguments);
+    return open('', '_self').close();
   };
   ws.onerror = function() {
     return console.log("WebSocket error", arguments);
@@ -40,7 +42,7 @@ $(function() {
     $main = $('main');
     $termtest = $('<div>').addClass('terminal');
     $test = $('<div>').css({
-      display: 'inline-block'
+      display: 'inline'
     }).text('0123456789');
     $termtest.append($test);
     $main.append($termtest);
@@ -49,8 +51,8 @@ $(function() {
     $termtest.remove();
     w = $main.outerWidth();
     h = $main.outerHeight();
-    cols = Math.floor(w / ew);
-    rows = Math.floor(h / eh);
+    cols = Math.floor(w / ew) - 1;
+    rows = Math.floor(h / eh) - 1;
     term.resize(cols, rows);
     return ws.send("RS|" + cols + "," + rows);
   });
