@@ -38,6 +38,8 @@ body
       &.bell
         -webkit-filter: blur(2px)
 
+.focus .cursor
+  transition: 300ms
 
 ::selection
   background-color: black
@@ -46,7 +48,6 @@ body
 ::-moz-selection
   background-color: black
   box-shadow: 0 0 10px inset white
-
 
 .cursor.reverse-video
   box-shadow: 0 0 10px $fg
@@ -68,15 +69,19 @@ body
   color: $bg
   background-color: $fg
 
+.blur .cursor.reverse-video
+  background: none
+  border: 1px solid $fg
+
 =termcolor($i, $color)
   .bg-color-#{$i}
     background-color: $color
-    &.reverse-video, .cursor
+    &.reverse-video
       color: $color !important
 
   .fg-color-#{$i}
     color: $color
-    &.reverse-video, .cursor
+    &.reverse-video
       background-color: $color !important
 
     text-shadow: 0 0 $shadow rgba($color, $shadow-alpha)
