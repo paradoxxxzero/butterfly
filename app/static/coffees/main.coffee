@@ -9,7 +9,7 @@ $ ->
     ws.onopen = ->
         console.log "WebSocket open", arguments
         term = new Terminal(
-            visualBell: true
+            visualBell: 100
             screenKeys: true
             scrollback: -1
         )
@@ -43,7 +43,7 @@ $ ->
 
         $main.append($termtest)
         eh = $test.outerHeight()
-        $test.css(display: 'inline-block')
+        $test.css(display: 'inline')
         ew = $test.outerWidth() / 10
         $termtest.remove()
         w = $main.outerWidth()

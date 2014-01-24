@@ -34,6 +34,10 @@ body
       background-color: $bg
       color: $fg
       text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
+      transition: 50ms
+      &.bell
+        -webkit-filter: blur(2px)
+
 
 ::selection
   background-color: black

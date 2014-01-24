@@ -15,7 +15,7 @@ $(function() {
   ws.onopen = function() {
     console.log("WebSocket open", arguments);
     term = new Terminal({
-      visualBell: true,
+      visualBell: 100,
       screenKeys: true,
       scrollback: -1
     });
@@ -51,7 +51,7 @@ $(function() {
     $main.append($termtest);
     eh = $test.outerHeight();
     $test.css({
-      display: 'inline-block'
+      display: 'inline'
     });
     ew = $test.outerWidth() / 10;
     $termtest.remove();
