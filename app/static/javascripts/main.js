@@ -57,7 +57,7 @@ $(function() {
     $termtest.remove();
     w = $main.outerWidth();
     h = $main.outerHeight();
-    cols = Math.floor(w / ew);
+    cols = Math.floor(w / ew) - 1;
     rows = Math.floor(h / eh);
     console.log("Computed " + cols + " cols and " + rows + " rows from main size " + w + ", " + h + " and div " + ew + ", " + eh);
     term.resize(cols, rows);
