@@ -1,19 +1,34 @@
 #!/usr/bin/env python
+#Depends: pillow
+#Broken: Too slow !
+from PIL import Image
 import os
 import mimetypes
-
+import base64
+import io
 print('\x1b]99;')
 
 out = ''
 i = 0
 
 for f in os.listdir(os.getcwd()):
-    if 'image' in (mimetypes.guess_type(f)[0] or ''):
-        out += '<img src="/file/%s" alt="%s" width="100px" height="100px" />' % (
-            os.path.abspath(f), f)
-        i += 1
-        if i % 5 == 0:
-            out += '\n'
+    mime = mimetypes.guess_type(f)[0]
+    if 'image' in (mime or ''):
+        try:
+            im = Image.open(f)
+            im.thumbnail((100, 100), Image.ANTIALIAS)
+            buf = io.BytesIO()
+            im.save(buf, im.format)
+            buf.seek(0)
+            out += '<img src="data:%s;base64,%s" alt="%s" />' % (
+                mime,
+                base64.b64encode(buf.read()).decode('ascii'),
+                f)
+            i += 1
+            if i % 5 == 0:
+                out += '\n'
+        except:
+            pass
 
 print(out)
 

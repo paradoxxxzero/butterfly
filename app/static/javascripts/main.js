@@ -6,7 +6,12 @@ term = ws = null;
 cols = rows = null;
 
 $(function() {
-  ws = new WebSocket('ws://' + document.location.host + '/ws');
+  var ws_url;
+  ws_url = 'ws://' + document.location.host + '/ws';
+  if (location.pathname.indexOf('/wd') === 0) {
+    ws_url += location.pathname.slice(3);
+  }
+  ws = new WebSocket(ws_url);
   ws.onopen = function() {
     console.log("WebSocket open", arguments);
     term = new Terminal({
@@ -41,18 +46,20 @@ $(function() {
     var $main, $termtest, $test, eh, ew, h, w;
     $main = $('main');
     $termtest = $('<div>').addClass('terminal');
-    $test = $('<div>').css({
-      display: 'inline'
-    }).text('0123456789');
+    $test = $('<div>').text('0123456789');
     $termtest.append($test);
     $main.append($termtest);
-    ew = $test.outerWidth() / 10;
     eh = $test.outerHeight();
+    $test.css({
+      display: 'inline-block'
+    });
+    ew = $test.outerWidth() / 10;
     $termtest.remove();
     w = $main.outerWidth();
     h = $main.outerHeight();
-    cols = Math.floor(w / ew) - 1;
-    rows = Math.floor(h / eh) - 1;
+    cols = Math.floor(w / ew);
+    rows = Math.floor(h / eh);
+    console.log("Computed " + cols + " cols and " + rows + " rows from main size " + w + ", " + h + " and div " + ew + ", " + eh);
     term.resize(cols, rows);
     return ws.send("RS|" + cols + "," + rows);
   });

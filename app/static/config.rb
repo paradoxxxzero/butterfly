@@ -1,5 +1,6 @@
-http_path = "/"
+http_path = "/static/"
 css_dir = "stylesheets"
+fonts_dir = "fonts"
 sass_dir = "sass"
 images_dir = "images"
 javascripts_dir = "javascripts"

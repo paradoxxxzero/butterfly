@@ -1,4957 +1,5026 @@
-/* line 8, ../sass/main.sass */
-html, body {
-  height: 100%;
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-ExtraLight.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
 }
 
-/* line 13, ../sass/main.sass */
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SourceCodePro";
+  src: url('/static/fonts/');
+  src: url('/static/fonts/?#iefix') format('eot'), url('/static/fonts/SourceCodePro-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* line 18, ../sass/main.sass */
+html, body {
+  height: 100%;
+  font-family: "SourceCodePro";
+}
+
+/* line 23, ../sass/main.sass */
 body main {
   display: flex;
   height: 100%;
   flex-direction: column;
   background-color: black;
+  overflow: hidden;
+  white-space: nowrap;
 }
-/* line 19, ../sass/main.sass */
+/* line 31, ../sass/main.sass */
 body main .terminal {
-  /* margin: .5em */
   flex: 1;
-  font-family: "Droid Sans Mono", monospace;
   outline: none;
   background-color: #110f13;
   color: #f4ead5;
   text-shadow: 0 0 6px rgba(244, 234, 213, 0.5);
 }
 
-/* line 28, ../sass/main.sass */
-.cursor {
-  box-shadow: 0 0 6px rgba(244, 234, 213, 0.5);
+/* line 38, ../sass/main.sass */
+::selection {
+  background-color: black;
+  box-shadow: 0 0 10px inset white;
+}
+
+/* line 42, ../sass/main.sass */
+::-moz-selection {
+  background-color: black;
+  box-shadow: 0 0 10px inset white;
+}
+
+/* line 47, ../sass/main.sass */
+.cursor.reverse-video {
+  box-shadow: 0 0 10px #f4ead5;
 }
 
 /* Terminal styles */
-/* line 32, ../sass/main.sass */
+/* line 51, ../sass/main.sass */
 .bold {
   font-weight: bold;
 }
 
-/* line 35, ../sass/main.sass */
+/* line 54, ../sass/main.sass */
 .underline {
   text-decoration: underline;
 }
 
-/* line 38, ../sass/main.sass */
+/* line 57, ../sass/main.sass */
 .blink {
   text-decoration: blink;
 }
 
-/* line 41, ../sass/main.sass */
+/* line 60, ../sass/main.sass */
 .invisible {
   visibility: hidden;
 }
 
-/* line 44, ../sass/main.sass */
-.reverse-video, .cursor {
+/* line 63, ../sass/main.sass */
+.reverse-video {
   color: #110f13;
   background-color: #f4ead5;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-0 {
   background-color: #2e3436;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-0.reverse-video, .bg-color-0 .cursor {
   color: #2e3436 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-0 {
   color: #2e3436;
   text-shadow: 0 0 6px rgba(46, 52, 54, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-0.reverse-video, .fg-color-0 .cursor {
   background-color: #2e3436 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-1 {
   background-color: #cc0000;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-1.reverse-video, .bg-color-1 .cursor {
   color: #cc0000 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-1 {
   color: #cc0000;
   text-shadow: 0 0 6px rgba(204, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-1.reverse-video, .fg-color-1 .cursor {
   background-color: #cc0000 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-2 {
   background-color: #4e9a06;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-2.reverse-video, .bg-color-2 .cursor {
   color: #4e9a06 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-2 {
   color: #4e9a06;
   text-shadow: 0 0 6px rgba(78, 154, 6, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-2.reverse-video, .fg-color-2 .cursor {
   background-color: #4e9a06 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-3 {
   background-color: #c4a000;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-3.reverse-video, .bg-color-3 .cursor {
   color: #c4a000 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-3 {
   color: #c4a000;
   text-shadow: 0 0 6px rgba(196, 160, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-3.reverse-video, .fg-color-3 .cursor {
   background-color: #c4a000 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-4 {
   background-color: #3465a4;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-4.reverse-video, .bg-color-4 .cursor {
   color: #3465a4 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-4 {
   color: #3465a4;
   text-shadow: 0 0 6px rgba(52, 101, 164, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-4.reverse-video, .fg-color-4 .cursor {
   background-color: #3465a4 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-5 {
   background-color: #75507b;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-5.reverse-video, .bg-color-5 .cursor {
   color: #75507b !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-5 {
   color: #75507b;
   text-shadow: 0 0 6px rgba(117, 80, 123, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-5.reverse-video, .fg-color-5 .cursor {
   background-color: #75507b !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-6 {
   background-color: #06989a;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-6.reverse-video, .bg-color-6 .cursor {
   color: #06989a !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-6 {
   color: #06989a;
   text-shadow: 0 0 6px rgba(6, 152, 154, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-6.reverse-video, .fg-color-6 .cursor {
   background-color: #06989a !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-7 {
   background-color: #d3d7cf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-7.reverse-video, .bg-color-7 .cursor {
   color: #d3d7cf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-7 {
   color: #d3d7cf;
   text-shadow: 0 0 6px rgba(211, 215, 207, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-7.reverse-video, .fg-color-7 .cursor {
   background-color: #d3d7cf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-8 {
   background-color: #555753;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-8.reverse-video, .bg-color-8 .cursor {
   color: #555753 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-8 {
   color: #555753;
   text-shadow: 0 0 6px rgba(85, 87, 83, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-8.reverse-video, .fg-color-8 .cursor {
   background-color: #555753 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-9 {
   background-color: #ef2929;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-9.reverse-video, .bg-color-9 .cursor {
   color: #ef2929 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-9 {
   color: #ef2929;
   text-shadow: 0 0 6px rgba(239, 41, 41, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-9.reverse-video, .fg-color-9 .cursor {
   background-color: #ef2929 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-10 {
   background-color: #8ae234;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-10.reverse-video, .bg-color-10 .cursor {
   color: #8ae234 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-10 {
   color: #8ae234;
   text-shadow: 0 0 6px rgba(138, 226, 52, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-10.reverse-video, .fg-color-10 .cursor {
   background-color: #8ae234 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-11 {
   background-color: #fce94f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-11.reverse-video, .bg-color-11 .cursor {
   color: #fce94f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-11 {
   color: #fce94f;
   text-shadow: 0 0 6px rgba(252, 233, 79, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-11.reverse-video, .fg-color-11 .cursor {
   background-color: #fce94f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-12 {
   background-color: #729fcf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-12.reverse-video, .bg-color-12 .cursor {
   color: #729fcf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-12 {
   color: #729fcf;
   text-shadow: 0 0 6px rgba(114, 159, 207, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-12.reverse-video, .fg-color-12 .cursor {
   background-color: #729fcf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-13 {
   background-color: #ad7fa8;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-13.reverse-video, .bg-color-13 .cursor {
   color: #ad7fa8 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-13 {
   color: #ad7fa8;
   text-shadow: 0 0 6px rgba(173, 127, 168, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-13.reverse-video, .fg-color-13 .cursor {
   background-color: #ad7fa8 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-14 {
   background-color: #34e2e2;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-14.reverse-video, .bg-color-14 .cursor {
   color: #34e2e2 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-14 {
   color: #34e2e2;
   text-shadow: 0 0 6px rgba(52, 226, 226, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-14.reverse-video, .fg-color-14 .cursor {
   background-color: #34e2e2 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-15 {
   background-color: #eeeeec;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-15.reverse-video, .bg-color-15 .cursor {
   color: #eeeeec !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-15 {
   color: #eeeeec;
   text-shadow: 0 0 6px rgba(238, 238, 236, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-15.reverse-video, .fg-color-15 .cursor {
   background-color: #eeeeec !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-16 {
   background-color: black;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-16.reverse-video, .bg-color-16 .cursor {
   color: black !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-16 {
   color: black;
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-16.reverse-video, .fg-color-16 .cursor {
   background-color: black !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-17 {
   background-color: #00005f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-17.reverse-video, .bg-color-17 .cursor {
   color: #00005f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-17 {
   color: #00005f;
   text-shadow: 0 0 6px rgba(0, 0, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-17.reverse-video, .fg-color-17 .cursor {
   background-color: #00005f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-18 {
   background-color: #000087;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-18.reverse-video, .bg-color-18 .cursor {
   color: #000087 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-18 {
   color: #000087;
   text-shadow: 0 0 6px rgba(0, 0, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-18.reverse-video, .fg-color-18 .cursor {
   background-color: #000087 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-19 {
   background-color: #0000af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-19.reverse-video, .bg-color-19 .cursor {
   color: #0000af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-19 {
   color: #0000af;
   text-shadow: 0 0 6px rgba(0, 0, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-19.reverse-video, .fg-color-19 .cursor {
   background-color: #0000af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-20 {
   background-color: #0000d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-20.reverse-video, .bg-color-20 .cursor {
   color: #0000d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-20 {
   color: #0000d7;
   text-shadow: 0 0 6px rgba(0, 0, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-20.reverse-video, .fg-color-20 .cursor {
   background-color: #0000d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-21 {
   background-color: blue;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-21.reverse-video, .bg-color-21 .cursor {
   color: blue !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-21 {
   color: blue;
   text-shadow: 0 0 6px rgba(0, 0, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-21.reverse-video, .fg-color-21 .cursor {
   background-color: blue !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-22 {
   background-color: #005f00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-22.reverse-video, .bg-color-22 .cursor {
   color: #005f00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-22 {
   color: #005f00;
   text-shadow: 0 0 6px rgba(0, 95, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-22.reverse-video, .fg-color-22 .cursor {
   background-color: #005f00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-23 {
   background-color: #005f5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-23.reverse-video, .bg-color-23 .cursor {
   color: #005f5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-23 {
   color: #005f5f;
   text-shadow: 0 0 6px rgba(0, 95, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-23.reverse-video, .fg-color-23 .cursor {
   background-color: #005f5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-24 {
   background-color: #005f87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-24.reverse-video, .bg-color-24 .cursor {
   color: #005f87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-24 {
   color: #005f87;
   text-shadow: 0 0 6px rgba(0, 95, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-24.reverse-video, .fg-color-24 .cursor {
   background-color: #005f87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-25 {
   background-color: #005faf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-25.reverse-video, .bg-color-25 .cursor {
   color: #005faf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-25 {
   color: #005faf;
   text-shadow: 0 0 6px rgba(0, 95, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-25.reverse-video, .fg-color-25 .cursor {
   background-color: #005faf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-26 {
   background-color: #005fd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-26.reverse-video, .bg-color-26 .cursor {
   color: #005fd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-26 {
   color: #005fd7;
   text-shadow: 0 0 6px rgba(0, 95, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-26.reverse-video, .fg-color-26 .cursor {
   background-color: #005fd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-27 {
   background-color: #005fff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-27.reverse-video, .bg-color-27 .cursor {
   color: #005fff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-27 {
   color: #005fff;
   text-shadow: 0 0 6px rgba(0, 95, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-27.reverse-video, .fg-color-27 .cursor {
   background-color: #005fff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-28 {
   background-color: #008700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-28.reverse-video, .bg-color-28 .cursor {
   color: #008700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-28 {
   color: #008700;
   text-shadow: 0 0 6px rgba(0, 135, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-28.reverse-video, .fg-color-28 .cursor {
   background-color: #008700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-29 {
   background-color: #00875f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-29.reverse-video, .bg-color-29 .cursor {
   color: #00875f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-29 {
   color: #00875f;
   text-shadow: 0 0 6px rgba(0, 135, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-29.reverse-video, .fg-color-29 .cursor {
   background-color: #00875f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-30 {
   background-color: #008787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-30.reverse-video, .bg-color-30 .cursor {
   color: #008787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-30 {
   color: #008787;
   text-shadow: 0 0 6px rgba(0, 135, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-30.reverse-video, .fg-color-30 .cursor {
   background-color: #008787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-31 {
   background-color: #0087af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-31.reverse-video, .bg-color-31 .cursor {
   color: #0087af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-31 {
   color: #0087af;
   text-shadow: 0 0 6px rgba(0, 135, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-31.reverse-video, .fg-color-31 .cursor {
   background-color: #0087af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-32 {
   background-color: #0087d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-32.reverse-video, .bg-color-32 .cursor {
   color: #0087d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-32 {
   color: #0087d7;
   text-shadow: 0 0 6px rgba(0, 135, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-32.reverse-video, .fg-color-32 .cursor {
   background-color: #0087d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-33 {
   background-color: #0087ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-33.reverse-video, .bg-color-33 .cursor {
   color: #0087ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-33 {
   color: #0087ff;
   text-shadow: 0 0 6px rgba(0, 135, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-33.reverse-video, .fg-color-33 .cursor {
   background-color: #0087ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-34 {
   background-color: #00af00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-34.reverse-video, .bg-color-34 .cursor {
   color: #00af00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-34 {
   color: #00af00;
   text-shadow: 0 0 6px rgba(0, 175, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-34.reverse-video, .fg-color-34 .cursor {
   background-color: #00af00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-35 {
   background-color: #00af5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-35.reverse-video, .bg-color-35 .cursor {
   color: #00af5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-35 {
   color: #00af5f;
   text-shadow: 0 0 6px rgba(0, 175, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-35.reverse-video, .fg-color-35 .cursor {
   background-color: #00af5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-36 {
   background-color: #00af87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-36.reverse-video, .bg-color-36 .cursor {
   color: #00af87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-36 {
   color: #00af87;
   text-shadow: 0 0 6px rgba(0, 175, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-36.reverse-video, .fg-color-36 .cursor {
   background-color: #00af87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-37 {
   background-color: #00afaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-37.reverse-video, .bg-color-37 .cursor {
   color: #00afaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-37 {
   color: #00afaf;
   text-shadow: 0 0 6px rgba(0, 175, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-37.reverse-video, .fg-color-37 .cursor {
   background-color: #00afaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-38 {
   background-color: #00afd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-38.reverse-video, .bg-color-38 .cursor {
   color: #00afd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-38 {
   color: #00afd7;
   text-shadow: 0 0 6px rgba(0, 175, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-38.reverse-video, .fg-color-38 .cursor {
   background-color: #00afd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-39 {
   background-color: #00afff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-39.reverse-video, .bg-color-39 .cursor {
   color: #00afff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-39 {
   color: #00afff;
   text-shadow: 0 0 6px rgba(0, 175, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-39.reverse-video, .fg-color-39 .cursor {
   background-color: #00afff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-40 {
   background-color: #00d700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-40.reverse-video, .bg-color-40 .cursor {
   color: #00d700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-40 {
   color: #00d700;
   text-shadow: 0 0 6px rgba(0, 215, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-40.reverse-video, .fg-color-40 .cursor {
   background-color: #00d700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-41 {
   background-color: #00d75f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-41.reverse-video, .bg-color-41 .cursor {
   color: #00d75f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-41 {
   color: #00d75f;
   text-shadow: 0 0 6px rgba(0, 215, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-41.reverse-video, .fg-color-41 .cursor {
   background-color: #00d75f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-42 {
   background-color: #00d787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-42.reverse-video, .bg-color-42 .cursor {
   color: #00d787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-42 {
   color: #00d787;
   text-shadow: 0 0 6px rgba(0, 215, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-42.reverse-video, .fg-color-42 .cursor {
   background-color: #00d787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-43 {
   background-color: #00d7af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-43.reverse-video, .bg-color-43 .cursor {
   color: #00d7af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-43 {
   color: #00d7af;
   text-shadow: 0 0 6px rgba(0, 215, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-43.reverse-video, .fg-color-43 .cursor {
   background-color: #00d7af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-44 {
   background-color: #00d7d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-44.reverse-video, .bg-color-44 .cursor {
   color: #00d7d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-44 {
   color: #00d7d7;
   text-shadow: 0 0 6px rgba(0, 215, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-44.reverse-video, .fg-color-44 .cursor {
   background-color: #00d7d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-45 {
   background-color: #00d7ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-45.reverse-video, .bg-color-45 .cursor {
   color: #00d7ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-45 {
   color: #00d7ff;
   text-shadow: 0 0 6px rgba(0, 215, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-45.reverse-video, .fg-color-45 .cursor {
   background-color: #00d7ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-46 {
   background-color: lime;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-46.reverse-video, .bg-color-46 .cursor {
   color: lime !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-46 {
   color: lime;
   text-shadow: 0 0 6px rgba(0, 255, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-46.reverse-video, .fg-color-46 .cursor {
   background-color: lime !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-47 {
   background-color: #00ff5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-47.reverse-video, .bg-color-47 .cursor {
   color: #00ff5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-47 {
   color: #00ff5f;
   text-shadow: 0 0 6px rgba(0, 255, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-47.reverse-video, .fg-color-47 .cursor {
   background-color: #00ff5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-48 {
   background-color: #00ff87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-48.reverse-video, .bg-color-48 .cursor {
   color: #00ff87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-48 {
   color: #00ff87;
   text-shadow: 0 0 6px rgba(0, 255, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-48.reverse-video, .fg-color-48 .cursor {
   background-color: #00ff87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-49 {
   background-color: #00ffaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-49.reverse-video, .bg-color-49 .cursor {
   color: #00ffaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-49 {
   color: #00ffaf;
   text-shadow: 0 0 6px rgba(0, 255, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-49.reverse-video, .fg-color-49 .cursor {
   background-color: #00ffaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-50 {
   background-color: #00ffd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-50.reverse-video, .bg-color-50 .cursor {
   color: #00ffd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-50 {
   color: #00ffd7;
   text-shadow: 0 0 6px rgba(0, 255, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-50.reverse-video, .fg-color-50 .cursor {
   background-color: #00ffd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-51 {
   background-color: cyan;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-51.reverse-video, .bg-color-51 .cursor {
   color: cyan !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-51 {
   color: cyan;
   text-shadow: 0 0 6px rgba(0, 255, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-51.reverse-video, .fg-color-51 .cursor {
   background-color: cyan !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-52 {
   background-color: #5f0000;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-52.reverse-video, .bg-color-52 .cursor {
   color: #5f0000 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-52 {
   color: #5f0000;
   text-shadow: 0 0 6px rgba(95, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-52.reverse-video, .fg-color-52 .cursor {
   background-color: #5f0000 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-53 {
   background-color: #5f005f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-53.reverse-video, .bg-color-53 .cursor {
   color: #5f005f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-53 {
   color: #5f005f;
   text-shadow: 0 0 6px rgba(95, 0, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-53.reverse-video, .fg-color-53 .cursor {
   background-color: #5f005f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-54 {
   background-color: #5f0087;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-54.reverse-video, .bg-color-54 .cursor {
   color: #5f0087 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-54 {
   color: #5f0087;
   text-shadow: 0 0 6px rgba(95, 0, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-54.reverse-video, .fg-color-54 .cursor {
   background-color: #5f0087 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-55 {
   background-color: #5f00af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-55.reverse-video, .bg-color-55 .cursor {
   color: #5f00af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-55 {
   color: #5f00af;
   text-shadow: 0 0 6px rgba(95, 0, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-55.reverse-video, .fg-color-55 .cursor {
   background-color: #5f00af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-56 {
   background-color: #5f00d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-56.reverse-video, .bg-color-56 .cursor {
   color: #5f00d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-56 {
   color: #5f00d7;
   text-shadow: 0 0 6px rgba(95, 0, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-56.reverse-video, .fg-color-56 .cursor {
   background-color: #5f00d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-57 {
   background-color: #5f00ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-57.reverse-video, .bg-color-57 .cursor {
   color: #5f00ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-57 {
   color: #5f00ff;
   text-shadow: 0 0 6px rgba(95, 0, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-57.reverse-video, .fg-color-57 .cursor {
   background-color: #5f00ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-58 {
   background-color: #5f5f00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-58.reverse-video, .bg-color-58 .cursor {
   color: #5f5f00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-58 {
   color: #5f5f00;
   text-shadow: 0 0 6px rgba(95, 95, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-58.reverse-video, .fg-color-58 .cursor {
   background-color: #5f5f00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-59 {
   background-color: #5f5f5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-59.reverse-video, .bg-color-59 .cursor {
   color: #5f5f5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-59 {
   color: #5f5f5f;
   text-shadow: 0 0 6px rgba(95, 95, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-59.reverse-video, .fg-color-59 .cursor {
   background-color: #5f5f5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-60 {
   background-color: #5f5f87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-60.reverse-video, .bg-color-60 .cursor {
   color: #5f5f87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-60 {
   color: #5f5f87;
   text-shadow: 0 0 6px rgba(95, 95, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-60.reverse-video, .fg-color-60 .cursor {
   background-color: #5f5f87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-61 {
   background-color: #5f5faf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-61.reverse-video, .bg-color-61 .cursor {
   color: #5f5faf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-61 {
   color: #5f5faf;
   text-shadow: 0 0 6px rgba(95, 95, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-61.reverse-video, .fg-color-61 .cursor {
   background-color: #5f5faf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-62 {
   background-color: #5f5fd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-62.reverse-video, .bg-color-62 .cursor {
   color: #5f5fd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-62 {
   color: #5f5fd7;
   text-shadow: 0 0 6px rgba(95, 95, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-62.reverse-video, .fg-color-62 .cursor {
   background-color: #5f5fd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-63 {
   background-color: #5f5fff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-63.reverse-video, .bg-color-63 .cursor {
   color: #5f5fff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-63 {
   color: #5f5fff;
   text-shadow: 0 0 6px rgba(95, 95, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-63.reverse-video, .fg-color-63 .cursor {
   background-color: #5f5fff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-64 {
   background-color: #5f8700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-64.reverse-video, .bg-color-64 .cursor {
   color: #5f8700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-64 {
   color: #5f8700;
   text-shadow: 0 0 6px rgba(95, 135, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-64.reverse-video, .fg-color-64 .cursor {
   background-color: #5f8700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-65 {
   background-color: #5f875f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-65.reverse-video, .bg-color-65 .cursor {
   color: #5f875f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-65 {
   color: #5f875f;
   text-shadow: 0 0 6px rgba(95, 135, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-65.reverse-video, .fg-color-65 .cursor {
   background-color: #5f875f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-66 {
   background-color: #5f8787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-66.reverse-video, .bg-color-66 .cursor {
   color: #5f8787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-66 {
   color: #5f8787;
   text-shadow: 0 0 6px rgba(95, 135, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-66.reverse-video, .fg-color-66 .cursor {
   background-color: #5f8787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-67 {
   background-color: #5f87af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-67.reverse-video, .bg-color-67 .cursor {
   color: #5f87af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-67 {
   color: #5f87af;
   text-shadow: 0 0 6px rgba(95, 135, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-67.reverse-video, .fg-color-67 .cursor {
   background-color: #5f87af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-68 {
   background-color: #5f87d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-68.reverse-video, .bg-color-68 .cursor {
   color: #5f87d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-68 {
   color: #5f87d7;
   text-shadow: 0 0 6px rgba(95, 135, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-68.reverse-video, .fg-color-68 .cursor {
   background-color: #5f87d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-69 {
   background-color: #5f87ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-69.reverse-video, .bg-color-69 .cursor {
   color: #5f87ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-69 {
   color: #5f87ff;
   text-shadow: 0 0 6px rgba(95, 135, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-69.reverse-video, .fg-color-69 .cursor {
   background-color: #5f87ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-70 {
   background-color: #5faf00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-70.reverse-video, .bg-color-70 .cursor {
   color: #5faf00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-70 {
   color: #5faf00;
   text-shadow: 0 0 6px rgba(95, 175, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-70.reverse-video, .fg-color-70 .cursor {
   background-color: #5faf00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-71 {
   background-color: #5faf5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-71.reverse-video, .bg-color-71 .cursor {
   color: #5faf5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-71 {
   color: #5faf5f;
   text-shadow: 0 0 6px rgba(95, 175, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-71.reverse-video, .fg-color-71 .cursor {
   background-color: #5faf5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-72 {
   background-color: #5faf87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-72.reverse-video, .bg-color-72 .cursor {
   color: #5faf87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-72 {
   color: #5faf87;
   text-shadow: 0 0 6px rgba(95, 175, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-72.reverse-video, .fg-color-72 .cursor {
   background-color: #5faf87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-73 {
   background-color: #5fafaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-73.reverse-video, .bg-color-73 .cursor {
   color: #5fafaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-73 {
   color: #5fafaf;
   text-shadow: 0 0 6px rgba(95, 175, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-73.reverse-video, .fg-color-73 .cursor {
   background-color: #5fafaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-74 {
   background-color: #5fafd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-74.reverse-video, .bg-color-74 .cursor {
   color: #5fafd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-74 {
   color: #5fafd7;
   text-shadow: 0 0 6px rgba(95, 175, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-74.reverse-video, .fg-color-74 .cursor {
   background-color: #5fafd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-75 {
   background-color: #5fafff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-75.reverse-video, .bg-color-75 .cursor {
   color: #5fafff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-75 {
   color: #5fafff;
   text-shadow: 0 0 6px rgba(95, 175, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-75.reverse-video, .fg-color-75 .cursor {
   background-color: #5fafff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-76 {
   background-color: #5fd700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-76.reverse-video, .bg-color-76 .cursor {
   color: #5fd700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-76 {
   color: #5fd700;
   text-shadow: 0 0 6px rgba(95, 215, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-76.reverse-video, .fg-color-76 .cursor {
   background-color: #5fd700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-77 {
   background-color: #5fd75f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-77.reverse-video, .bg-color-77 .cursor {
   color: #5fd75f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-77 {
   color: #5fd75f;
   text-shadow: 0 0 6px rgba(95, 215, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-77.reverse-video, .fg-color-77 .cursor {
   background-color: #5fd75f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-78 {
   background-color: #5fd787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-78.reverse-video, .bg-color-78 .cursor {
   color: #5fd787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-78 {
   color: #5fd787;
   text-shadow: 0 0 6px rgba(95, 215, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-78.reverse-video, .fg-color-78 .cursor {
   background-color: #5fd787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-79 {
   background-color: #5fd7af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-79.reverse-video, .bg-color-79 .cursor {
   color: #5fd7af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-79 {
   color: #5fd7af;
   text-shadow: 0 0 6px rgba(95, 215, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-79.reverse-video, .fg-color-79 .cursor {
   background-color: #5fd7af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-80 {
   background-color: #5fd7d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-80.reverse-video, .bg-color-80 .cursor {
   color: #5fd7d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-80 {
   color: #5fd7d7;
   text-shadow: 0 0 6px rgba(95, 215, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-80.reverse-video, .fg-color-80 .cursor {
   background-color: #5fd7d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-81 {
   background-color: #5fd7ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-81.reverse-video, .bg-color-81 .cursor {
   color: #5fd7ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-81 {
   color: #5fd7ff;
   text-shadow: 0 0 6px rgba(95, 215, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-81.reverse-video, .fg-color-81 .cursor {
   background-color: #5fd7ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-82 {
   background-color: #5fff00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-82.reverse-video, .bg-color-82 .cursor {
   color: #5fff00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-82 {
   color: #5fff00;
   text-shadow: 0 0 6px rgba(95, 255, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-82.reverse-video, .fg-color-82 .cursor {
   background-color: #5fff00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-83 {
   background-color: #5fff5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-83.reverse-video, .bg-color-83 .cursor {
   color: #5fff5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-83 {
   color: #5fff5f;
   text-shadow: 0 0 6px rgba(95, 255, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-83.reverse-video, .fg-color-83 .cursor {
   background-color: #5fff5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-84 {
   background-color: #5fff87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-84.reverse-video, .bg-color-84 .cursor {
   color: #5fff87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-84 {
   color: #5fff87;
   text-shadow: 0 0 6px rgba(95, 255, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-84.reverse-video, .fg-color-84 .cursor {
   background-color: #5fff87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-85 {
   background-color: #5fffaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-85.reverse-video, .bg-color-85 .cursor {
   color: #5fffaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-85 {
   color: #5fffaf;
   text-shadow: 0 0 6px rgba(95, 255, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-85.reverse-video, .fg-color-85 .cursor {
   background-color: #5fffaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-86 {
   background-color: #5fffd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-86.reverse-video, .bg-color-86 .cursor {
   color: #5fffd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-86 {
   color: #5fffd7;
   text-shadow: 0 0 6px rgba(95, 255, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-86.reverse-video, .fg-color-86 .cursor {
   background-color: #5fffd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-87 {
   background-color: #5fffff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-87.reverse-video, .bg-color-87 .cursor {
   color: #5fffff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-87 {
   color: #5fffff;
   text-shadow: 0 0 6px rgba(95, 255, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-87.reverse-video, .fg-color-87 .cursor {
   background-color: #5fffff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-88 {
   background-color: #870000;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-88.reverse-video, .bg-color-88 .cursor {
   color: #870000 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-88 {
   color: #870000;
   text-shadow: 0 0 6px rgba(135, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-88.reverse-video, .fg-color-88 .cursor {
   background-color: #870000 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-89 {
   background-color: #87005f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-89.reverse-video, .bg-color-89 .cursor {
   color: #87005f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-89 {
   color: #87005f;
   text-shadow: 0 0 6px rgba(135, 0, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-89.reverse-video, .fg-color-89 .cursor {
   background-color: #87005f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-90 {
   background-color: #870087;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-90.reverse-video, .bg-color-90 .cursor {
   color: #870087 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-90 {
   color: #870087;
   text-shadow: 0 0 6px rgba(135, 0, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-90.reverse-video, .fg-color-90 .cursor {
   background-color: #870087 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-91 {
   background-color: #8700af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-91.reverse-video, .bg-color-91 .cursor {
   color: #8700af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-91 {
   color: #8700af;
   text-shadow: 0 0 6px rgba(135, 0, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-91.reverse-video, .fg-color-91 .cursor {
   background-color: #8700af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-92 {
   background-color: #8700d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-92.reverse-video, .bg-color-92 .cursor {
   color: #8700d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-92 {
   color: #8700d7;
   text-shadow: 0 0 6px rgba(135, 0, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-92.reverse-video, .fg-color-92 .cursor {
   background-color: #8700d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-93 {
   background-color: #8700ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-93.reverse-video, .bg-color-93 .cursor {
   color: #8700ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-93 {
   color: #8700ff;
   text-shadow: 0 0 6px rgba(135, 0, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-93.reverse-video, .fg-color-93 .cursor {
   background-color: #8700ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-94 {
   background-color: #875f00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-94.reverse-video, .bg-color-94 .cursor {
   color: #875f00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-94 {
   color: #875f00;
   text-shadow: 0 0 6px rgba(135, 95, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-94.reverse-video, .fg-color-94 .cursor {
   background-color: #875f00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-95 {
   background-color: #875f5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-95.reverse-video, .bg-color-95 .cursor {
   color: #875f5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-95 {
   color: #875f5f;
   text-shadow: 0 0 6px rgba(135, 95, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-95.reverse-video, .fg-color-95 .cursor {
   background-color: #875f5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-96 {
   background-color: #875f87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-96.reverse-video, .bg-color-96 .cursor {
   color: #875f87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-96 {
   color: #875f87;
   text-shadow: 0 0 6px rgba(135, 95, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-96.reverse-video, .fg-color-96 .cursor {
   background-color: #875f87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-97 {
   background-color: #875faf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-97.reverse-video, .bg-color-97 .cursor {
   color: #875faf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-97 {
   color: #875faf;
   text-shadow: 0 0 6px rgba(135, 95, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-97.reverse-video, .fg-color-97 .cursor {
   background-color: #875faf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-98 {
   background-color: #875fd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-98.reverse-video, .bg-color-98 .cursor {
   color: #875fd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-98 {
   color: #875fd7;
   text-shadow: 0 0 6px rgba(135, 95, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-98.reverse-video, .fg-color-98 .cursor {
   background-color: #875fd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-99 {
   background-color: #875fff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-99.reverse-video, .bg-color-99 .cursor {
   color: #875fff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-99 {
   color: #875fff;
   text-shadow: 0 0 6px rgba(135, 95, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-99.reverse-video, .fg-color-99 .cursor {
   background-color: #875fff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-100 {
   background-color: #878700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-100.reverse-video, .bg-color-100 .cursor {
   color: #878700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-100 {
   color: #878700;
   text-shadow: 0 0 6px rgba(135, 135, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-100.reverse-video, .fg-color-100 .cursor {
   background-color: #878700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-101 {
   background-color: #87875f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-101.reverse-video, .bg-color-101 .cursor {
   color: #87875f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-101 {
   color: #87875f;
   text-shadow: 0 0 6px rgba(135, 135, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-101.reverse-video, .fg-color-101 .cursor {
   background-color: #87875f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-102 {
   background-color: #878787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-102.reverse-video, .bg-color-102 .cursor {
   color: #878787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-102 {
   color: #878787;
   text-shadow: 0 0 6px rgba(135, 135, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-102.reverse-video, .fg-color-102 .cursor {
   background-color: #878787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-103 {
   background-color: #8787af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-103.reverse-video, .bg-color-103 .cursor {
   color: #8787af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-103 {
   color: #8787af;
   text-shadow: 0 0 6px rgba(135, 135, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-103.reverse-video, .fg-color-103 .cursor {
   background-color: #8787af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-104 {
   background-color: #8787d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-104.reverse-video, .bg-color-104 .cursor {
   color: #8787d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-104 {
   color: #8787d7;
   text-shadow: 0 0 6px rgba(135, 135, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-104.reverse-video, .fg-color-104 .cursor {
   background-color: #8787d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-105 {
   background-color: #8787ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-105.reverse-video, .bg-color-105 .cursor {
   color: #8787ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-105 {
   color: #8787ff;
   text-shadow: 0 0 6px rgba(135, 135, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-105.reverse-video, .fg-color-105 .cursor {
   background-color: #8787ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-106 {
   background-color: #87af00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-106.reverse-video, .bg-color-106 .cursor {
   color: #87af00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-106 {
   color: #87af00;
   text-shadow: 0 0 6px rgba(135, 175, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-106.reverse-video, .fg-color-106 .cursor {
   background-color: #87af00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-107 {
   background-color: #87af5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-107.reverse-video, .bg-color-107 .cursor {
   color: #87af5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-107 {
   color: #87af5f;
   text-shadow: 0 0 6px rgba(135, 175, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-107.reverse-video, .fg-color-107 .cursor {
   background-color: #87af5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-108 {
   background-color: #87af87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-108.reverse-video, .bg-color-108 .cursor {
   color: #87af87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-108 {
   color: #87af87;
   text-shadow: 0 0 6px rgba(135, 175, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-108.reverse-video, .fg-color-108 .cursor {
   background-color: #87af87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-109 {
   background-color: #87afaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-109.reverse-video, .bg-color-109 .cursor {
   color: #87afaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-109 {
   color: #87afaf;
   text-shadow: 0 0 6px rgba(135, 175, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-109.reverse-video, .fg-color-109 .cursor {
   background-color: #87afaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-110 {
   background-color: #87afd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-110.reverse-video, .bg-color-110 .cursor {
   color: #87afd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-110 {
   color: #87afd7;
   text-shadow: 0 0 6px rgba(135, 175, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-110.reverse-video, .fg-color-110 .cursor {
   background-color: #87afd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-111 {
   background-color: #87afff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-111.reverse-video, .bg-color-111 .cursor {
   color: #87afff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-111 {
   color: #87afff;
   text-shadow: 0 0 6px rgba(135, 175, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-111.reverse-video, .fg-color-111 .cursor {
   background-color: #87afff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-112 {
   background-color: #87d700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-112.reverse-video, .bg-color-112 .cursor {
   color: #87d700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-112 {
   color: #87d700;
   text-shadow: 0 0 6px rgba(135, 215, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-112.reverse-video, .fg-color-112 .cursor {
   background-color: #87d700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-113 {
   background-color: #87d75f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-113.reverse-video, .bg-color-113 .cursor {
   color: #87d75f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-113 {
   color: #87d75f;
   text-shadow: 0 0 6px rgba(135, 215, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-113.reverse-video, .fg-color-113 .cursor {
   background-color: #87d75f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-114 {
   background-color: #87d787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-114.reverse-video, .bg-color-114 .cursor {
   color: #87d787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-114 {
   color: #87d787;
   text-shadow: 0 0 6px rgba(135, 215, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-114.reverse-video, .fg-color-114 .cursor {
   background-color: #87d787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-115 {
   background-color: #87d7af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-115.reverse-video, .bg-color-115 .cursor {
   color: #87d7af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-115 {
   color: #87d7af;
   text-shadow: 0 0 6px rgba(135, 215, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-115.reverse-video, .fg-color-115 .cursor {
   background-color: #87d7af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-116 {
   background-color: #87d7d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-116.reverse-video, .bg-color-116 .cursor {
   color: #87d7d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-116 {
   color: #87d7d7;
   text-shadow: 0 0 6px rgba(135, 215, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-116.reverse-video, .fg-color-116 .cursor {
   background-color: #87d7d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-117 {
   background-color: #87d7ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-117.reverse-video, .bg-color-117 .cursor {
   color: #87d7ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-117 {
   color: #87d7ff;
   text-shadow: 0 0 6px rgba(135, 215, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-117.reverse-video, .fg-color-117 .cursor {
   background-color: #87d7ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-118 {
   background-color: #87ff00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-118.reverse-video, .bg-color-118 .cursor {
   color: #87ff00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-118 {
   color: #87ff00;
   text-shadow: 0 0 6px rgba(135, 255, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-118.reverse-video, .fg-color-118 .cursor {
   background-color: #87ff00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-119 {
   background-color: #87ff5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-119.reverse-video, .bg-color-119 .cursor {
   color: #87ff5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-119 {
   color: #87ff5f;
   text-shadow: 0 0 6px rgba(135, 255, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-119.reverse-video, .fg-color-119 .cursor {
   background-color: #87ff5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-120 {
   background-color: #87ff87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-120.reverse-video, .bg-color-120 .cursor {
   color: #87ff87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-120 {
   color: #87ff87;
   text-shadow: 0 0 6px rgba(135, 255, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-120.reverse-video, .fg-color-120 .cursor {
   background-color: #87ff87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-121 {
   background-color: #87ffaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-121.reverse-video, .bg-color-121 .cursor {
   color: #87ffaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-121 {
   color: #87ffaf;
   text-shadow: 0 0 6px rgba(135, 255, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-121.reverse-video, .fg-color-121 .cursor {
   background-color: #87ffaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-122 {
   background-color: #87ffd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-122.reverse-video, .bg-color-122 .cursor {
   color: #87ffd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-122 {
   color: #87ffd7;
   text-shadow: 0 0 6px rgba(135, 255, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-122.reverse-video, .fg-color-122 .cursor {
   background-color: #87ffd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-123 {
   background-color: #87ffff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-123.reverse-video, .bg-color-123 .cursor {
   color: #87ffff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-123 {
   color: #87ffff;
   text-shadow: 0 0 6px rgba(135, 255, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-123.reverse-video, .fg-color-123 .cursor {
   background-color: #87ffff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-124 {
   background-color: #af0000;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-124.reverse-video, .bg-color-124 .cursor {
   color: #af0000 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-124 {
   color: #af0000;
   text-shadow: 0 0 6px rgba(175, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-124.reverse-video, .fg-color-124 .cursor {
   background-color: #af0000 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-125 {
   background-color: #af005f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-125.reverse-video, .bg-color-125 .cursor {
   color: #af005f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-125 {
   color: #af005f;
   text-shadow: 0 0 6px rgba(175, 0, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-125.reverse-video, .fg-color-125 .cursor {
   background-color: #af005f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-126 {
   background-color: #af0087;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-126.reverse-video, .bg-color-126 .cursor {
   color: #af0087 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-126 {
   color: #af0087;
   text-shadow: 0 0 6px rgba(175, 0, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-126.reverse-video, .fg-color-126 .cursor {
   background-color: #af0087 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-127 {
   background-color: #af00af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-127.reverse-video, .bg-color-127 .cursor {
   color: #af00af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-127 {
   color: #af00af;
   text-shadow: 0 0 6px rgba(175, 0, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-127.reverse-video, .fg-color-127 .cursor {
   background-color: #af00af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-128 {
   background-color: #af00d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-128.reverse-video, .bg-color-128 .cursor {
   color: #af00d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-128 {
   color: #af00d7;
   text-shadow: 0 0 6px rgba(175, 0, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-128.reverse-video, .fg-color-128 .cursor {
   background-color: #af00d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-129 {
   background-color: #af00ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-129.reverse-video, .bg-color-129 .cursor {
   color: #af00ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-129 {
   color: #af00ff;
   text-shadow: 0 0 6px rgba(175, 0, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-129.reverse-video, .fg-color-129 .cursor {
   background-color: #af00ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-130 {
   background-color: #af5f00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-130.reverse-video, .bg-color-130 .cursor {
   color: #af5f00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-130 {
   color: #af5f00;
   text-shadow: 0 0 6px rgba(175, 95, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-130.reverse-video, .fg-color-130 .cursor {
   background-color: #af5f00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-131 {
   background-color: #af5f5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-131.reverse-video, .bg-color-131 .cursor {
   color: #af5f5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-131 {
   color: #af5f5f;
   text-shadow: 0 0 6px rgba(175, 95, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-131.reverse-video, .fg-color-131 .cursor {
   background-color: #af5f5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-132 {
   background-color: #af5f87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-132.reverse-video, .bg-color-132 .cursor {
   color: #af5f87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-132 {
   color: #af5f87;
   text-shadow: 0 0 6px rgba(175, 95, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-132.reverse-video, .fg-color-132 .cursor {
   background-color: #af5f87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-133 {
   background-color: #af5faf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-133.reverse-video, .bg-color-133 .cursor {
   color: #af5faf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-133 {
   color: #af5faf;
   text-shadow: 0 0 6px rgba(175, 95, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-133.reverse-video, .fg-color-133 .cursor {
   background-color: #af5faf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-134 {
   background-color: #af5fd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-134.reverse-video, .bg-color-134 .cursor {
   color: #af5fd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-134 {
   color: #af5fd7;
   text-shadow: 0 0 6px rgba(175, 95, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-134.reverse-video, .fg-color-134 .cursor {
   background-color: #af5fd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-135 {
   background-color: #af5fff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-135.reverse-video, .bg-color-135 .cursor {
   color: #af5fff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-135 {
   color: #af5fff;
   text-shadow: 0 0 6px rgba(175, 95, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-135.reverse-video, .fg-color-135 .cursor {
   background-color: #af5fff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-136 {
   background-color: #af8700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-136.reverse-video, .bg-color-136 .cursor {
   color: #af8700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-136 {
   color: #af8700;
   text-shadow: 0 0 6px rgba(175, 135, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-136.reverse-video, .fg-color-136 .cursor {
   background-color: #af8700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-137 {
   background-color: #af875f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-137.reverse-video, .bg-color-137 .cursor {
   color: #af875f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-137 {
   color: #af875f;
   text-shadow: 0 0 6px rgba(175, 135, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-137.reverse-video, .fg-color-137 .cursor {
   background-color: #af875f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-138 {
   background-color: #af8787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-138.reverse-video, .bg-color-138 .cursor {
   color: #af8787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-138 {
   color: #af8787;
   text-shadow: 0 0 6px rgba(175, 135, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-138.reverse-video, .fg-color-138 .cursor {
   background-color: #af8787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-139 {
   background-color: #af87af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-139.reverse-video, .bg-color-139 .cursor {
   color: #af87af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-139 {
   color: #af87af;
   text-shadow: 0 0 6px rgba(175, 135, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-139.reverse-video, .fg-color-139 .cursor {
   background-color: #af87af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-140 {
   background-color: #af87d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-140.reverse-video, .bg-color-140 .cursor {
   color: #af87d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-140 {
   color: #af87d7;
   text-shadow: 0 0 6px rgba(175, 135, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-140.reverse-video, .fg-color-140 .cursor {
   background-color: #af87d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-141 {
   background-color: #af87ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-141.reverse-video, .bg-color-141 .cursor {
   color: #af87ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-141 {
   color: #af87ff;
   text-shadow: 0 0 6px rgba(175, 135, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-141.reverse-video, .fg-color-141 .cursor {
   background-color: #af87ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-142 {
   background-color: #afaf00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-142.reverse-video, .bg-color-142 .cursor {
   color: #afaf00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-142 {
   color: #afaf00;
   text-shadow: 0 0 6px rgba(175, 175, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-142.reverse-video, .fg-color-142 .cursor {
   background-color: #afaf00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-143 {
   background-color: #afaf5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-143.reverse-video, .bg-color-143 .cursor {
   color: #afaf5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-143 {
   color: #afaf5f;
   text-shadow: 0 0 6px rgba(175, 175, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-143.reverse-video, .fg-color-143 .cursor {
   background-color: #afaf5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-144 {
   background-color: #afaf87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-144.reverse-video, .bg-color-144 .cursor {
   color: #afaf87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-144 {
   color: #afaf87;
   text-shadow: 0 0 6px rgba(175, 175, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-144.reverse-video, .fg-color-144 .cursor {
   background-color: #afaf87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-145 {
   background-color: #afafaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-145.reverse-video, .bg-color-145 .cursor {
   color: #afafaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-145 {
   color: #afafaf;
   text-shadow: 0 0 6px rgba(175, 175, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-145.reverse-video, .fg-color-145 .cursor {
   background-color: #afafaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-146 {
   background-color: #afafd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-146.reverse-video, .bg-color-146 .cursor {
   color: #afafd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-146 {
   color: #afafd7;
   text-shadow: 0 0 6px rgba(175, 175, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-146.reverse-video, .fg-color-146 .cursor {
   background-color: #afafd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-147 {
   background-color: #afafff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-147.reverse-video, .bg-color-147 .cursor {
   color: #afafff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-147 {
   color: #afafff;
   text-shadow: 0 0 6px rgba(175, 175, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-147.reverse-video, .fg-color-147 .cursor {
   background-color: #afafff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-148 {
   background-color: #afd700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-148.reverse-video, .bg-color-148 .cursor {
   color: #afd700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-148 {
   color: #afd700;
   text-shadow: 0 0 6px rgba(175, 215, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-148.reverse-video, .fg-color-148 .cursor {
   background-color: #afd700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-149 {
   background-color: #afd75f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-149.reverse-video, .bg-color-149 .cursor {
   color: #afd75f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-149 {
   color: #afd75f;
   text-shadow: 0 0 6px rgba(175, 215, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-149.reverse-video, .fg-color-149 .cursor {
   background-color: #afd75f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-150 {
   background-color: #afd787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-150.reverse-video, .bg-color-150 .cursor {
   color: #afd787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-150 {
   color: #afd787;
   text-shadow: 0 0 6px rgba(175, 215, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-150.reverse-video, .fg-color-150 .cursor {
   background-color: #afd787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-151 {
   background-color: #afd7af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-151.reverse-video, .bg-color-151 .cursor {
   color: #afd7af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-151 {
   color: #afd7af;
   text-shadow: 0 0 6px rgba(175, 215, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-151.reverse-video, .fg-color-151 .cursor {
   background-color: #afd7af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-152 {
   background-color: #afd7d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-152.reverse-video, .bg-color-152 .cursor {
   color: #afd7d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-152 {
   color: #afd7d7;
   text-shadow: 0 0 6px rgba(175, 215, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-152.reverse-video, .fg-color-152 .cursor {
   background-color: #afd7d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-153 {
   background-color: #afd7ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-153.reverse-video, .bg-color-153 .cursor {
   color: #afd7ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-153 {
   color: #afd7ff;
   text-shadow: 0 0 6px rgba(175, 215, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-153.reverse-video, .fg-color-153 .cursor {
   background-color: #afd7ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-154 {
   background-color: #afff00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-154.reverse-video, .bg-color-154 .cursor {
   color: #afff00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-154 {
   color: #afff00;
   text-shadow: 0 0 6px rgba(175, 255, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-154.reverse-video, .fg-color-154 .cursor {
   background-color: #afff00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-155 {
   background-color: #afff5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-155.reverse-video, .bg-color-155 .cursor {
   color: #afff5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-155 {
   color: #afff5f;
   text-shadow: 0 0 6px rgba(175, 255, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-155.reverse-video, .fg-color-155 .cursor {
   background-color: #afff5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-156 {
   background-color: #afff87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-156.reverse-video, .bg-color-156 .cursor {
   color: #afff87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-156 {
   color: #afff87;
   text-shadow: 0 0 6px rgba(175, 255, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-156.reverse-video, .fg-color-156 .cursor {
   background-color: #afff87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-157 {
   background-color: #afffaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-157.reverse-video, .bg-color-157 .cursor {
   color: #afffaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-157 {
   color: #afffaf;
   text-shadow: 0 0 6px rgba(175, 255, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-157.reverse-video, .fg-color-157 .cursor {
   background-color: #afffaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-158 {
   background-color: #afffd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-158.reverse-video, .bg-color-158 .cursor {
   color: #afffd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-158 {
   color: #afffd7;
   text-shadow: 0 0 6px rgba(175, 255, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-158.reverse-video, .fg-color-158 .cursor {
   background-color: #afffd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-159 {
   background-color: #afffff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-159.reverse-video, .bg-color-159 .cursor {
   color: #afffff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-159 {
   color: #afffff;
   text-shadow: 0 0 6px rgba(175, 255, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-159.reverse-video, .fg-color-159 .cursor {
   background-color: #afffff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-160 {
   background-color: #d70000;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-160.reverse-video, .bg-color-160 .cursor {
   color: #d70000 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-160 {
   color: #d70000;
   text-shadow: 0 0 6px rgba(215, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-160.reverse-video, .fg-color-160 .cursor {
   background-color: #d70000 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-161 {
   background-color: #d7005f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-161.reverse-video, .bg-color-161 .cursor {
   color: #d7005f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-161 {
   color: #d7005f;
   text-shadow: 0 0 6px rgba(215, 0, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-161.reverse-video, .fg-color-161 .cursor {
   background-color: #d7005f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-162 {
   background-color: #d70087;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-162.reverse-video, .bg-color-162 .cursor {
   color: #d70087 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-162 {
   color: #d70087;
   text-shadow: 0 0 6px rgba(215, 0, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-162.reverse-video, .fg-color-162 .cursor {
   background-color: #d70087 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-163 {
   background-color: #d700af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-163.reverse-video, .bg-color-163 .cursor {
   color: #d700af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-163 {
   color: #d700af;
   text-shadow: 0 0 6px rgba(215, 0, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-163.reverse-video, .fg-color-163 .cursor {
   background-color: #d700af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-164 {
   background-color: #d700d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-164.reverse-video, .bg-color-164 .cursor {
   color: #d700d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-164 {
   color: #d700d7;
   text-shadow: 0 0 6px rgba(215, 0, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-164.reverse-video, .fg-color-164 .cursor {
   background-color: #d700d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-165 {
   background-color: #d700ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-165.reverse-video, .bg-color-165 .cursor {
   color: #d700ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-165 {
   color: #d700ff;
   text-shadow: 0 0 6px rgba(215, 0, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-165.reverse-video, .fg-color-165 .cursor {
   background-color: #d700ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-166 {
   background-color: #d75f00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-166.reverse-video, .bg-color-166 .cursor {
   color: #d75f00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-166 {
   color: #d75f00;
   text-shadow: 0 0 6px rgba(215, 95, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-166.reverse-video, .fg-color-166 .cursor {
   background-color: #d75f00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-167 {
   background-color: #d75f5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-167.reverse-video, .bg-color-167 .cursor {
   color: #d75f5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-167 {
   color: #d75f5f;
   text-shadow: 0 0 6px rgba(215, 95, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-167.reverse-video, .fg-color-167 .cursor {
   background-color: #d75f5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-168 {
   background-color: #d75f87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-168.reverse-video, .bg-color-168 .cursor {
   color: #d75f87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-168 {
   color: #d75f87;
   text-shadow: 0 0 6px rgba(215, 95, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-168.reverse-video, .fg-color-168 .cursor {
   background-color: #d75f87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-169 {
   background-color: #d75faf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-169.reverse-video, .bg-color-169 .cursor {
   color: #d75faf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-169 {
   color: #d75faf;
   text-shadow: 0 0 6px rgba(215, 95, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-169.reverse-video, .fg-color-169 .cursor {
   background-color: #d75faf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-170 {
   background-color: #d75fd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-170.reverse-video, .bg-color-170 .cursor {
   color: #d75fd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-170 {
   color: #d75fd7;
   text-shadow: 0 0 6px rgba(215, 95, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-170.reverse-video, .fg-color-170 .cursor {
   background-color: #d75fd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-171 {
   background-color: #d75fff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-171.reverse-video, .bg-color-171 .cursor {
   color: #d75fff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-171 {
   color: #d75fff;
   text-shadow: 0 0 6px rgba(215, 95, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-171.reverse-video, .fg-color-171 .cursor {
   background-color: #d75fff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-172 {
   background-color: #d78700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-172.reverse-video, .bg-color-172 .cursor {
   color: #d78700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-172 {
   color: #d78700;
   text-shadow: 0 0 6px rgba(215, 135, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-172.reverse-video, .fg-color-172 .cursor {
   background-color: #d78700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-173 {
   background-color: #d7875f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-173.reverse-video, .bg-color-173 .cursor {
   color: #d7875f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-173 {
   color: #d7875f;
   text-shadow: 0 0 6px rgba(215, 135, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-173.reverse-video, .fg-color-173 .cursor {
   background-color: #d7875f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-174 {
   background-color: #d78787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-174.reverse-video, .bg-color-174 .cursor {
   color: #d78787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-174 {
   color: #d78787;
   text-shadow: 0 0 6px rgba(215, 135, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-174.reverse-video, .fg-color-174 .cursor {
   background-color: #d78787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-175 {
   background-color: #d787af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-175.reverse-video, .bg-color-175 .cursor {
   color: #d787af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-175 {
   color: #d787af;
   text-shadow: 0 0 6px rgba(215, 135, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-175.reverse-video, .fg-color-175 .cursor {
   background-color: #d787af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-176 {
   background-color: #d787d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-176.reverse-video, .bg-color-176 .cursor {
   color: #d787d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-176 {
   color: #d787d7;
   text-shadow: 0 0 6px rgba(215, 135, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-176.reverse-video, .fg-color-176 .cursor {
   background-color: #d787d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-177 {
   background-color: #d787ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-177.reverse-video, .bg-color-177 .cursor {
   color: #d787ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-177 {
   color: #d787ff;
   text-shadow: 0 0 6px rgba(215, 135, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-177.reverse-video, .fg-color-177 .cursor {
   background-color: #d787ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-178 {
   background-color: #d7af00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-178.reverse-video, .bg-color-178 .cursor {
   color: #d7af00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-178 {
   color: #d7af00;
   text-shadow: 0 0 6px rgba(215, 175, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-178.reverse-video, .fg-color-178 .cursor {
   background-color: #d7af00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-179 {
   background-color: #d7af5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-179.reverse-video, .bg-color-179 .cursor {
   color: #d7af5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-179 {
   color: #d7af5f;
   text-shadow: 0 0 6px rgba(215, 175, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-179.reverse-video, .fg-color-179 .cursor {
   background-color: #d7af5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-180 {
   background-color: #d7af87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-180.reverse-video, .bg-color-180 .cursor {
   color: #d7af87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-180 {
   color: #d7af87;
   text-shadow: 0 0 6px rgba(215, 175, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-180.reverse-video, .fg-color-180 .cursor {
   background-color: #d7af87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-181 {
   background-color: #d7afaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-181.reverse-video, .bg-color-181 .cursor {
   color: #d7afaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-181 {
   color: #d7afaf;
   text-shadow: 0 0 6px rgba(215, 175, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-181.reverse-video, .fg-color-181 .cursor {
   background-color: #d7afaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-182 {
   background-color: #d7afd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-182.reverse-video, .bg-color-182 .cursor {
   color: #d7afd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-182 {
   color: #d7afd7;
   text-shadow: 0 0 6px rgba(215, 175, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-182.reverse-video, .fg-color-182 .cursor {
   background-color: #d7afd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-183 {
   background-color: #d7afff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-183.reverse-video, .bg-color-183 .cursor {
   color: #d7afff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-183 {
   color: #d7afff;
   text-shadow: 0 0 6px rgba(215, 175, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-183.reverse-video, .fg-color-183 .cursor {
   background-color: #d7afff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-184 {
   background-color: #d7d700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-184.reverse-video, .bg-color-184 .cursor {
   color: #d7d700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-184 {
   color: #d7d700;
   text-shadow: 0 0 6px rgba(215, 215, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-184.reverse-video, .fg-color-184 .cursor {
   background-color: #d7d700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-185 {
   background-color: #d7d75f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-185.reverse-video, .bg-color-185 .cursor {
   color: #d7d75f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-185 {
   color: #d7d75f;
   text-shadow: 0 0 6px rgba(215, 215, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-185.reverse-video, .fg-color-185 .cursor {
   background-color: #d7d75f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-186 {
   background-color: #d7d787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-186.reverse-video, .bg-color-186 .cursor {
   color: #d7d787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-186 {
   color: #d7d787;
   text-shadow: 0 0 6px rgba(215, 215, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-186.reverse-video, .fg-color-186 .cursor {
   background-color: #d7d787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-187 {
   background-color: #d7d7af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-187.reverse-video, .bg-color-187 .cursor {
   color: #d7d7af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-187 {
   color: #d7d7af;
   text-shadow: 0 0 6px rgba(215, 215, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-187.reverse-video, .fg-color-187 .cursor {
   background-color: #d7d7af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-188 {
   background-color: #d7d7d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-188.reverse-video, .bg-color-188 .cursor {
   color: #d7d7d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-188 {
   color: #d7d7d7;
   text-shadow: 0 0 6px rgba(215, 215, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-188.reverse-video, .fg-color-188 .cursor {
   background-color: #d7d7d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-189 {
   background-color: #d7d7ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-189.reverse-video, .bg-color-189 .cursor {
   color: #d7d7ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-189 {
   color: #d7d7ff;
   text-shadow: 0 0 6px rgba(215, 215, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-189.reverse-video, .fg-color-189 .cursor {
   background-color: #d7d7ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-190 {
   background-color: #d7ff00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-190.reverse-video, .bg-color-190 .cursor {
   color: #d7ff00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-190 {
   color: #d7ff00;
   text-shadow: 0 0 6px rgba(215, 255, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-190.reverse-video, .fg-color-190 .cursor {
   background-color: #d7ff00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-191 {
   background-color: #d7ff5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-191.reverse-video, .bg-color-191 .cursor {
   color: #d7ff5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-191 {
   color: #d7ff5f;
   text-shadow: 0 0 6px rgba(215, 255, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-191.reverse-video, .fg-color-191 .cursor {
   background-color: #d7ff5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-192 {
   background-color: #d7ff87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-192.reverse-video, .bg-color-192 .cursor {
   color: #d7ff87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-192 {
   color: #d7ff87;
   text-shadow: 0 0 6px rgba(215, 255, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-192.reverse-video, .fg-color-192 .cursor {
   background-color: #d7ff87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-193 {
   background-color: #d7ffaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-193.reverse-video, .bg-color-193 .cursor {
   color: #d7ffaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-193 {
   color: #d7ffaf;
   text-shadow: 0 0 6px rgba(215, 255, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-193.reverse-video, .fg-color-193 .cursor {
   background-color: #d7ffaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-194 {
   background-color: #d7ffd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-194.reverse-video, .bg-color-194 .cursor {
   color: #d7ffd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-194 {
   color: #d7ffd7;
   text-shadow: 0 0 6px rgba(215, 255, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-194.reverse-video, .fg-color-194 .cursor {
   background-color: #d7ffd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-195 {
   background-color: #d7ffff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-195.reverse-video, .bg-color-195 .cursor {
   color: #d7ffff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-195 {
   color: #d7ffff;
   text-shadow: 0 0 6px rgba(215, 255, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-195.reverse-video, .fg-color-195 .cursor {
   background-color: #d7ffff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-196 {
   background-color: red;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-196.reverse-video, .bg-color-196 .cursor {
   color: red !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-196 {
   color: red;
   text-shadow: 0 0 6px rgba(255, 0, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-196.reverse-video, .fg-color-196 .cursor {
   background-color: red !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-197 {
   background-color: #ff005f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-197.reverse-video, .bg-color-197 .cursor {
   color: #ff005f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-197 {
   color: #ff005f;
   text-shadow: 0 0 6px rgba(255, 0, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-197.reverse-video, .fg-color-197 .cursor {
   background-color: #ff005f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-198 {
   background-color: #ff0087;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-198.reverse-video, .bg-color-198 .cursor {
   color: #ff0087 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-198 {
   color: #ff0087;
   text-shadow: 0 0 6px rgba(255, 0, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-198.reverse-video, .fg-color-198 .cursor {
   background-color: #ff0087 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-199 {
   background-color: #ff00af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-199.reverse-video, .bg-color-199 .cursor {
   color: #ff00af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-199 {
   color: #ff00af;
   text-shadow: 0 0 6px rgba(255, 0, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-199.reverse-video, .fg-color-199 .cursor {
   background-color: #ff00af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-200 {
   background-color: #ff00d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-200.reverse-video, .bg-color-200 .cursor {
   color: #ff00d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-200 {
   color: #ff00d7;
   text-shadow: 0 0 6px rgba(255, 0, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-200.reverse-video, .fg-color-200 .cursor {
   background-color: #ff00d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-201 {
   background-color: magenta;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-201.reverse-video, .bg-color-201 .cursor {
   color: magenta !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-201 {
   color: magenta;
   text-shadow: 0 0 6px rgba(255, 0, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-201.reverse-video, .fg-color-201 .cursor {
   background-color: magenta !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-202 {
   background-color: #ff5f00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-202.reverse-video, .bg-color-202 .cursor {
   color: #ff5f00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-202 {
   color: #ff5f00;
   text-shadow: 0 0 6px rgba(255, 95, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-202.reverse-video, .fg-color-202 .cursor {
   background-color: #ff5f00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-203 {
   background-color: #ff5f5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-203.reverse-video, .bg-color-203 .cursor {
   color: #ff5f5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-203 {
   color: #ff5f5f;
   text-shadow: 0 0 6px rgba(255, 95, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-203.reverse-video, .fg-color-203 .cursor {
   background-color: #ff5f5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-204 {
   background-color: #ff5f87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-204.reverse-video, .bg-color-204 .cursor {
   color: #ff5f87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-204 {
   color: #ff5f87;
   text-shadow: 0 0 6px rgba(255, 95, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-204.reverse-video, .fg-color-204 .cursor {
   background-color: #ff5f87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-205 {
   background-color: #ff5faf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-205.reverse-video, .bg-color-205 .cursor {
   color: #ff5faf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-205 {
   color: #ff5faf;
   text-shadow: 0 0 6px rgba(255, 95, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-205.reverse-video, .fg-color-205 .cursor {
   background-color: #ff5faf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-206 {
   background-color: #ff5fd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-206.reverse-video, .bg-color-206 .cursor {
   color: #ff5fd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-206 {
   color: #ff5fd7;
   text-shadow: 0 0 6px rgba(255, 95, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-206.reverse-video, .fg-color-206 .cursor {
   background-color: #ff5fd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-207 {
   background-color: #ff5fff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-207.reverse-video, .bg-color-207 .cursor {
   color: #ff5fff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-207 {
   color: #ff5fff;
   text-shadow: 0 0 6px rgba(255, 95, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-207.reverse-video, .fg-color-207 .cursor {
   background-color: #ff5fff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-208 {
   background-color: #ff8700;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-208.reverse-video, .bg-color-208 .cursor {
   color: #ff8700 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-208 {
   color: #ff8700;
   text-shadow: 0 0 6px rgba(255, 135, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-208.reverse-video, .fg-color-208 .cursor {
   background-color: #ff8700 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-209 {
   background-color: #ff875f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-209.reverse-video, .bg-color-209 .cursor {
   color: #ff875f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-209 {
   color: #ff875f;
   text-shadow: 0 0 6px rgba(255, 135, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-209.reverse-video, .fg-color-209 .cursor {
   background-color: #ff875f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-210 {
   background-color: #ff8787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-210.reverse-video, .bg-color-210 .cursor {
   color: #ff8787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-210 {
   color: #ff8787;
   text-shadow: 0 0 6px rgba(255, 135, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-210.reverse-video, .fg-color-210 .cursor {
   background-color: #ff8787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-211 {
   background-color: #ff87af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-211.reverse-video, .bg-color-211 .cursor {
   color: #ff87af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-211 {
   color: #ff87af;
   text-shadow: 0 0 6px rgba(255, 135, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-211.reverse-video, .fg-color-211 .cursor {
   background-color: #ff87af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-212 {
   background-color: #ff87d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-212.reverse-video, .bg-color-212 .cursor {
   color: #ff87d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-212 {
   color: #ff87d7;
   text-shadow: 0 0 6px rgba(255, 135, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-212.reverse-video, .fg-color-212 .cursor {
   background-color: #ff87d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-213 {
   background-color: #ff87ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-213.reverse-video, .bg-color-213 .cursor {
   color: #ff87ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-213 {
   color: #ff87ff;
   text-shadow: 0 0 6px rgba(255, 135, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-213.reverse-video, .fg-color-213 .cursor {
   background-color: #ff87ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-214 {
   background-color: #ffaf00;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-214.reverse-video, .bg-color-214 .cursor {
   color: #ffaf00 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-214 {
   color: #ffaf00;
   text-shadow: 0 0 6px rgba(255, 175, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-214.reverse-video, .fg-color-214 .cursor {
   background-color: #ffaf00 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-215 {
   background-color: #ffaf5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-215.reverse-video, .bg-color-215 .cursor {
   color: #ffaf5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-215 {
   color: #ffaf5f;
   text-shadow: 0 0 6px rgba(255, 175, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-215.reverse-video, .fg-color-215 .cursor {
   background-color: #ffaf5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-216 {
   background-color: #ffaf87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-216.reverse-video, .bg-color-216 .cursor {
   color: #ffaf87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-216 {
   color: #ffaf87;
   text-shadow: 0 0 6px rgba(255, 175, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-216.reverse-video, .fg-color-216 .cursor {
   background-color: #ffaf87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-217 {
   background-color: #ffafaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-217.reverse-video, .bg-color-217 .cursor {
   color: #ffafaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-217 {
   color: #ffafaf;
   text-shadow: 0 0 6px rgba(255, 175, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-217.reverse-video, .fg-color-217 .cursor {
   background-color: #ffafaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-218 {
   background-color: #ffafd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-218.reverse-video, .bg-color-218 .cursor {
   color: #ffafd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-218 {
   color: #ffafd7;
   text-shadow: 0 0 6px rgba(255, 175, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-218.reverse-video, .fg-color-218 .cursor {
   background-color: #ffafd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-219 {
   background-color: #ffafff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-219.reverse-video, .bg-color-219 .cursor {
   color: #ffafff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-219 {
   color: #ffafff;
   text-shadow: 0 0 6px rgba(255, 175, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-219.reverse-video, .fg-color-219 .cursor {
   background-color: #ffafff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-220 {
   background-color: gold;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-220.reverse-video, .bg-color-220 .cursor {
   color: gold !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-220 {
   color: gold;
   text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-220.reverse-video, .fg-color-220 .cursor {
   background-color: gold !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-221 {
   background-color: #ffd75f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-221.reverse-video, .bg-color-221 .cursor {
   color: #ffd75f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-221 {
   color: #ffd75f;
   text-shadow: 0 0 6px rgba(255, 215, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-221.reverse-video, .fg-color-221 .cursor {
   background-color: #ffd75f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-222 {
   background-color: #ffd787;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-222.reverse-video, .bg-color-222 .cursor {
   color: #ffd787 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-222 {
   color: #ffd787;
   text-shadow: 0 0 6px rgba(255, 215, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-222.reverse-video, .fg-color-222 .cursor {
   background-color: #ffd787 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-223 {
   background-color: #ffd7af;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-223.reverse-video, .bg-color-223 .cursor {
   color: #ffd7af !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-223 {
   color: #ffd7af;
   text-shadow: 0 0 6px rgba(255, 215, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-223.reverse-video, .fg-color-223 .cursor {
   background-color: #ffd7af !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-224 {
   background-color: #ffd7d7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-224.reverse-video, .bg-color-224 .cursor {
   color: #ffd7d7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-224 {
   color: #ffd7d7;
   text-shadow: 0 0 6px rgba(255, 215, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-224.reverse-video, .fg-color-224 .cursor {
   background-color: #ffd7d7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-225 {
   background-color: #ffd7ff;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-225.reverse-video, .bg-color-225 .cursor {
   color: #ffd7ff !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-225 {
   color: #ffd7ff;
   text-shadow: 0 0 6px rgba(255, 215, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-225.reverse-video, .fg-color-225 .cursor {
   background-color: #ffd7ff !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-226 {
   background-color: yellow;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-226.reverse-video, .bg-color-226 .cursor {
   color: yellow !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-226 {
   color: yellow;
   text-shadow: 0 0 6px rgba(255, 255, 0, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-226.reverse-video, .fg-color-226 .cursor {
   background-color: yellow !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-227 {
   background-color: #ffff5f;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-227.reverse-video, .bg-color-227 .cursor {
   color: #ffff5f !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-227 {
   color: #ffff5f;
   text-shadow: 0 0 6px rgba(255, 255, 95, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-227.reverse-video, .fg-color-227 .cursor {
   background-color: #ffff5f !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-228 {
   background-color: #ffff87;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-228.reverse-video, .bg-color-228 .cursor {
   color: #ffff87 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-228 {
   color: #ffff87;
   text-shadow: 0 0 6px rgba(255, 255, 135, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-228.reverse-video, .fg-color-228 .cursor {
   background-color: #ffff87 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-229 {
   background-color: #ffffaf;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-229.reverse-video, .bg-color-229 .cursor {
   color: #ffffaf !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-229 {
   color: #ffffaf;
   text-shadow: 0 0 6px rgba(255, 255, 175, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-229.reverse-video, .fg-color-229 .cursor {
   background-color: #ffffaf !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-230 {
   background-color: #ffffd7;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-230.reverse-video, .bg-color-230 .cursor {
   color: #ffffd7 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-230 {
   color: #ffffd7;
   text-shadow: 0 0 6px rgba(255, 255, 215, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-230.reverse-video, .fg-color-230 .cursor {
   background-color: #ffffd7 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-231 {
   background-color: white;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-231.reverse-video, .bg-color-231 .cursor {
   color: white !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-231 {
   color: white;
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-231.reverse-video, .fg-color-231 .cursor {
   background-color: white !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-232 {
   background-color: #080808;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-232.reverse-video, .bg-color-232 .cursor {
   color: #080808 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-232 {
   color: #080808;
   text-shadow: 0 0 6px rgba(8, 8, 8, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-232.reverse-video, .fg-color-232 .cursor {
   background-color: #080808 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-233 {
   background-color: #121212;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-233.reverse-video, .bg-color-233 .cursor {
   color: #121212 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-233 {
   color: #121212;
   text-shadow: 0 0 6px rgba(18, 18, 18, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-233.reverse-video, .fg-color-233 .cursor {
   background-color: #121212 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-234 {
   background-color: #1c1c1c;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-234.reverse-video, .bg-color-234 .cursor {
   color: #1c1c1c !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-234 {
   color: #1c1c1c;
   text-shadow: 0 0 6px rgba(28, 28, 28, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-234.reverse-video, .fg-color-234 .cursor {
   background-color: #1c1c1c !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-235 {
   background-color: #262626;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-235.reverse-video, .bg-color-235 .cursor {
   color: #262626 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-235 {
   color: #262626;
   text-shadow: 0 0 6px rgba(38, 38, 38, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-235.reverse-video, .fg-color-235 .cursor {
   background-color: #262626 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-236 {
   background-color: #303030;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-236.reverse-video, .bg-color-236 .cursor {
   color: #303030 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-236 {
   color: #303030;
   text-shadow: 0 0 6px rgba(48, 48, 48, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-236.reverse-video, .fg-color-236 .cursor {
   background-color: #303030 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-237 {
   background-color: #3a3a3a;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-237.reverse-video, .bg-color-237 .cursor {
   color: #3a3a3a !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-237 {
   color: #3a3a3a;
   text-shadow: 0 0 6px rgba(58, 58, 58, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-237.reverse-video, .fg-color-237 .cursor {
   background-color: #3a3a3a !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-238 {
   background-color: #444444;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-238.reverse-video, .bg-color-238 .cursor {
   color: #444444 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-238 {
   color: #444444;
   text-shadow: 0 0 6px rgba(68, 68, 68, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-238.reverse-video, .fg-color-238 .cursor {
   background-color: #444444 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-239 {
   background-color: #4e4e4e;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-239.reverse-video, .bg-color-239 .cursor {
   color: #4e4e4e !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-239 {
   color: #4e4e4e;
   text-shadow: 0 0 6px rgba(78, 78, 78, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-239.reverse-video, .fg-color-239 .cursor {
   background-color: #4e4e4e !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-240 {
   background-color: #585858;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-240.reverse-video, .bg-color-240 .cursor {
   color: #585858 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-240 {
   color: #585858;
   text-shadow: 0 0 6px rgba(88, 88, 88, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-240.reverse-video, .fg-color-240 .cursor {
   background-color: #585858 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-241 {
   background-color: #626262;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-241.reverse-video, .bg-color-241 .cursor {
   color: #626262 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-241 {
   color: #626262;
   text-shadow: 0 0 6px rgba(98, 98, 98, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-241.reverse-video, .fg-color-241 .cursor {
   background-color: #626262 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-242 {
   background-color: #6c6c6c;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-242.reverse-video, .bg-color-242 .cursor {
   color: #6c6c6c !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-242 {
   color: #6c6c6c;
   text-shadow: 0 0 6px rgba(108, 108, 108, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-242.reverse-video, .fg-color-242 .cursor {
   background-color: #6c6c6c !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-243 {
   background-color: #767676;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-243.reverse-video, .bg-color-243 .cursor {
   color: #767676 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-243 {
   color: #767676;
   text-shadow: 0 0 6px rgba(118, 118, 118, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-243.reverse-video, .fg-color-243 .cursor {
   background-color: #767676 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-244 {
   background-color: gray;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-244.reverse-video, .bg-color-244 .cursor {
   color: gray !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-244 {
   color: gray;
   text-shadow: 0 0 6px rgba(128, 128, 128, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-244.reverse-video, .fg-color-244 .cursor {
   background-color: gray !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-245 {
   background-color: #8a8a8a;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-245.reverse-video, .bg-color-245 .cursor {
   color: #8a8a8a !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-245 {
   color: #8a8a8a;
   text-shadow: 0 0 6px rgba(138, 138, 138, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-245.reverse-video, .fg-color-245 .cursor {
   background-color: #8a8a8a !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-246 {
   background-color: #949494;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-246.reverse-video, .bg-color-246 .cursor {
   color: #949494 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-246 {
   color: #949494;
   text-shadow: 0 0 6px rgba(148, 148, 148, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-246.reverse-video, .fg-color-246 .cursor {
   background-color: #949494 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-247 {
   background-color: #9e9e9e;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-247.reverse-video, .bg-color-247 .cursor {
   color: #9e9e9e !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-247 {
   color: #9e9e9e;
   text-shadow: 0 0 6px rgba(158, 158, 158, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-247.reverse-video, .fg-color-247 .cursor {
   background-color: #9e9e9e !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-248 {
   background-color: #a8a8a8;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-248.reverse-video, .bg-color-248 .cursor {
   color: #a8a8a8 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-248 {
   color: #a8a8a8;
   text-shadow: 0 0 6px rgba(168, 168, 168, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-248.reverse-video, .fg-color-248 .cursor {
   background-color: #a8a8a8 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-249 {
   background-color: #b2b2b2;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-249.reverse-video, .bg-color-249 .cursor {
   color: #b2b2b2 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-249 {
   color: #b2b2b2;
   text-shadow: 0 0 6px rgba(178, 178, 178, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-249.reverse-video, .fg-color-249 .cursor {
   background-color: #b2b2b2 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-250 {
   background-color: #bcbcbc;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-250.reverse-video, .bg-color-250 .cursor {
   color: #bcbcbc !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-250 {
   color: #bcbcbc;
   text-shadow: 0 0 6px rgba(188, 188, 188, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-250.reverse-video, .fg-color-250 .cursor {
   background-color: #bcbcbc !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-251 {
   background-color: #c6c6c6;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-251.reverse-video, .bg-color-251 .cursor {
   color: #c6c6c6 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-251 {
   color: #c6c6c6;
   text-shadow: 0 0 6px rgba(198, 198, 198, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-251.reverse-video, .fg-color-251 .cursor {
   background-color: #c6c6c6 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-252 {
   background-color: #d0d0d0;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-252.reverse-video, .bg-color-252 .cursor {
   color: #d0d0d0 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-252 {
   color: #d0d0d0;
   text-shadow: 0 0 6px rgba(208, 208, 208, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-252.reverse-video, .fg-color-252 .cursor {
   background-color: #d0d0d0 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-253 {
   background-color: #dadada;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-253.reverse-video, .bg-color-253 .cursor {
   color: #dadada !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-253 {
   color: #dadada;
   text-shadow: 0 0 6px rgba(218, 218, 218, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-253.reverse-video, .fg-color-253 .cursor {
   background-color: #dadada !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-254 {
   background-color: #e4e4e4;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-254.reverse-video, .bg-color-254 .cursor {
   color: #e4e4e4 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-254 {
   color: #e4e4e4;
   text-shadow: 0 0 6px rgba(228, 228, 228, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-254.reverse-video, .fg-color-254 .cursor {
   background-color: #e4e4e4 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-255 {
   background-color: #eeeeee;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-255.reverse-video, .bg-color-255 .cursor {
   color: #eeeeee !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-255 {
   color: #eeeeee;
   text-shadow: 0 0 6px rgba(238, 238, 238, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-255.reverse-video, .fg-color-255 .cursor {
   background-color: #eeeeee !important;
 }
 
 /* ?? */
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-256 {
   background-color: #110f13;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-256.reverse-video, .bg-color-256 .cursor {
   color: #110f13 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-256 {
   color: #110f13;
   text-shadow: 0 0 6px rgba(17, 15, 19, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-256.reverse-video, .fg-color-256 .cursor {
   background-color: #110f13 !important;
 }
 
-/* line 49, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bg-color-257 {
   background-color: #f4ead5;
 }
-/* line 51, ../sass/main.sass */
+/* line 70, ../sass/main.sass */
 .bg-color-257.reverse-video, .bg-color-257 .cursor {
   color: #f4ead5 !important;
 }
 
-/* line 54, ../sass/main.sass */
+/* line 73, ../sass/main.sass */
 .fg-color-257 {
   color: #f4ead5;
   text-shadow: 0 0 6px rgba(244, 234, 213, 0.5);
 }
-/* line 56, ../sass/main.sass */
+/* line 75, ../sass/main.sass */
 .fg-color-257.reverse-video, .fg-color-257 .cursor {
   background-color: #f4ead5 !important;
 }

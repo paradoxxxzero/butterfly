@@ -19,7 +19,7 @@ tornado.options.parse_command_line()
 
 from logging import getLogger
 for logger in ('tornado.access', 'tornado.application',
-              'tornado.general', 'wsterm'):
+               'tornado.general', 'wsterm'):
     getLogger(logger).setLevel(10 if tornado.options.options.debug else 30)
 
 log = getLogger('wsterm')

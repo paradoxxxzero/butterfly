@@ -1,35 +1,25 @@
 import pty
 import os
 import io
-import sys
 import struct
 import fcntl
-import mimetypes
 import termios
 import tornado.websocket
 import tornado.process
 import tornado.ioloop
-from subprocess import Popen
+import tornado.options
 from app import url, Route
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
 
-@url(r'/')
+@url(r'/(?:(wd/.+))?')
 class Index(Route):
-    def get(self):
+    def get(self, path):
         return self.render('index.html')
 
 
-@url(r'/file/(.+)')
-class File(Route):
-    def get(self, file):
-        self.add_header('Content-Type', mimetypes.guess_type(file)[0])
-        with open(file, 'rb') as fd:
-            self.write(fd.read())
-
-
-@url(r'/ws')
+@url(r'/ws(?:(/.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def pty(self):
@@ -44,13 +34,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "wsterm"
             command = os.getenv('SHELL')
+            env["LOCATION"] = "http://%s:%d/" % (
+                tornado.options.options.host, tornado.options.options.port)
+            env["WSTERMDIR"] = os.getcwd()
+
             env["SHELL"] = command
             env["PATH"] = "%s:%s" % (
                 os.path.abspath(os.path.join(
                     os.path.dirname(__file__), '..', 'bin')), env["PATH"])
-            p = Popen(command, env=env)
-            p.wait()
-            sys.exit(0)
+            os.chdir(self.path or os.path.expanduser("~"))
+            os.execvpe(command, [''], env)
         else:
             self.log.debug('Adding handler')
             fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
@@ -76,9 +69,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             )
             ioloop.add_handler(self.fd, self.shell, ioloop.READ | ioloop.ERROR)
 
-    def open(self):
+    def open(self, path):
         self.log.info('Websocket opened')
         self.set_nodelay(True)
+        self.path = path
         self.pty()
 
     def on_message(self, message):
@@ -108,14 +102,24 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
         if events & ioloop.ERROR:
             self.log.info('Closing due to ioloop fd handler error')
+            ioloop.remove_handler(self.fd)
             # Terminated
             self.close()
 
     def on_close(self):
         if self.pid == 0:
             return
-        self.writer.write('')
-        self.writer.flush()
-        os.close(self.fd)
-        os.waitpid(self.pid, 0)
+        try:
+            self.writer.write('')
+            self.writer.flush()
+        except OSError:
+            pass
+        try:
+            os.close(self.fd)
+        except OSError:
+            pass
+        try:
+            os.waitpid(self.pid, 0)
+        except OSError:
+            pass
         self.log.info('Websocket closed')

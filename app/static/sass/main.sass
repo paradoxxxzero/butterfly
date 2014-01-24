@@ -1,3 +1,13 @@
+@import compass/css3
+
++font-face("SourceCodePro", font-files("SourceCodePro-ExtraLight.otf"), "", 100, normal)
++font-face("SourceCodePro", font-files("SourceCodePro-Light.otf"), "", 300, normal)
++font-face("SourceCodePro", font-files("SourceCodePro-Regular.otf"), "", 400, normal)
++font-face("SourceCodePro", font-files("SourceCodePro-Medium.otf"), "", 500, normal)
++font-face("SourceCodePro", font-files("SourceCodePro-Semibold.otf"), "", 600, normal)
++font-face("SourceCodePro", font-files("SourceCodePro-Bold.otf"), "", 700, normal)
++font-face("SourceCodePro", font-files("SourceCodePro-Black.otf"), "", 900, normal)
+
 $bg: #110f13
 $fg: #f4ead5
 
@@ -7,26 +17,35 @@ $shadow-alpha: .5
 
 html, body
   height: 100%
+  font-family: "SourceCodePro"
 
 body
-
   main
     display: flex
     height: 100%
     flex-direction: column
     background-color: black
+    overflow: hidden
+    white-space: nowrap
 
     .terminal
-      /* margin: .5em
       flex: 1
-      font-family: 'Droid Sans Mono', monospace
       outline: none
       background-color: $bg
       color: $fg
       text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
 
-.cursor
-  box-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
+::selection
+  background-color: black
+  box-shadow: 0 0 10px inset white
+
+::-moz-selection
+  background-color: black
+  box-shadow: 0 0 10px inset white
+
+
+.cursor.reverse-video
+  box-shadow: 0 0 10px $fg
 
 /* Terminal styles
 .bold
@@ -41,7 +60,7 @@ body
 .invisible
   visibility: hidden
 
-.reverse-video, .cursor
+.reverse-video
   color: $bg
   background-color: $fg
 
