@@ -1,6 +1,0 @@
-wdb
-wsreload
-cutter
-pytest
-selenium
-pyvirtualdisplay
