@@ -9,7 +9,7 @@ import re
 from setuptools import setup
 
 ROOT = os.path.dirname(__file__)
-with open(os.path.join(ROOT, 'app', '__init__.py')) as fd:
+with open(os.path.join(ROOT, 'butterfly', '__init__.py')) as fd:
     __version__ = re.search("__version__ = '([^']+)'", fd.read()).group(1)
 
 options = dict(
@@ -22,12 +22,11 @@ options = dict(
     url="http://github.com/paradoxxxzero/butterfly",
     license="GPLv3",
     platforms="Any",
-    scripts=['butterfly.py'],
-    packages=['app'],
+    scripts=['butterfly.server.py'],
+    packages=['butterfly'],
     install_requires=["tornado"],
-    package_dir={'butterfly': 'app'},
     package_data={
-        'app': [
+        'butterfly': [
             'static/fonts/*',
             'static/stylesheets/main.css',
             'static/javascripts/term.js/src/term.js',
@@ -39,7 +38,7 @@ options = dict(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Operating System :: Linux",
+        "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Topic :: Terminals"])

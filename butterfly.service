@@ -3,7 +3,7 @@ Description=Butterfly Terminal Server
 After=syslog.target
 
 [Service]
-ExecStart=/usr/bin/butterfly.py
+ExecStart=/usr/bin/butterfly.server.py
 Restart=on-abort
 
 [Install]

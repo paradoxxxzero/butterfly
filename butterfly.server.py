@@ -39,7 +39,7 @@ log.debug('Starting server')
 ioloop = tornado.ioloop.IOLoop.instance()
 
 
-from app import application
+from butterfly import application
 application.listen(tornado.options.options.port)
 
 
@@ -54,9 +54,9 @@ except ImportError:
 else:
     sporadic_reload({'url': url})
 
-    files = ['app/static/javascripts/',
-             'app/static/stylesheets/',
-             'app/templates/']
+    files = ['butterfly/static/javascripts/',
+             'butterfly/static/stylesheets/',
+             'butterfly/templates/']
     watch({'url': url}, files, unwatch_at_exit=True)
 
 log.debug('Starting loop')

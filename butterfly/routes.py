@@ -26,7 +26,7 @@ import tornado.websocket
 import tornado.process
 import tornado.ioloop
 import tornado.options
-from app import url, Route
+from butterfly import url, Route
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
@@ -122,16 +122,31 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     @property
     def uid(self):
-        with open('/proc/net/tcp') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == '0100007F:%X' % self.port:
-                # We got the user
-                return int(line.split()[7])
+        try:
+            with open('/proc/net/tcp') as k:
+                lines = k.readlines()
+            for line in lines:
+                # Look for local address with peer port
+                if line.split()[1] == '0100007F:%X' % self.port:
+                    # We got the user
+                    return int(line.split()[7])
+        except:
+            pass
+        try:
+            with open('/proc/net/tcp6') as k:
+                lines = k.readlines()
+            for line in lines:
+                # Look for local address with peer port
+                if line.split()[1] == (
+                        '00000000000000000000000001000000:%X' % self.port):
+                    # We got the user
+                    return int(line.split()[7])
+        except:
+            pass
 
     def open(self, user, path):
-        self.bind, self.port = self.ws_connection.stream.socket.getpeername()
+        self.bind, self.port = (
+            self.ws_connection.stream.socket.getpeername()[:2])
         self.log.info('Websocket opened for %s:%d' % (self.bind, self.port))
         self.set_nodelay(True)
         self.user = user.decode('utf-8') if user else None
