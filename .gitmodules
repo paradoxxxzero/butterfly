@@ -1,6 +1,3 @@
-[submodule "ext/sass-bootstrap"]
-	path = ext/sass-bootstrap
-	url = git@github.com:jlong/sass-bootstrap.git
 [submodule "app/static/javascripts/term.js"]
 	path = app/static/javascripts/term.js
 	url = git@github.com:paradoxxxzero/term.js.git
