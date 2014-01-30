@@ -108,7 +108,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     @property
     def is_local(self):
-        return self.bind == '127.0.0.1'
+        return self.bind in ['127.0.0.1', '::1']
 
     @property
     def pw(self):
