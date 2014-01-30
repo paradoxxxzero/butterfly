@@ -1,55 +1,56 @@
 term = ws = null
 cols = rows = null
+$ = document.querySelectorAll.bind(document)
 
-$ ->
-    ws_url = 'ws://' + document.location.host + '/ws'
-    if location.pathname.indexOf('/wd') == 0
-        ws_url += location.pathname.slice 3
-    ws = new WebSocket ws_url
-    ws.onopen = ->
-        console.log "WebSocket open", arguments
-        term = new Terminal(
-            visualBell: 100
-            screenKeys: true
-            scrollback: -1
-        )
-        term.on "data", (data) ->
-            ws.send 'SH|' + data
+ws_url = 'ws://' + document.location.host + '/ws' + location.pathname
+ws = new WebSocket ws_url
+ws.onopen = ->
+    console.log "WebSocket open", arguments
+    term = new Terminal(
+        visualBell: 100
+        screenKeys: true
+        scrollback: -1
+    )
+    term.on "data", (data) ->
+        ws.send 'SH|' + data
 
-        term.on "title", (title) ->
-          document.title = title
+    term.on "title", (title) ->
+      document.title = title
 
-        term.open $('main').get(0)
-        $('.terminal').attr('style', '')
-        $(window).trigger 'resize'
+    term.open $('main')[0]
+    $('.terminal')[0].style = ''
+    resize()
 
 
-    ws.onclose = ->
-        if term
-            term.destroy()
-        console.log "WebSocket closed", arguments
-        open('','_self').close()
+ws.onclose = ->
+    if term
+        term.destroy()
+    console.log "WebSocket closed", arguments
+    open('','_self').close()
 
-    ws.onerror = -> console.log "WebSocket error", arguments
-    ws.onmessage = (event) ->
-        # setTimeout (term.write event.data), 1
-        term.write event.data
+ws.onerror = -> console.log "WebSocket error", arguments
+ws.onmessage = (event) ->
+    term.write event.data
 
-    $(window).resize ->
-        $main = $('main')
-        $termtest = $('<div>').addClass('terminal')
-        $test = $('<div>').text('0123456789')
-        $termtest.append($test)
+addEventListener 'resize', resize =  ->
+    main = $('main')[0]
+    fake_term = document.createElement('div')
+    fake_term.className = 'terminal test'
+    fake_term_div = document.createElement('div')
+    fake_term_line = document.createElement('span')
+    fake_term_line.textContent = '0123456789'
+    fake_term_div.appendChild(fake_term_line)
+    fake_term.appendChild(fake_term_div)
+    main.appendChild(fake_term)
 
-        $main.append($termtest)
-        eh = $test.outerHeight()
-        $test.css(display: 'inline')
-        ew = $test.outerWidth() / 10
-        $termtest.remove()
-        w = $main.outerWidth()
-        h = $main.outerHeight()
-        cols = Math.floor(w / ew) - 1
-        rows = Math.floor(h / eh)
-        console.log "Computed #{cols} cols and #{rows} rows from main size #{w}, #{h} and div #{ew}, #{eh}"
-        term.resize cols, rows
-        ws.send "RS|#{cols},#{rows}"
+    ew = fake_term_line.getBoundingClientRect().width
+    eh = fake_term_div.getBoundingClientRect().height
+    main.removeChild(fake_term)
+
+    main_bb = main.getBoundingClientRect()
+    cols = Math.floor(10 * main_bb.width / ew) - 1
+    rows = Math.floor(main_bb.height / eh)
+
+    console.log "Computed #{cols} cols and #{rows} rows from ", main_bb, ew, eh
+    term.resize cols, rows
+    ws.send "RS|#{cols},#{rows}"

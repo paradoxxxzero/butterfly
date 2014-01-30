@@ -1,0 +1,10 @@
+[Unit]
+Description=Butterfly Terminal Server
+After=syslog.target
+
+[Service]
+ExecStart=/usr/bin/butterfly.py
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

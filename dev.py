@@ -10,7 +10,7 @@ commands = [
     'coffee -wcb -j app/static/javascripts/main.js ' +
     ' '.join(glob('app/static/coffees/*.coffee')),
     'compass watch app/static',
-    'python serve.py ' + ' '.join(sys.argv[1:])
+    'python butterfly.py ' + ' '.join(sys.argv[1:])
 ]
 
 
