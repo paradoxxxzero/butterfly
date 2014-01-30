@@ -49,19 +49,38 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             except:
                 pass
 
-            env = {}
+            if not self.is_local and not self.user:
+                while self.user is None:
+                    user = input('%s login:' % self.bind)
+                    try:
+                        pwd.getpwnam(user)
+                    except:
+                        self.user = None
+                        print('User %s not found' % user)
+                    else:
+                        self.user = user
+            try:
+                os.chdir(self.path or self.pw.pw_dir)
+            except:
+                pass
+
+            env = os.environ
+            if self.is_local:
+                try:
+                    env = self.socket_opener_environ
+                except:
+                    pass
+            # Ugly hack for most people
+            # env["DISPLAY"] = env.get("DISPLAY", ":0")
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "butterfly"
             env["LOCATION"] = "http://%s:%d/" % (
                 tornado.options.options.host, tornado.options.options.port)
             env["BUTTERFLY_DIR"] = os.getcwd()
             env["SHELL"] = self.pw.pw_shell or '/bin/sh'
-            # env["PATH"] = os.path.abspath(os.path.join(
-                # os.path.dirname(__file__), '..', 'bin'))
-            try:
-                os.chdir(self.path or self.pw.pw_dir)
-            except:
-                pass
+            env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
+                os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
+
             shell = tornado.options.options.command or self.pw.pw_shell
             args = ['-i', '-l']
 
@@ -73,8 +92,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             if not (self.is_local and os.getuid() == 0 and
                     self.uid == self.pw.pw_uid):
                 # If user is not the same, get a password prompt
-                os.setuid(self.uid)
+                # (setuid to daemon user before su)
+                os.setuid(2)
 
+            args = ['p']
             if tornado.options.options.command:
                 args.append('-s')
                 args.append('%s' % tornado.options.options.command)
@@ -117,19 +138,61 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
         if self.uid and self.is_local:
             return pwd.getpwuid(self.uid)
-        # ?? Returning first user
-        return pwd.getpwuid(1000)
 
     @property
     def uid(self):
+        try:
+            return int(self.socket_line[7])
+        except:
+            pass
+
+    @property
+    def socket_opener(self):
+        inode = self.socket_line[9]
+        for pid in os.listdir("/proc/"):
+            if not pid.isdigit():
+                continue
+            for fd in os.listdir("/proc/%s/fd/" % pid):
+                lnk = "/proc/%s/fd/%s" % (pid, fd)
+                if not os.path.islink(lnk):
+                    continue
+                if 'socket:[%s]' % inode == os.readlink(lnk):
+                    return pid
+
+    @property
+    def socket_opener_parent(self):
+        opener = self.socket_opener
+        if opener is None:
+            return
+        # Get parent pid
+        with open('/proc/%s/status' % opener) as s:
+            for line in s.readlines():
+                if line.startswith('PPid:'):
+                    return line[len('PPid:'):].strip()
+
+    @property
+    def socket_opener_environ(self):
+        parent = self.socket_opener_parent
+        if parent is None:
+            return
+        with open('/proc/%s/environ' % parent) as e:
+            keyvals = e.read().split('\x00')
+            env = {}
+            for keyval in keyvals:
+                key, val = keyval.split('=', 1)
+                env[key] = val
+            return env
+
+    @property
+    def socket_line(self):
         try:
             with open('/proc/net/tcp') as k:
                 lines = k.readlines()
             for line in lines:
                 # Look for local address with peer port
                 if line.split()[1] == '0100007F:%X' % self.port:
-                    # We got the user
-                    return int(line.split()[7])
+                    # We got the socket
+                    return line.split()
         except:
             pass
         try:
@@ -139,8 +202,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 # Look for local address with peer port
                 if line.split()[1] == (
                         '00000000000000000000000001000000:%X' % self.port):
-                    # We got the user
-                    return int(line.split()[7])
+                    # We got the socket
+                    return line.split()
         except:
             pass
 
