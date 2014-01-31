@@ -29,12 +29,13 @@ tornado.options.define("command", help="Command to execute at login")
 tornado.options.parse_command_line()
 
 
-from logging import getLogger
+import logging
 for logger in ('tornado.access', 'tornado.application',
                'tornado.general', 'butterfly'):
-    getLogger(logger).setLevel(10 if tornado.options.options.debug else 30)
+    logging.getLogger(logger).setLevel(
+        logging.DEBUG if tornado.options.options.debug else logging.WARNING)
 
-log = getLogger('butterfly')
+log = logging.getLogger('butterfly')
 log.debug('Starting server')
 ioloop = tornado.ioloop.IOLoop.instance()
 

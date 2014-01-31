@@ -47,7 +47,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 os.closerange(3, 256)
             except:
-                pass
+                self.log.error('closerange failed', exc_info=True)
 
             if not self.is_local and not self.user:
                 while self.user is None:
@@ -62,16 +62,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 os.chdir(self.path or self.pw.pw_dir)
             except:
-                pass
+                self.log.warning('chdir failed', exc_info=True)
 
             env = os.environ
             if self.is_local:
                 try:
                     env = self.socket_opener_environ
                 except:
-                    pass
-            # Ugly hack for most people
-            # env["DISPLAY"] = env.get("DISPLAY", ":0")
+                    self.log.warning('getting local environment failed',
+                                     exc_info=True)
+
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "butterfly"
             env["LOCATION"] = "http://%s:%d/" % (
@@ -82,7 +82,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
 
             shell = tornado.options.options.command or self.pw.pw_shell
-            args = ['-i', '-l']
+            args = ['butterfly', '-i', '-l']
 
             # All users are the same -> launch shell
             if self.is_local and (
@@ -95,7 +95,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 # (setuid to daemon user before su)
                 os.setuid(2)
 
-            args = ['p']
+            args = ['butterfly', '-p']
             if tornado.options.options.command:
                 args.append('-s')
                 args.append('%s' % tornado.options.options.command)
@@ -144,7 +144,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         try:
             return int(self.socket_line[7])
         except:
-            pass
+            self.log.error('getting socket uid fail', exc_info=True)
 
     @property
     def socket_opener(self):
@@ -179,8 +179,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             keyvals = e.read().split('\x00')
             env = {}
             for keyval in keyvals:
-                key, val = keyval.split('=', 1)
-                env[key] = val
+                if '=' in keyval:
+                    key, val = keyval.split('=', 1)
+                    env[key] = val
             return env
 
     @property
@@ -194,7 +195,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     # We got the socket
                     return line.split()
         except:
-            pass
+            self.log.error('getting socket inet4 line fail', exc_info=True)
+
         try:
             with open('/proc/net/tcp6') as k:
                 lines = k.readlines()
@@ -205,7 +207,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     # We got the socket
                     return line.split()
         except:
-            pass
+            self.log.error('getting socket inet6 line fail', exc_info=True)
 
     def open(self, user, path):
         self.bind, self.port = (
@@ -244,23 +246,26 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if events & ioloop.ERROR:
             self.log.info('Closing due to ioloop fd handler error')
             ioloop.remove_handler(self.fd)
+
             # Terminated
+            self.on_close()
             self.close()
 
     def on_close(self):
         if self.pid == 0:
+            self.log.warning('pid is 0')
             return
         try:
             self.writer.write('')
             self.writer.flush()
         except OSError:
-            pass
+            self.log.warning('closing term fail', exc_info=True)
         try:
             os.close(self.fd)
         except OSError:
-            pass
+            self.log.warning('closing fd fail', exc_info=True)
         try:
             os.waitpid(self.pid, 0)
         except OSError:
-            pass
+            self.log.warning('waitpid fail', exc_info=True)
         self.log.info('Websocket closed')
