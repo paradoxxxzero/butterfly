@@ -59,6 +59,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                         print('User %s not found' % user)
                     else:
                         self.user = user
+
+            butterfly_dir = os.getcwd()
             try:
                 os.chdir(self.path or self.pw.pw_dir)
             except:
@@ -76,7 +78,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             env["COLORTERM"] = "butterfly"
             env["LOCATION"] = "http://%s:%d/" % (
                 tornado.options.options.host, tornado.options.options.port)
-            env["BUTTERFLY_DIR"] = os.getcwd()
+            env["BUTTERFLY_DIR"] = butterfly_dir
             env["SHELL"] = self.pw.pw_shell or '/bin/sh'
             env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
                 os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))

@@ -1,5 +1,6 @@
 term = ws = null
 cols = rows = null
+quit = false
 $ = document.querySelectorAll.bind(document)
 
 ws_url = 'ws://' + document.location.host + '/ws' + location.pathname
@@ -26,11 +27,16 @@ ws.onclose = ->
     if term
         term.destroy()
     console.log "WebSocket closed", arguments
+    quit = true
     open('','_self').close()
 
 ws.onerror = -> console.log "WebSocket error", arguments
 ws.onmessage = (event) ->
     term.write event.data
+
+addEventListener 'beforeunload', ->
+    if not quit
+        'This will exit the terminal session'
 
 addEventListener 'resize', resize =  ->
     main = $('main')[0]
