@@ -65,7 +65,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 self.log.warning('chdir failed', exc_info=True)
 
             env = os.environ
-            if self.is_local:
+            if self.is_local and os.getuid() == 0:
                 try:
                     env = self.socket_opener_environ
                 except:
