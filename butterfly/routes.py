@@ -64,15 +64,15 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 os.chdir(self.path or self.pw.pw_dir)
             except:
-                self.log.warning('chdir failed', exc_info=True)
+                pass
 
             env = os.environ
             if self.is_local and os.getuid() == 0:
                 try:
                     env = self.socket_opener_environ
                 except:
-                    self.log.warning('getting local environment failed',
-                                     exc_info=True)
+                    pass
+
 
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "butterfly"
@@ -95,7 +95,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     self.uid == self.pw.pw_uid):
                 # If user is not the same, get a password prompt
                 # (setuid to daemon user before su)
-                os.setuid(2)
+                try:
+                    os.setuid(2)
+                except PermissionError:
+                    pass
 
             args = ['butterfly', '-p']
             if tornado.options.options.command:
