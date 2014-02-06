@@ -38,8 +38,16 @@ body
       color: $fg
       text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
       transition: 50ms
+
       &.bell
         -webkit-filter: blur(2px)
+
+      div
+        overflow: visible
+
+        .inline-html
+          white-space: normal
+
 
 .focus .cursor
   transition: 300ms

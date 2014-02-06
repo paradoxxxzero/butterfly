@@ -9,7 +9,6 @@ import io
 print('\x1b]99;')
 
 out = ''
-i = 0
 
 for f in os.listdir(os.getcwd()):
     mime = mimetypes.guess_type(f)[0]
@@ -24,9 +23,6 @@ for f in os.listdir(os.getcwd()):
                 mime,
                 base64.b64encode(buf.read()).decode('ascii'),
                 f)
-            i += 1
-            if i % 5 == 0:
-                out += '\n'
         except:
             pass
 

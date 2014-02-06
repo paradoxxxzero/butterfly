@@ -25,13 +25,6 @@ from logging import getLogger
 
 log = getLogger('butterfly')
 
-application = tornado.web.Application(
-    debug=tornado.options.options.debug,
-    cookie_secret=tornado.options.options.secret,
-    static_path=os.path.join(os.path.dirname(__file__), "static"),
-    template_path=os.path.join(os.path.dirname(__file__), "templates")
-)
-
 
 class url(object):
     def __init__(self, url):
@@ -49,6 +42,20 @@ class Route(tornado.web.RequestHandler):
     @property
     def log(self):
         return log
+
+if hasattr(tornado.options.options, 'debug'):
+    opts = dict(
+        debug=tornado.options.options.debug,
+        cookie_secret=tornado.options.options.secret)
+else:
+    opts = {}
+
+
+application = tornado.web.Application(
+    static_path=os.path.join(os.path.dirname(__file__), "static"),
+    template_path=os.path.join(os.path.dirname(__file__), "templates"),
+    **opts
+)
 
 
 import butterfly.routes

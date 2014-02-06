@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import pwd
+
 import pty
 import os
 import io
@@ -26,9 +26,50 @@ import tornado.websocket
 import tornado.process
 import tornado.ioloop
 import tornado.options
-from butterfly import url, Route
+import sys
+from butterfly import url, Route, utils
 
 ioloop = tornado.ioloop.IOLoop.instance()
+
+server = utils.User()
+daemon = utils.User(name='daemon')
+
+
+def motd(socket, caller, callee):
+    return (
+'''
+B                   `         '
+   ;,,,             `       '             ,,,;
+   `Y888888bo.       :     :       .od888888Y'
+     8888888888b.     :   :     .d8888888888      AWelcome to RbutterflyB
+     88888Y'  `Y8b.   `   '   .d8Y'  `Y88888
+    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k     AServer runnging as G%rB
+      `888  RY88YB    `b ( ) d'    RY88YB  888'
+       888b  R'"B        ,',        R"'B  d888        AConnecting to:B
+      j888888bd8gf"'   ':'   `"?g8bd888888k         AHost: G%sB
+        R'Y'B   .8'     d' 'b     '8.   R'Y'X           AUser: G%rB
+         R!B   .8' RdbB  d'; ;`b  RdbB '8.   R!B
+            d88  R`'B  8 ; ; 8  R`'B  88b             AFrom:B
+           d888b   .g8 ',' 8g.   d888b              AHost: G%sB
+          :888888888Y'     'Y888888888:             AUser: G%rB
+          '! 8888888'       `8888888 !'
+             '8Y  R`Y         Y'B  Y8'
+R              Y                   Y
+              !                   !X
+
+'''
+        .replace('B', '\x1b[34;1m')
+        .replace('G', '\x1b[32;1m')
+        .replace('R', '\x1b[37;1m')
+        .replace('A', '\x1b[37;0m')
+        .replace('X', '\x1b[0m')
+        .replace('\n', '\r\n')
+        % (
+            server,
+            '%s:%d' % (socket.remote_addr, socket.remote_port),
+            callee,
+            '%s:%d' % (socket.local_addr, socket.local_port),
+            caller or '?'))
 
 
 @url(r'/(?:user/(.+))?/?(?:wd/(.+))?')
@@ -43,184 +84,121 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     def pty(self):
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
-            # Child
             try:
                 os.closerange(3, 256)
             except:
-                self.log.error('closerange failed', exc_info=True)
-
-            if not self.is_local and not self.user:
-                while self.user is None:
-                    user = input('%s login:' % self.bind)
-                    try:
-                        pwd.getpwnam(user)
-                    except:
-                        self.user = None
-                        print('User %s not found' % user)
-                    else:
-                        self.user = user
-
-            butterfly_dir = os.getcwd()
-            try:
-                os.chdir(self.path or self.pw.pw_dir)
-            except:
                 pass
-
-            env = os.environ
-            if self.is_local and os.getuid() == 0:
-                try:
-                    env = self.socket_opener_environ
-                except:
-                    pass
-
-
-            env["TERM"] = "xterm-256color"
-            env["COLORTERM"] = "butterfly"
-            env["LOCATION"] = "http://%s:%d/" % (
-                tornado.options.options.host, tornado.options.options.port)
-            env["BUTTERFLY_DIR"] = butterfly_dir
-            env["SHELL"] = self.pw.pw_shell or '/bin/sh'
-            env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
-                os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
-
-            shell = tornado.options.options.command or self.pw.pw_shell
-            args = ['butterfly', '-i', '-l']
-
-            # All users are the same -> launch shell
-            if self.is_local and (
-                    self.uid == self.pw.pw_uid and self.uid == os.getuid()):
-                os.execvpe(shell, args, env)
-
-            if not (self.is_local and os.getuid() == 0 and
-                    self.uid == self.pw.pw_uid):
-                # If user is not the same, get a password prompt
-                # (setuid to daemon user before su)
-                try:
-                    os.setuid(2)
-                except PermissionError:
-                    pass
-
-            args = ['butterfly', '-p']
-            if tornado.options.options.command:
-                args.append('-s')
-                args.append('%s' % tornado.options.options.command)
-            args.append(self.pw.pw_name)
-            print('Logging: %s@%s' % (self.pw.pw_name, self.bind))
-            os.execvpe('/bin/su', args, env)
+            self.shell()
         else:
-            self.log.debug('Adding handler')
-            fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
+            self.communicate()
 
-            # Set the size of the terminal window:
-            s = struct.pack("HHHH", 80, 80, 0, 0)
-            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
-
-            def utf8_error(e):
-                self.log.error(e)
-
-            self.reader = io.open(
-                self.fd,
-                'rb',
-                buffering=0,
-                closefd=False
-            )
-            self.writer = io.open(
-                self.fd,
-                'wt',
-                encoding='utf-8',
-                closefd=False
-            )
-            ioloop.add_handler(self.fd, self.shell, ioloop.READ | ioloop.ERROR)
-
-    @property
-    def is_local(self):
-        return self.bind in ['127.0.0.1', '::1']
-
-    @property
-    def pw(self):
-        if self.user:
-            return pwd.getpwnam(self.user)
-
-        if self.uid and self.is_local:
-            return pwd.getpwuid(self.uid)
-
-    @property
-    def uid(self):
-        try:
-            return int(self.socket_line[7])
-        except:
-            self.log.error('getting socket uid fail', exc_info=True)
-
-    @property
-    def socket_opener(self):
-        inode = self.socket_line[9]
-        for pid in os.listdir("/proc/"):
-            if not pid.isdigit():
-                continue
-            for fd in os.listdir("/proc/%s/fd/" % pid):
-                lnk = "/proc/%s/fd/%s" % (pid, fd)
-                if not os.path.islink(lnk):
-                    continue
-                if 'socket:[%s]' % inode == os.readlink(lnk):
-                    return pid
-
-    @property
-    def socket_opener_parent(self):
-        opener = self.socket_opener
-        if opener is None:
-            return
-        # Get parent pid
-        with open('/proc/%s/status' % opener) as s:
-            for line in s.readlines():
-                if line.startswith('PPid:'):
-                    return line[len('PPid:'):].strip()
-
-    @property
-    def socket_opener_environ(self):
-        parent = self.socket_opener_parent
-        if parent is None:
-            return
-        with open('/proc/%s/environ' % parent) as e:
-            keyvals = e.read().split('\x00')
-            env = {}
-            for keyval in keyvals:
-                if '=' in keyval:
-                    key, val = keyval.split('=', 1)
-                    env[key] = val
-            return env
-
-    @property
-    def socket_line(self):
-        try:
-            with open('/proc/net/tcp') as k:
-                lines = k.readlines()
-            for line in lines:
-                # Look for local address with peer port
-                if line.split()[1] == '0100007F:%X' % self.port:
-                    # We got the socket
-                    return line.split()
-        except:
-            self.log.error('getting socket inet4 line fail', exc_info=True)
+    def shell(self):
+        while self.callee is None:
+            user = input('login: ')
+            try:
+                self.callee = utils.User(name=user)
+            except:
+                print('User %s not found' % user)
 
         try:
-            with open('/proc/net/tcp6') as k:
-                lines = k.readlines()
-            for line in lines:
-                # Look for local address with peer port
-                if line.split()[1] == (
-                        '00000000000000000000000001000000:%X' % self.port):
-                    # We got the socket
-                    return line.split()
+            os.chdir(self.path or self.callee.dir)
         except:
-            self.log.error('getting socket inet6 line fail', exc_info=True)
+            pass
+
+        env = os.environ
+        env.update(self.socket.env)
+
+        env["TERM"] = "xterm-256color"
+        env["COLORTERM"] = "butterfly"
+        env["HOME"] = self.callee.dir
+        env["SHELL"] = self.callee.shell
+        env["LOCATION"] = "http://%s:%d/" % (
+            tornado.options.options.host, tornado.options.options.port)
+        env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
+            os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
+        args = ['butterfly']
+
+        if self.socket.local:
+            # All users are the same -> launch shell
+            if self.caller == self.callee and server == self.callee:
+                os.execvpe(
+                    tornado.options.options.shell or self.callee.shell,
+                    args, env)
+                # This process has been replaced
+                return
+
+            if server.root:
+                if self.callee != self.caller:
+                    # Force password prompt by dropping rights
+                    # to the daemon user
+                    os.setuid(daemon.uid)
+        else:
+            # We are not local so we should always get a password prompt
+            if server.root:
+                if self.callee == daemon:
+                    # No logging from daemon
+                    sys.exit(1)
+                os.setuid(daemon.uid)
+
+        args.append('-p')
+        if tornado.options.options.shell:
+            args.append('-s')
+            args.append(tornado.options.options.shell)
+        args.append(self.callee.name)
+        os.execvpe('/bin/su', args, env)
+
+    def communicate(self):
+        self.log.debug('Adding handler')
+        fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
+
+        # Set the size of the terminal window:
+        s = struct.pack("HHHH", 80, 80, 0, 0)
+        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
+
+        def utf8_error(e):
+            self.log.error(e)
+
+        self.reader = io.open(
+            self.fd,
+            'rb',
+            buffering=0,
+            closefd=False
+        )
+        self.writer = io.open(
+            self.fd,
+            'wt',
+            encoding='utf-8',
+            closefd=False
+        )
+        ioloop.add_handler(
+            self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
-        self.bind, self.port = (
-            self.ws_connection.stream.socket.getpeername()[:2])
-        self.log.info('Websocket opened for %s:%d' % (self.bind, self.port))
+        self.socket = utils.Socket(self.ws_connection.stream.socket)
         self.set_nodelay(True)
-        self.user = user.decode('utf-8') if user else None
+        self.log.info('Websocket opened %r' % self.socket)
         self.path = path
+        self.user = user.decode('utf-8') if user else None
+        self.caller = self.callee = None
+        if self.socket.local:
+            self.caller = utils.User(uid=self.socket.uid)
+        else:
+            # We don't know uid is on the other machine
+            pass
+
+        if self.user:
+            try:
+                self.callee = utils.User(name=self.user)
+            except LookupError:
+                print('User %s not found' % self.user)
+                self.callee = None
+
+        # If no user where given and we are local, keep the same user
+        # as the one who opened the socket
+        # ie: the one openning a terminal in borwser
+        if not self.callee and not self.user and self.socket.local:
+            self.callee = self.caller
+        self.write_message(motd(self.socket, self.caller, self.callee))
         self.pty()
 
     def on_message(self, message):
@@ -236,7 +214,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.writer.write(message)
             self.writer.flush()
 
-    def shell(self, fd, events):
+    def shell_handler(self, fd, events):
         if events & ioloop.READ:
             try:
                 read = self.reader.read()

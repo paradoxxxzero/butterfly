@@ -130,7 +130,7 @@ addEventListener('beforeunload', function() {
 });
 
 addEventListener('resize', resize = function() {
-  var eh, ew, fake_term, fake_term_div, fake_term_line, main, main_bb;
+  var div, eh, ew, fake_term, fake_term_div, fake_term_line, main, main_bb, _i, _len, _ref;
   main = $('main')[0];
   fake_term = document.createElement('div');
   fake_term.className = 'terminal test';
@@ -148,5 +148,10 @@ addEventListener('resize', resize = function() {
   rows = Math.floor(main_bb.height / eh);
   console.log("Computed " + cols + " cols and " + rows + " rows from ", main_bb, ew, eh);
   term.resize(cols, rows);
+  _ref = $('.terminal div');
+  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+    div = _ref[_i];
+    div.style.height = eh + 'px';
+  }
   return ws.send("RS|" + cols + "," + rows);
 });

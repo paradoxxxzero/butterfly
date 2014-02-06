@@ -129,4 +129,7 @@ addEventListener 'resize', resize =  ->
 
     console.log "Computed #{cols} cols and #{rows} rows from ", main_bb, ew, eh
     term.resize cols, rows
+    for div in $('.terminal div')
+        div.style.height = eh + 'px'
+
     ws.send "RS|#{cols},#{rows}"

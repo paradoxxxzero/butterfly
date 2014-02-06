@@ -24,7 +24,7 @@ tornado.options.define("secret", default='secret', help="Secret")
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("host", default='127.0.0.1', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
-tornado.options.define("command", help="Command to execute at login")
+tornado.options.define("shell", help="Shell to execute at login")
 
 tornado.options.parse_command_line()
 
