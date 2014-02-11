@@ -216,7 +216,7 @@ Terminal = (function() {
     this.rows = 24;
     this.scrollback = 100000;
     this.visualBell = 100;
-    this.debug = true;
+    this.debug = !true;
     this.convertEol = false;
     this.termName = 'xterm';
     this.cursorBlink = true;
@@ -285,6 +285,15 @@ Terminal = (function() {
     return this.element.classList.remove('focus');
   };
 
+  Terminal.prototype.paste = function(ev) {
+    if (ev.clipboardData) {
+      this.send(ev.clipboardData.getData('text/plain'));
+    } else if (window.clipboardData) {
+      this.send(window.clipboardData.getData('Text'));
+    }
+    return cancel(ev);
+  };
+
   Terminal.prototype.open = function(parent) {
     var div, i, _i, _ref;
     this.parent = parent || this.parent;
@@ -311,7 +320,8 @@ Terminal = (function() {
     addEventListener('keydown', this.keyDown.bind(this));
     addEventListener('keypress', this.keyPress.bind(this));
     addEventListener('focus', this.focus.bind(this));
-    return addEventListener('blur', this.blur.bind(this));
+    addEventListener('blur', this.blur.bind(this));
+    return addEventListener('paste', this.paste.bind(this));
   };
 
   Terminal.prototype.destroy = function() {
@@ -1020,6 +1030,9 @@ Terminal = (function() {
     var key,
       _this = this;
     if (ev.keyCode > 15 && ev.keyCode < 19) {
+      return true;
+    }
+    if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
       return true;
     }
     if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {

@@ -25,7 +25,7 @@ class Terminal
         @rows = 24
         @scrollback = 100000
         @visualBell = 100
-        @debug = true
+        @debug = not true
 
         @convertEol = false
         @termName = 'xterm'
@@ -90,6 +90,13 @@ class Terminal
         @element.classList.add('blur')
         @element.classList.remove('focus')
 
+    paste: (ev) ->
+        if ev.clipboardData
+            @send(ev.clipboardData.getData('text/plain'))
+        else if window.clipboardData
+            @send(window.clipboardData.getData('Text'))
+        cancel(ev)
+
     open: (parent) ->
         @parent = parent or @parent
         throw new Error('Terminal requires a parent element') unless @parent
@@ -124,6 +131,7 @@ class Terminal
         addEventListener('keypress', @keyPress.bind(@))
         addEventListener('focus', @focus.bind(@))
         addEventListener('blur', @blur.bind(@))
+        addEventListener('paste', @paste.bind(@))
 
     destroy: ->
         @readable = false
@@ -886,13 +894,8 @@ class Terminal
         return true if ev.keyCode > 15 and ev.keyCode < 19
 
         # Handle shift insert and ctrl insert copy/paste usefull for typematrix keyboard
-        # TODO
-        # if ev.shiftKey and ev.keyCode is 45
-        #     @emit "paste"
-        #     return true
-        # if ev.ctrlKey and ev.keyCode is 45
-        #     @emit "copy"
-        #     return true
+        if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
+            return true
 
         # Alt-z works as an escape to relay the following keys to the browser.
         # usefull to trigger browser shortcuts, i.e.: Alt+Z F5 to reload
