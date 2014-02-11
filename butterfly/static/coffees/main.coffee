@@ -10,16 +10,7 @@ ws = new WebSocket ws_url
 ws.onopen = ->
     console.log "WebSocket open", arguments
 
-    term = new Terminal(
-        visualBell: 100
-        screenKeys: true
-        scrollback: 100000
-    )
-    term.on "data", (data) ->
-        ws.send 'SH|' + data
-
-    term.on "title", (title) ->
-      document.title = title
+    term = new Terminal (data) -> ws.send 'SH|' + data
 
     term.open $('main')[0]
     $('.terminal')[0].style = ''
