@@ -107,7 +107,7 @@ def get_env(inode):
                                     if '=' in keyval:
                                         key, val = keyval.split('=', 1)
                                         env[key] = val
-                                        return env
+                                return env
 
 
 class Socket(object):
