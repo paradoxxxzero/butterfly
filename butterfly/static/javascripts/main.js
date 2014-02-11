@@ -208,8 +208,6 @@ State = {
 };
 
 Terminal = (function() {
-  var deleteColumns;
-
   function Terminal(out) {
     this.out = out;
     this.cols = 80;
@@ -222,6 +220,7 @@ Terminal = (function() {
     this.cursorBlink = true;
     this.popOnBell = false;
     this.screenKeys = false;
+    this.cursorState = 0;
     this.init();
   }
 
@@ -233,6 +232,7 @@ Terminal = (function() {
     this.y = 0;
     this.cursorHidden = false;
     this.state = State.normal;
+    this.queue = '';
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
     this.applicationKeypad = false;
@@ -288,8 +288,8 @@ Terminal = (function() {
   Terminal.prototype.paste = function(ev) {
     if (ev.clipboardData) {
       this.send(ev.clipboardData.getData('text/plain'));
-    } else if (window.clipboardData) {
-      this.send(window.clipboardData.getData('Text'));
+    } else if (this.context.clipboardData) {
+      this.send(this.context.clipboardData.getData('Text'));
     }
     return cancel(ev);
   };
@@ -321,15 +321,196 @@ Terminal = (function() {
     addEventListener('keypress', this.keyPress.bind(this));
     addEventListener('focus', this.focus.bind(this));
     addEventListener('blur', this.blur.bind(this));
-    return addEventListener('paste', this.paste.bind(this));
+    addEventListener('paste', this.paste.bind(this));
+    return this.initmouse();
+  };
+
+  Terminal.prototype.initmouse = function() {
+    var encode, getButton, getCoords, pressed, sendButton, sendEvent, sendMove,
+      _this = this;
+    pressed = 32;
+    sendButton = function(ev) {
+      var button, pos;
+      button = getButton(ev);
+      pos = getCoords(ev);
+      if (!pos) {
+        return;
+      }
+      sendEvent(button, pos);
+      switch (ev.type) {
+        case "mousedown":
+          return pressed = button;
+        case "mouseup":
+          return pressed = 32;
+      }
+    };
+    sendMove = function(ev) {
+      var button, pos;
+      button = pressed;
+      pos = getCoords(ev);
+      if (!pos) {
+        return;
+      }
+      button += 32;
+      return sendEvent(button, pos);
+    };
+    encode = function(data, ch) {
+      if (!_this.utfMouse) {
+        if (ch === 255) {
+          return data.push(0);
+        }
+        if (ch > 127) {
+          ch = 127;
+        }
+        return data.push(ch);
+      } else {
+        if (ch === 2047) {
+          return data.push(0);
+        }
+        if (ch < 127) {
+          return data.push(ch);
+        } else {
+          if (ch > 2047) {
+            ch = 2047;
+          }
+          data.push(0xC0 | (ch >> 6));
+          return data.push(0x80 | (ch & 0x3F));
+        }
+      }
+    };
+    sendEvent = function(button, pos) {
+      var data;
+      if (_this.urxvtMouse) {
+        pos.x -= 32;
+        pos.y -= 32;
+        pos.x++;
+        pos.y++;
+        _this.send("\u001b[" + button + ";" + pos.x + ";" + pos.y + "M");
+        return;
+      }
+      if (_this.sgrMouse) {
+        pos.x -= 32;
+        pos.y -= 32;
+        _this.send("\u001b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
+        return;
+      }
+      data = [];
+      encode(data, button);
+      encode(data, pos.x);
+      encode(data, pos.y);
+      return _this.send("\u001b[M" + String.fromCharCode.apply(String, data));
+    };
+    getButton = function(ev) {
+      var button, meta, mod, shift;
+      switch (ev.type) {
+        case "mousedown":
+          button = ev.button != null ? +ev.button : (ev.which != null ? ev.which - 1 : null);
+          break;
+        case "mouseup":
+          button = 3;
+          break;
+        case "wheel":
+          button = ev.deltaY < 0 ? 64 : 65;
+      }
+      shift = ev.shiftKey ? 4 : 0;
+      meta = ev.metaKey ? 8 : 0;
+      ctrl = ev.ctrlKey ? 16 : 0;
+      mod = shift | meta | ctrl;
+      if (_this.vt200Mouse) {
+        mod &= ctrl;
+      } else {
+        if (!_this.normalMouse) {
+          mod = 0;
+        }
+      }
+      return (32 + (mod << 2)) + button;
+    };
+    getCoords = function(ev) {
+      var el, h, w, x, y;
+      x = ev.pageX;
+      y = ev.pageY;
+      el = _this.element;
+      while (el && el !== _this.document.documentElement) {
+        x -= el.offsetLeft;
+        y -= el.offsetTop;
+        el = "offsetParent" in el ? el.offsetParent : el.parentNode;
+      }
+      w = _this.element.clientWidth;
+      h = _this.element.clientHeight;
+      x = Math.ceil((x / w) * _this.cols);
+      y = Math.ceil((y / h) * _this.rows);
+      if (x < 0) {
+        x = 0;
+      }
+      if (x > _this.cols) {
+        x = _this.cols;
+      }
+      if (y < 0) {
+        y = 0;
+      }
+      if (y > _this.rows) {
+        y = _this.rows;
+      }
+      x += 32;
+      y += 32;
+      return {
+        x: x,
+        y: y,
+        type: ev.type
+      };
+    };
+    addEventListener("mousedown", function(ev) {
+      var up;
+      if (!_this.mouseEvents) {
+        return;
+      }
+      sendButton(ev);
+      if (_this.vt200Mouse) {
+        sendButton({
+          __proto__: ev,
+          type: "mouseup"
+        });
+        return cancel(ev);
+      }
+      if (_this.normalMouse) {
+        addEventListener("mousemove", sendMove.bind(_this));
+      }
+      if (!_this.x10Mouse) {
+        addEventListener("mouseup", up = function(ev) {
+          sendButton(ev);
+          if (_this.normalMouse) {
+            removeEventListener("mousemove", sendMove);
+          }
+          removeEventListener("mouseup", up);
+          return cancel(ev);
+        });
+      }
+      return cancel(ev);
+    });
+    return addEventListener("wheel", function(ev) {
+      if (_this.mouseEvents) {
+        if (_this.x10Mouse || _this.vt300Mouse || _this.decLocator) {
+          return;
+        }
+        sendButton(ev);
+      } else {
+        if (_this.applicationKeypad) {
+          return;
+        }
+        _this.scrollDisp(ev.deltaY);
+      }
+      return cancel(ev);
+    });
   };
 
   Terminal.prototype.destroy = function() {
     var _ref;
     this.readable = false;
     this.writable = false;
-    this.write = function() {};
-    return (_ref = this.element.parentNode) != null ? _ref.removeChild(this.element) : void 0;
+    if ((_ref = this.element.parentNode) != null) {
+      _ref.removeChild(this.element);
+    }
+    return this.write = function() {};
   };
 
   Terminal.prototype.refresh = function(start, end) {
@@ -1322,11 +1503,11 @@ Terminal = (function() {
     if (!this.debug) {
       return;
     }
-    if (!window.console || !window.console.log) {
+    if (!this.context.console || !this.context.console.log) {
       return;
     }
     args = Array.prototype.slice.call(arguments);
-    return window.console.log.apply(window.console, args);
+    return this.context.console.log.apply(this.context.console, args);
   };
 
   Terminal.prototype.error = function() {
@@ -1334,11 +1515,11 @@ Terminal = (function() {
     if (!this.debug) {
       return;
     }
-    if (!window.console || !window.console.error) {
+    if (!this.context.console || !this.context.console.error) {
       return;
     }
     args = Array.prototype.slice.call(arguments);
-    return window.console.error.apply(window.console, args);
+    return this.context.console.error.apply(this.console.console, args);
   };
 
   Terminal.prototype.resize = function(x, y) {
@@ -2372,7 +2553,7 @@ Terminal = (function() {
     return this.maxRange();
   };
 
-  deleteColumns = function() {
+  Terminal.prototype.deleteColumns = function() {
     var ch, i, l, param;
     param = params[0];
     l = this.ybase + this.rows;

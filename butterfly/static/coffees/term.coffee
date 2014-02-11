@@ -32,7 +32,7 @@ class Terminal
         @cursorBlink = true
         @popOnBell = false
         @screenKeys = false
-
+        @cursorState = 0
         @init()
 
     init: ->
@@ -42,6 +42,7 @@ class Terminal
         @y = 0
         @cursorHidden = false
         @state = State.normal
+        @queue = ''
         @scrollTop = 0
         @scrollBottom = @rows - 1
 
@@ -93,8 +94,8 @@ class Terminal
     paste: (ev) ->
         if ev.clipboardData
             @send(ev.clipboardData.getData('text/plain'))
-        else if window.clipboardData
-            @send(window.clipboardData.getData('Text'))
+        else if @context.clipboardData
+            @send(@context.clipboardData.getData('Text'))
         cancel(ev)
 
     open: (parent) ->
@@ -132,13 +133,206 @@ class Terminal
         addEventListener('focus', @focus.bind(@))
         addEventListener('blur', @blur.bind(@))
         addEventListener('paste', @paste.bind(@))
+        @initmouse()
+
+    # XTerm mouse events
+    # http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
+    # To better understand these
+    # the xterm code is very helpful:
+    # Relevant files:
+    #     button.c, charproc.c, misc.c
+    # Relevant functions in xterm/button.c:
+    #     BtnCode, EmitButtonCode, EditorButton, SendMousePosition
+    initmouse: ->
+        pressed = 32
+
+        # mouseup, mousedown, mousewheel
+        # left click: ^[[M 3<^[[M#3<
+        # mousewheel up: ^[[M`3>
+        sendButton = (ev) =>
+            # get the xterm-style button
+            button = getButton(ev)
+
+            # get mouse coordinates
+            pos = getCoords(ev)
+            return unless pos
+            sendEvent button, pos
+            switch ev.type
+                when "mousedown"
+                    pressed = button
+
+                when "mouseup"
+                    # keep it at the left
+                    # button, just in case.
+                    pressed = 32
+
+        # motion example of a left click:
+        # ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
+        sendMove = (ev) =>
+            button = pressed
+            pos = getCoords(ev)
+            return unless pos
+
+            # buttons marked as motions
+            # are incremented by 32
+            button += 32
+            sendEvent button, pos
+
+        # encode button and
+        # position to characters
+        encode = (data, ch) =>
+            unless @utfMouse
+                return data.push(0) if ch is 255
+                ch = 127 if ch > 127
+                data.push ch
+            else
+                return data.push(0) if ch is 2047
+                if ch < 127
+                    data.push ch
+                else
+                    ch = 2047 if ch > 2047
+                    data.push 0xC0 | (ch >> 6)
+                    data.push 0x80 | (ch & 0x3F)
+
+
+        # send a mouse event:
+        # regular/utf8: ^[[M Cb Cx Cy
+        # urxvt: ^[[ Cb ; Cx ; Cy M
+        # sgr: ^[[ Cb ; Cx ; Cy M/m
+        # vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
+        # locator: CSI P e ; P b ; P r ; P c ; P p & w
+        sendEvent = (button, pos) =>
+
+            if @urxvtMouse
+                pos.x -= 32
+                pos.y -= 32
+                pos.x++
+                pos.y++
+                @send "\u001b[" + button + ";" + pos.x + ";" + pos.y + "M"
+                return
+
+            if @sgrMouse
+                pos.x -= 32
+                pos.y -= 32
+                @send "\u001b[<" + (if (button & 3) is 3 then button & ~3 else button) + ";" + pos.x + ";" + pos.y + (if (button & 3) is 3 then "m" else "M")
+                return
+
+            data = []
+            encode data, button
+            encode data, pos.x
+            encode data, pos.y
+            @send "\u001b[M" + String.fromCharCode.apply(String, data)
+
+        getButton = (ev) =>
+            # two low bits:
+            # 0 = left
+            # 1 = middle
+            # 2 = right
+            # 3 = release
+            # wheel up/down:
+            # 1, and 2 - with 64 added
+            switch ev.type
+                when "mousedown"
+                    button = if ev.button? then +ev.button else (if ev.which? then ev.which - 1 else null)
+                when "mouseup"
+                    button = 3
+                when "wheel"
+                    button = if ev.deltaY < 0 then 64 else 65
+
+            # next three bits are the modifiers:
+            # 4 = shift, 8 = meta, 16 = control
+            shift = if ev.shiftKey then 4 else 0
+            meta = if ev.metaKey then 8 else 0
+            ctrl = if ev.ctrlKey then 16 else 0
+            mod = shift | meta | ctrl
+
+            # no mods
+            if @vt200Mouse
+                # ctrl only
+                mod &= ctrl
+            else
+                 mod = 0 unless @normalMouse
+
+            # increment to SP
+            (32 + (mod << 2)) + button
+
+        # mouse coordinates measured in cols/rows
+        getCoords = (ev) =>
+            x = ev.pageX
+            y = ev.pageY
+
+            # should probably check offsetParent
+            # but this is more portable
+            el = @element
+            while el and el isnt @document.documentElement
+                x -= el.offsetLeft
+                y -= el.offsetTop
+                el = if "offsetParent" of el then el.offsetParent else el.parentNode
+
+            # convert to cols/rows
+            w = @element.clientWidth
+            h = @element.clientHeight
+            x = Math.ceil((x / w) * @cols)
+            y = Math.ceil((y / h) * @rows)
+
+            # be sure to avoid sending
+            # bad positions to the program
+            x = 0     if x < 0
+            x = @cols if x > @cols
+            y = 0     if y < 0
+            y = @rows if y > @rows
+
+            # xterm sends raw bytes and
+            # starts at 32 (SP) for each.
+            x += 32
+            y += 32
+
+            x: x
+            y: y
+            type: ev.type
+
+        addEventListener "mousedown", (ev) =>
+            return unless @mouseEvents
+
+            # send the button
+            sendButton ev
+
+            # fix for odd bug
+            #if (@vt200Mouse && !@normalMouse) {
+            if @vt200Mouse
+                sendButton
+                    __proto__: ev
+                    type: "mouseup"
+
+                return cancel(ev)
+
+            addEventListener "mousemove", sendMove.bind(this) if @normalMouse
+
+            # x10 compatibility mode can't send button releases
+            unless @x10Mouse
+                addEventListener "mouseup", up = (ev) =>
+                    sendButton ev
+                    removeEventListener "mousemove", sendMove if @normalMouse
+                    removeEventListener "mouseup", up
+                    cancel ev
+            cancel ev
+
+        addEventListener "wheel", (ev) =>
+            if @mouseEvents
+                return if @x10Mouse or @vt300Mouse or @decLocator
+                sendButton ev
+            else
+                return if @applicationKeypad
+                @scrollDisp ev.deltaY
+            cancel ev
+
 
     destroy: ->
         @readable = false
         @writable = false
+        @element.parentNode?.removeChild @element
         @write = ->
 
-        @element.parentNode?.removeChild(@element)
 
 
     refresh: (start, end) ->
@@ -1185,15 +1379,15 @@ class Terminal
 
     log: ->
         return unless @debug
-        return if not window.console or not window.console.log
+        return if not @context.console or not @context.console.log
         args = Array::slice.call(arguments)
-        window.console.log.apply window.console, args
+        @context.console.log.apply @context.console, args
 
     error: ->
         return unless @debug
-        return if not window.console or not window.console.error
+        return if not @context.console or not @context.console.error
         args = Array::slice.call(arguments)
-        window.console.error.apply window.console, args
+        @context.console.error.apply @console.console, args
 
     resize: (x, y) ->
         x = 1 if x < 1
@@ -2737,7 +2931,7 @@ class Terminal
     # CSI P m SP ~
     # Delete P s Column(s) (default = 1) (DECDC), VT420 and up
     # NOTE: xterm doesn't enable this code by default.
-    deleteColumns = ->
+    deleteColumns: ->
         param = params[0]
         l = @ybase + @rows
         ch = [@eraseAttr(), " "]
