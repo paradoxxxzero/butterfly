@@ -37,10 +37,13 @@ body
       background-color: $bg
       color: $fg
       text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
-      transition: 50ms
+      transition: 200ms
 
       &.bell
         -webkit-filter: blur(2px)
+
+      &.skip
+        -webkit-filter: sepia(1)
 
       div
         overflow: visible
@@ -54,11 +57,9 @@ body
 
 ::selection
   background-color: black
-  box-shadow: 0 0 10px inset white
 
 ::-moz-selection
   background-color: black
-  box-shadow: 0 0 10px inset white
 
 .cursor.reverse-video
   box-shadow: 0 0 10px $fg
@@ -82,7 +83,6 @@ body
 
 .blur .cursor.reverse-video
   background: none
-  border: 1px solid $fg
 
 =termcolor($i, $color)
   .bg-color-#{$i}

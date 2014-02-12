@@ -79,74 +79,75 @@ body main .terminal {
   background-color: #110f13;
   color: #f4ead5;
   text-shadow: 0 0 6px rgba(244, 234, 213, 0.5);
-  transition: 50ms;
+  transition: 200ms;
 }
 /* line 42, ../sass/main.sass */
 body main .terminal.bell {
   -webkit-filter: blur(2px);
 }
 /* line 45, ../sass/main.sass */
+body main .terminal.skip {
+  -webkit-filter: sepia(1);
+}
+/* line 48, ../sass/main.sass */
 body main .terminal div {
   overflow: visible;
 }
-/* line 48, ../sass/main.sass */
+/* line 51, ../sass/main.sass */
 body main .terminal div .inline-html {
   white-space: normal;
 }
 
-/* line 52, ../sass/main.sass */
+/* line 55, ../sass/main.sass */
 .focus .cursor {
   transition: 300ms;
 }
 
-/* line 55, ../sass/main.sass */
+/* line 58, ../sass/main.sass */
 ::selection {
   background-color: black;
-  box-shadow: 0 0 10px inset white;
 }
 
-/* line 59, ../sass/main.sass */
+/* line 61, ../sass/main.sass */
 ::-moz-selection {
   background-color: black;
-  box-shadow: 0 0 10px inset white;
 }
 
-/* line 63, ../sass/main.sass */
+/* line 64, ../sass/main.sass */
 .cursor.reverse-video {
   box-shadow: 0 0 10px #f4ead5;
 }
 
 /* Terminal styles */
-/* line 67, ../sass/main.sass */
+/* line 68, ../sass/main.sass */
 .bold {
   font-weight: bold;
 }
 
-/* line 70, ../sass/main.sass */
+/* line 71, ../sass/main.sass */
 .underline {
   text-decoration: underline;
 }
 
-/* line 73, ../sass/main.sass */
+/* line 74, ../sass/main.sass */
 .blink {
   text-decoration: blink;
 }
 
-/* line 76, ../sass/main.sass */
+/* line 77, ../sass/main.sass */
 .invisible {
   visibility: hidden;
 }
 
-/* line 79, ../sass/main.sass */
+/* line 80, ../sass/main.sass */
 .reverse-video {
   color: #110f13;
   background-color: #f4ead5;
 }
 
-/* line 83, ../sass/main.sass */
+/* line 84, ../sass/main.sass */
 .blur .cursor.reverse-video {
   background: none;
-  border: 1px solid #f4ead5;
 }
 
 /* line 88, ../sass/main.sass */

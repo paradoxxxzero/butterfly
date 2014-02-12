@@ -1188,10 +1188,12 @@ Terminal = (function() {
     }
     if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
       this.skipNextKey = true;
+      this.element.classList.add('skip');
       return cancel(ev);
     }
     if (this.skipNextKey) {
       this.skipNextKey = false;
+      this.element.classList.remove('skip');
       return true;
     }
     switch (ev.keyCode) {

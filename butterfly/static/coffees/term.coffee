@@ -17,9 +17,13 @@
 
 
 # This has been forked from term.js
+#
 #   Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
 #   https://github.com/chjj/term.js
+#
+#
 # which has been forked from jslinux
+#
 #   Copyright (c) 2011 Fabrice Bellard
 #   http://bellard.org/jslinux/
 
@@ -1089,10 +1093,12 @@ class Terminal
         # May be redundant with keyPrefix
         if ev.altKey and ev.keyCode is 90 and not @skipNextKey
             @skipNextKey = true
+            @element.classList.add('skip')
             return cancel(ev)
 
         if @skipNextKey
             @skipNextKey = false
+            @element.classList.remove('skip')
             return true
 
         switch ev.keyCode
