@@ -32,9 +32,6 @@ ws.onmessage = function(e) {
 };
 
 ws.onclose = function() {
-  if (term) {
-    term.destroy();
-  }
   console.log("WebSocket closed", arguments);
   quit = true;
   return open('', '_self').close();
@@ -483,7 +480,7 @@ Terminal = (function() {
     });
     return addEventListener("wheel", function(ev) {
       if (_this.mouseEvents) {
-        if (_this.x10Mouse || _this.vt300Mouse || _this.decLocator) {
+        if (_this.x10Mouse) {
           return;
         }
         sendButton(ev);
@@ -491,7 +488,7 @@ Terminal = (function() {
         if (_this.applicationKeypad) {
           return;
         }
-        _this.scrollDisp(ev.deltaY);
+        _this.scrollDisp(ev.deltaY | 0);
       }
       return cancel(ev);
     });
