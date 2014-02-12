@@ -214,11 +214,9 @@ Terminal = (function() {
     this.rows = 24;
     this.scrollback = 100000;
     this.visualBell = 100;
-    this.debug = !true;
     this.convertEol = false;
     this.termName = 'xterm';
     this.cursorBlink = true;
-    this.popOnBell = false;
     this.screenKeys = false;
     this.cursorState = 0;
     this.init();
@@ -238,21 +236,17 @@ Terminal = (function() {
     this.applicationKeypad = false;
     this.applicationCursor = false;
     this.originMode = false;
-    this.insertMode = false;
     this.wraparoundMode = false;
     this.normal = null;
     this.charset = null;
     this.gcharset = null;
     this.glevel = 0;
     this.charsets = [null];
-    this.readable = true;
-    this.writable = true;
     this.defAttr = (0 << 18) | (257 << 9) | (256 << 0);
     this.curAttr = this.defAttr;
     this.params = [];
     this.currentParam = 0;
     this.prefix = "";
-    this.postfix = "";
     this.lines = [];
     i = this.rows;
     while (i--) {
@@ -385,20 +379,20 @@ Terminal = (function() {
         pos.y -= 32;
         pos.x++;
         pos.y++;
-        _this.send("\u001b[" + button + ";" + pos.x + ";" + pos.y + "M");
+        _this.send("\x1b[" + button + ";" + pos.x + ";" + pos.y + "M");
         return;
       }
       if (_this.sgrMouse) {
         pos.x -= 32;
         pos.y -= 32;
-        _this.send("\u001b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
+        _this.send("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
         return;
       }
       data = [];
       encode(data, button);
       encode(data, pos.x);
       encode(data, pos.y);
-      return _this.send("\u001b[M" + String.fromCharCode.apply(String, data));
+      return _this.send("\x1b[M" + String.fromCharCode.apply(String, data));
     };
     getButton = function(ev) {
       var button, meta, mod, shift;
@@ -501,16 +495,6 @@ Terminal = (function() {
       }
       return cancel(ev);
     });
-  };
-
-  Terminal.prototype.destroy = function() {
-    var _ref;
-    this.readable = false;
-    this.writable = false;
-    if ((_ref = this.element.parentNode) != null) {
-      _ref.removeChild(this.element);
-    }
-    return this.write = function() {};
   };
 
   Terminal.prototype.refresh = function(start, end) {
@@ -696,7 +680,7 @@ Terminal = (function() {
   };
 
   Terminal.prototype.write = function(data) {
-    var ch, cs, html, i, j, l, line, pt, valid;
+    var ch, cs, html, i, j, l, line, pt, valid, _ref;
     this.refreshStart = this.y;
     this.refreshEnd = this.y;
     if (this.ybase !== this.ydisp) {
@@ -747,7 +731,7 @@ Terminal = (function() {
               break;
             default:
               if (ch >= " ") {
-                if (this.charset && this.charset[ch]) {
+                if ((_ref = this.charset) != null ? _ref[ch] : void 0) {
                   ch = this.charset[ch];
                 }
                 if (this.x >= this.cols) {
@@ -801,6 +785,7 @@ Terminal = (function() {
               break;
             case "E":
               this.x = 0;
+              this.index();
               break;
             case "D":
               this.index();
@@ -825,19 +810,15 @@ Terminal = (function() {
                   this.gcharset = 0;
                   break;
                 case ")":
+                case "-":
                   this.gcharset = 1;
                   break;
                 case "*":
+                case ".":
                   this.gcharset = 2;
                   break;
                 case "+":
                   this.gcharset = 3;
-                  break;
-                case "-":
-                  this.gcharset = 1;
-                  break;
-                case ".":
-                  this.gcharset = 2;
               }
               this.state = State.charset;
               break;
@@ -845,9 +826,6 @@ Terminal = (function() {
               this.gcharset = 3;
               this.state = State.charset;
               i--;
-              break;
-            case "N":
-            case "O":
               break;
             case "n":
               this.setgLevel(2);
@@ -880,12 +858,10 @@ Terminal = (function() {
               this.tabSet();
               break;
             case "=":
-              this.log("Serial port requested application keypad.");
               this.applicationKeypad = true;
               this.state = State.normal;
               break;
             case ">":
-              this.log("Switching back to normal keypad.");
               this.applicationKeypad = false;
               this.state = State.normal;
               break;
@@ -1004,7 +980,6 @@ Terminal = (function() {
             break;
           }
           if (ch === "$" || ch === "\"" || ch === " " || ch === "'") {
-            this.postfix = ch;
             break;
           }
           this.params.push(this.currentParam);
@@ -1123,16 +1098,14 @@ Terminal = (function() {
               this.tabClear(this.params);
               break;
             case "p":
-              switch (this.prefix) {
-                case "!":
-                  this.softReset(this.params);
+              if (this.prefix === '!') {
+                this.softReset(this.params);
               }
               break;
             default:
               this.error("Unknown CSI code: %s.", ch);
           }
           this.prefix = "";
-          this.postfix = "";
           break;
         case State.dcs:
           if (ch === "\x1b" || ch === "\x07") {
@@ -1481,7 +1454,7 @@ Terminal = (function() {
         _this.queue = "";
       }), 1);
     }
-    this.queue += data;
+    return this.queue += data;
   };
 
   Terminal.prototype.bell = function() {
@@ -1490,12 +1463,9 @@ Terminal = (function() {
       return;
     }
     this.element.classList.add("bell");
-    setTimeout((function() {
+    return setTimeout((function() {
       return _this.element.classList.remove("bell");
     }), this.visualBell);
-    if (this.popOnBell) {
-      return this.focus();
-    }
   };
 
   Terminal.prototype.log = function() {
@@ -2182,11 +2152,7 @@ Terminal = (function() {
       }
       return;
     }
-    if (!this.prefix) {
-      if (params === 4) {
-        return this.insertMode = true;
-      }
-    } else if (this.prefix === "?") {
+    if (this.prefix === "?") {
       switch (params) {
         case 1:
           return this.applicationCursor = true;
@@ -2258,12 +2224,7 @@ Terminal = (function() {
       }
       return;
     }
-    if (!this.prefix) {
-      switch (params) {
-        case 4:
-          return this.insertMode = false;
-      }
-    } else if (this.prefix === "?") {
+    if (this.prefix === "?") {
       switch (params) {
         case 1:
           return this.applicationCursor = false;

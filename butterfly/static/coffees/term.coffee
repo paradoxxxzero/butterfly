@@ -1,3 +1,30 @@
+# *-* coding: utf-8 *-*
+# This file is part of butterfly
+#
+# butterfly Copyright (C) 2014  Florian Mounier
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# This has been forked from term.js
+#   Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
+#   https://github.com/chjj/term.js
+# which has been forked from jslinux
+#   Copyright (c) 2011 Fabrice Bellard
+#   http://bellard.org/jslinux/
+
+
+
 cancel = (ev) ->
   ev.preventDefault() if ev.preventDefault
   ev.stopPropagation() if ev.stopPropagation
@@ -25,12 +52,10 @@ class Terminal
         @rows = 24
         @scrollback = 100000
         @visualBell = 100
-        @debug = not true
 
         @convertEol = false
         @termName = 'xterm'
         @cursorBlink = true
-        @popOnBell = false
         @screenKeys = false
         @cursorState = 0
         @init()
@@ -50,7 +75,6 @@ class Terminal
         @applicationKeypad = false
         @applicationCursor = false
         @originMode = false
-        @insertMode = false
         @wraparoundMode = false
         @normal = null
 
@@ -61,14 +85,11 @@ class Terminal
         @charsets = [null]
 
         # stream
-        @readable = true
-        @writable = true
         @defAttr = (0 << 18) | (257 << 9) | (256 << 0)
         @curAttr = @defAttr
         @params = []
         @currentParam = 0
         @prefix = ""
-        @postfix = ""
         @lines = []
         i = @rows
         @lines.push @blankLine() while i--
@@ -93,9 +114,9 @@ class Terminal
 
     paste: (ev) ->
         if ev.clipboardData
-            @send(ev.clipboardData.getData('text/plain'))
+            @send ev.clipboardData.getData('text/plain')
         else if @context.clipboardData
-            @send(@context.clipboardData.getData('Text'))
+            @send @context.clipboardData.getData('Text')
         cancel(ev)
 
     open: (parent) ->
@@ -208,20 +229,20 @@ class Terminal
                 pos.y -= 32
                 pos.x++
                 pos.y++
-                @send "\u001b[" + button + ";" + pos.x + ";" + pos.y + "M"
+                @send "\x1b[" + button + ";" + pos.x + ";" + pos.y + "M"
                 return
 
             if @sgrMouse
                 pos.x -= 32
                 pos.y -= 32
-                @send "\u001b[<" + (if (button & 3) is 3 then button & ~3 else button) + ";" + pos.x + ";" + pos.y + (if (button & 3) is 3 then "m" else "M")
+                @send "\x1b[<" + (if (button & 3) is 3 then button & ~3 else button) + ";" + pos.x + ";" + pos.y + (if (button & 3) is 3 then "m" else "M")
                 return
 
             data = []
             encode data, button
             encode data, pos.x
             encode data, pos.y
-            @send "\u001b[M" + String.fromCharCode.apply(String, data)
+            @send "\x1b[M" + String.fromCharCode.apply(String, data)
 
         getButton = (ev) =>
             # two low bits:
@@ -319,20 +340,12 @@ class Terminal
 
         addEventListener "wheel", (ev) =>
             if @mouseEvents
-                return if @x10Mouse or @vt300Mouse or @decLocator
+                return if @x10Mouse
                 sendButton ev
             else
                 return if @applicationKeypad
-                @scrollDisp ev.deltaY
+                @scrollDisp ev.deltaY | 0
             cancel ev
-
-
-    destroy: ->
-        @readable = false
-        @writable = false
-        @element.parentNode?.removeChild @element
-        @write = ->
-
 
 
     refresh: (start, end) ->
@@ -474,7 +487,7 @@ class Terminal
             @ydisp = @ybase
           @lines.splice @ybase + @scrollTop, 1
 
-        # this.maxRange();
+        # @maxRange();
         @updateRange @scrollTop
         @updateRange @scrollBottom
 
@@ -544,23 +557,23 @@ class Terminal
                         else
                             # ' '
                             if ch >= " "
-                                ch = @charset[ch] if @charset and @charset[ch]
+                                ch = @charset[ch] if @charset?[ch]
                                 if @x >= @cols
                                     @x = 0
                                     @y++
                                     if @y > @scrollBottom
                                         @y--
                                         @scroll()
-                                @lines[@y + @ybase][@x] = [this.curAttr, ch]
+                                @lines[@y + @ybase][@x] = [@curAttr, ch]
                                 @x++
                                 @updateRange @y
                                 if isWide(ch)
                                     j = @y + @ybase
                                     if @cols < 2 or @x >= @cols
-                                        @lines[j][@x - 1] = [this.curAttr, " "]
+                                        @lines[j][@x - 1] = [@curAttr, " "]
                                         break
 
-                                    @lines[j][@x] = [this.curAttr, " "]
+                                    @lines[j][@x] = [@curAttr, " "]
                                     @x++
 
                 when State.escaped
@@ -596,9 +609,11 @@ class Terminal
                             @reset()
 
                         # ESC E Next Line ( NEL is 0x85).
-                        # ESC D Index ( IND is 0x84).
                         when "E"
                             @x = 0
+                            @index()
+
+                        # ESC D Index ( IND is 0x84).
                         when "D"
                             @index()
 
@@ -620,16 +635,12 @@ class Terminal
                             switch ch
                                 when "("
                                     @gcharset = 0
-                                when ")"
+                                when ")", "-"
                                     @gcharset = 1
-                                when "*"
+                                when "*", "."
                                     @gcharset = 2
                                 when "+"
                                     @gcharset = 3
-                                when "-"
-                                    @gcharset = 1
-                                when "."
-                                    @gcharset = 2
                             @state = State.charset
 
                         # Designate G3 Character Set (VT300).
@@ -639,16 +650,6 @@ class Terminal
                             @gcharset = 3
                             @state = State.charset
                             i--
-
-                        # ESC N
-                        # Single Shift Select of G2 Character Set
-                        # ( SS2 is 0x8e). This affects next character only.
-
-                        # ESC O
-                        # Single Shift Select of G3 Character Set
-                        # ( SS3 is 0x8f). This affects next character only.
-                        when "N", "O"
-                                break
 
                         # ESC n
                         # Invoke the G2 Character Set as GL (LS2).
@@ -696,18 +697,17 @@ class Terminal
 
                         # ESC = Application Keypad (DECPAM).
                         when "="
-                            @log "Serial port requested application keypad."
                             @applicationKeypad = true
                             @state = State.normal
 
                         # ESC > Normal Keypad (DECPNM).
                         when ">"
-                            @log "Switching back to normal keypad."
                             @applicationKeypad = false
                             @state = State.normal
                         else
                             @state = State.normal
                             @error "Unknown ESC control: %s.", ch
+
                 when State.charset
                     switch ch
                         when "0" # DEC Special Character and Line Drawing Set.
@@ -765,7 +765,7 @@ class Terminal
                                 # Custom escape to produce raw html
                                 html = "<div class=\"inline-html\">" + @params[1] + "</div>"
                                 @lines[@y + @ybase][@x] = [
-                                    this.curAttr
+                                    @curAttr
                                     html
                                 ]
                                 line = 0
@@ -805,7 +805,6 @@ class Terminal
 
                     # '$', '"', ' ', '\''
                     if ch is "$" or ch is "\"" or ch is " " or ch is "'"
-                        @postfix = ch
                         break
                     @params.push @currentParam
                     @currentParam = 0
@@ -990,18 +989,12 @@ class Terminal
                         #     Request DEC private mode (DECRQM).
                         # CSI Ps ; Ps " p
                         when "p"
-                            switch @prefix
-
-                                # case '>':
-                                #     this.setPointerMode(this.params);
-                                #     break;
-                                when "!"
-                                    @softReset @params
+                            if @prefix is '!'
+                                @softReset @params
 
                         else
                             @error "Unknown CSI code: %s.", ch
                     @prefix = ""
-                    @postfix = ""
 
                 when State.dcs
                     if ch is "\x1b" or ch is "\x07"
@@ -1367,7 +1360,6 @@ class Terminal
             ), 1
 
         @queue += data
-        return
 
     bell: ->
         return unless @visualBell
@@ -1375,7 +1367,6 @@ class Terminal
         setTimeout (=>
             @element.classList.remove "bell"
         ), @visualBell
-        @focus() if @popOnBell
 
     log: ->
         return unless @debug
@@ -1505,7 +1496,7 @@ class Terminal
         line
 
     ch: (cur) ->
-        if cur then [@eraseAttr(), " "] else [this.defAttr, " "]
+        if cur then [@eraseAttr(), " "] else [@defAttr, " "]
 
     isterm: (term) ->
         "#{@termName}".indexOf(term) is 0
@@ -1539,7 +1530,7 @@ class Terminal
             j = @rows - 1 - @scrollBottom
             @lines.splice @rows - 1 + @ybase - j + 1, 1
 
-            # this.maxRange();
+            # @maxRange();
             @updateRange @scrollTop
             @updateRange @scrollBottom
         @state = State.normal
@@ -2167,11 +2158,7 @@ class Terminal
                 @setMode params[i]
                 i++
             return
-        unless @prefix
-            if params is 4
-                @insertMode = true
-
-        else if @prefix is "?"
+        if @prefix is "?"
             switch params
                 when 1
                     @applicationCursor = true
@@ -2225,7 +2212,7 @@ class Terminal
                 when 25 # show cursor
                     @cursorHidden = false
                 # alt screen buffer cursor
-                #this.saveCursor();
+                #@saveCursor();
                 when 1049, 47, 1047 # alt screen buffer
                     unless @normal
                         normal =
@@ -2330,12 +2317,8 @@ class Terminal
                 @resetMode params[i]
                 i++
             return
-        unless @prefix
-            switch params
-                when 4
-                    @insertMode = false
 
-        else if @prefix is "?"
+        if @prefix is "?"
             switch params
                 when 1
                     @applicationCursor = false
@@ -2468,7 +2451,7 @@ class Terminal
     repeatPrecedingCharacter: (params) ->
         param = params[0] or 1
         line = @lines[@ybase + @y]
-        ch = line[@x - 1] or [this.defAttr, " "]
+        ch = line[@x - 1] or [@defAttr, " "]
         line[@x++] = ch while param--
 
 

@@ -29,7 +29,6 @@ options = dict(
         'butterfly': [
             'static/fonts/*',
             'static/stylesheets/main.css',
-            'static/javascripts/term.js/src/term.js',
             'static/javascripts/main.js',
             'templates/index.html'
         ]
