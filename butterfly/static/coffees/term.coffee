@@ -35,10 +35,6 @@ cancel = (ev) ->
   ev.cancelBubble = true
   false
 
-isWide = (ch) ->
-  return false  if ch <= "＀"
-  (ch >= "！" and ch <= "ﾾ") or (ch >= "ￂ" and ch <= "ￇ") or (ch >= "ￊ" and ch <= "ￏ") or (ch >= "ￒ" and ch <= "ￗ") or (ch >= "ￚ" and ch <= "ￜ") or (ch >= "￠" and ch <= "￦") or (ch >= "￨" and ch <= "￮")
-
 s = 0
 State =
     normal: s++
@@ -140,7 +136,8 @@ class Terminal
 
         # Terminal lines
         @children = [];
-        for i in [0..@rows]
+        i = @rows
+        while i--
             div = @document.createElement('div')
             @element.appendChild(div)
             @children.push(div)
@@ -348,7 +345,7 @@ class Terminal
                 sendButton ev
             else
                 return if @applicationKeypad
-                @scrollDisp ev.deltaY | 0
+                @scrollDisp if ev.deltaY > 0 then 5 else -5
             cancel ev
 
 
@@ -361,7 +358,6 @@ class Terminal
         y = start
 
         if end >= @lines.length
-            @log "`end` is too large. Most likely a bad CSR."
             end = @lines.length - 1
 
         while y <= end
@@ -423,7 +419,7 @@ class Terminal
                             if ch <= " "
                                 out += "&nbsp;"
                             else
-                                i++ if isWide(ch)
+                                i++ if "\uff00" < ch < "\uffef"
                                 out += ch
                 out += "</span>" if i is x
                 attr = data
@@ -571,7 +567,7 @@ class Terminal
                                 @lines[@y + @ybase][@x] = [@curAttr, ch]
                                 @x++
                                 @updateRange @y
-                                if isWide(ch)
+                                if "\uff00" < ch < "\uffef"
                                     j = @y + @ybase
                                     if @cols < 2 or @x >= @cols
                                         @lines[j][@x - 1] = [@curAttr, " "]
@@ -1037,13 +1033,6 @@ class Terminal
 
                                 @send "\x1bP" + +valid + "$r" + pt + "\x1b\\"
 
-                            # Set Termcap/Terminfo Data (xterm, experimental).
-                            when "+p"
-                                break
-                            # Request Termcap/Terminfo String (xterm, experimental)
-                            # Regular xterm does not even respond to this sequence.
-                            # This can cause a small glitch in vim.
-                            # test: echo -ne '\eP+q6b64\e\\'
                             when "+q"
                                 pt = @currentParam
                                 valid = false
@@ -1085,8 +1074,7 @@ class Terminal
         return true if ev.keyCode > 15 and ev.keyCode < 19
 
         # Handle shift insert and ctrl insert copy/paste usefull for typematrix keyboard
-        if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
-            return true
+        return true if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
 
         # Alt-z works as an escape to relay the following keys to the browser.
         # usefull to trigger browser shortcuts, i.e.: Alt+Z F5 to reload
@@ -1373,18 +1361,6 @@ class Terminal
         setTimeout (=>
             @element.classList.remove "bell"
         ), @visualBell
-
-    log: ->
-        return unless @debug
-        return if not @context.console or not @context.console.log
-        args = Array::slice.call(arguments)
-        @context.console.log.apply @context.console, args
-
-    error: ->
-        return unless @debug
-        return if not @context.console or not @context.console.error
-        args = Array::slice.call(arguments)
-        @context.console.error.apply @console.console, args
 
     resize: (x, y) ->
         x = 1 if x < 1
@@ -2182,7 +2158,6 @@ class Terminal
                 when 7
                     @wraparoundMode = true
                 when 66
-                    @log "Serial port requested application keypad."
                     @applicationKeypad = true
                 # X10 Mouse
                 # no release, no motion, no wheel, no modifiers.
@@ -2194,7 +2169,6 @@ class Terminal
                     @normalMouse = params > 1000
                     @mouseEvents = true
                     @element.style.cursor = "default"
-                    @log "Binding to mouse events."
                 when 1004 # send focusin/focusout events
                     # focusin: ^[[I
                     # focusout: ^[[O
@@ -2336,7 +2310,6 @@ class Terminal
                 when 7
                     @wraparoundMode = false
                 when 66
-                    @log "Switching back to normal keypad."
                     @applicationKeypad = false
                 when 9, 1000, 1002 , 1003 # any event mouse
                     @x10Mouse = false

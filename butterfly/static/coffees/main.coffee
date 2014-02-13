@@ -36,7 +36,11 @@ ws.onopen = ->
 
 
 ws.onerror = -> console.log "WebSocket error", arguments
-ws.onmessage = (e) -> term.write e.data
+ws.onmessage = (e) ->
+    setTimeout ->
+        term.write e.data
+    , 1
+
 
 ws.onclose = ->
     console.log "WebSocket closed", arguments
