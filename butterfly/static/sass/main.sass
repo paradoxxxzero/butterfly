@@ -22,34 +22,31 @@ html, body
   padding: 0
   line-height: 1.2
 
-body
-  main
-    display: flex
-    height: 100%
-    flex-direction: column
-    background-color: black
-    overflow: hidden
-    white-space: nowrap
 
-    .terminal
-      flex: 1
-      outline: none
-      background-color: $bg
-      color: $fg
-      text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
-      transition: 200ms
+#wrapper
+  height: 100%
+  background-color: black
+  overflow: hidden
+  white-space: nowrap
 
-      &.bell
-        -webkit-filter: blur(2px)
+.terminal
+  outline: none
+  background-color: $bg
+  color: $fg
+  text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
+  transition: 200ms
 
-      &.skip
-        -webkit-filter: sepia(1)
+  &.bell
+    -webkit-filter: blur(2px)
 
-      div
-        overflow: visible
+  &.skip
+    -webkit-filter: sepia(1)
 
-        .inline-html
-          white-space: normal
+.line
+  overflow: visible
+
+  .inline-html
+    white-space: normal
 
 
 .focus .cursor

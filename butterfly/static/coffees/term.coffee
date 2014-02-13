@@ -47,9 +47,40 @@ State =
 
 
 class Terminal
-    constructor: (@out) ->
-        @cols = 80
-        @rows = 24
+    constructor: (@parent, @out, @ctl=->) ->
+        # Global elements
+        @context = @parent.ownerDocument.defaultView
+        @document = @parent.ownerDocument
+        @body = @document.getElementsByTagName('body')[0]
+
+        # Main terminal element
+        @element = @document.createElement('div')
+        @element.className = 'terminal focus'
+        @element.style.outline = 'none'
+        @element.setAttribute 'tabindex', 0
+
+        @parent.appendChild(@element)
+
+        # Adding one line to compute char size
+        div = @document.createElement('div')
+        div.className = 'line'
+        @element.appendChild(div)
+        @children = [div]
+
+        @compute_char_size()
+        div.style.height = @char_size.height + 'px'
+        term_size = @parent.getBoundingClientRect()
+        @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
+        @rows = Math.floor(term_size.height / @char_size.height)
+
+        i = @rows - 1
+        while i--
+            div = @document.createElement('div')
+            div.style.height = @char_size.height + 'px'
+            div.className = 'line'
+            @element.appendChild(div)
+            @children.push(div)
+
         @scrollback = 100000
         @visualBell = 100
 
@@ -58,9 +89,24 @@ class Terminal
         @cursorBlink = true
         @screenKeys = false
         @cursorState = 0
-        @init()
 
-    init: ->
+        @reset_vars()
+
+        # Draw screen
+        @refresh 0, @rows - 1
+
+        @focus()
+
+        @startBlink()
+        addEventListener 'keydown', @keyDown.bind(@)
+        addEventListener 'keypress', @keyPress.bind(@)
+        addEventListener 'focus', @focus.bind(@)
+        addEventListener 'blur', @blur.bind(@)
+        addEventListener 'paste', @paste.bind(@)
+        addEventListener 'resize', @resize.bind(@)
+        @initmouse()
+
+    reset_vars: ->
         @ybase = 0
         @ydisp = 0
         @x = 0
@@ -96,6 +142,15 @@ class Terminal
         @setupStops()
         @skipNextKey = false
 
+    compute_char_size: ->
+        test_span = document.createElement('span')
+        test_span.textContent = '0123456789'
+        @children[0].appendChild(test_span)
+        @char_size =
+            width: test_span.getBoundingClientRect().width / 10
+            height: @children[0].getBoundingClientRect().height
+        @children[0].removeChild(test_span)
+
     eraseAttr: ->
         (@defAttr & ~0x1ff) | (@curAttr & 0x1ff)
 
@@ -118,44 +173,6 @@ class Terminal
         else if @context.clipboardData
             @send @context.clipboardData.getData('Text')
         cancel(ev)
-
-    open: (parent) ->
-        @parent = parent or @parent
-        throw new Error('Terminal requires a parent element') unless @parent
-
-        # Global elements
-        @context = @parent.ownerDocument.defaultView
-        @document = @parent.ownerDocument
-        @body = @document.getElementsByTagName('body')[0]
-
-        # Main terminal element
-        @element = @document.createElement('div')
-        @element.className = 'terminal focus'
-        @element.style.outline = 'none'
-        @element.setAttribute('tabindex', 0)
-
-        # Terminal lines
-        @children = [];
-        i = @rows
-        while i--
-            div = @document.createElement('div')
-            @element.appendChild(div)
-            @children.push(div)
-
-        @parent.appendChild(@element);
-
-        # Draw screen
-        @refresh 0, @rows - 1
-
-        @focus()
-
-        @startBlink()
-        addEventListener('keydown', @keyDown.bind(@))
-        addEventListener('keypress', @keyPress.bind(@))
-        addEventListener('focus', @focus.bind(@))
-        addEventListener('blur', @blur.bind(@))
-        addEventListener('paste', @paste.bind(@))
-        @initmouse()
 
     # XTerm mouse events
     # http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
@@ -350,7 +367,7 @@ class Terminal
 
 
     refresh: (start, end) ->
-        if end - start >= @rows / 2
+        if end - start >= @rows / 3
             parent = @element.parentNode
             parent?.removeChild @element
 
@@ -487,7 +504,6 @@ class Terminal
             @ydisp = @ybase
           @lines.splice @ybase + @scrollTop, 1
 
-        # @maxRange();
         @updateRange @scrollTop
         @updateRange @scrollBottom
 
@@ -706,7 +722,7 @@ class Terminal
                             @state = State.normal
                         else
                             @state = State.normal
-                            @error "Unknown ESC control: %s.", ch
+                            console.log "Unknown ESC control:", ch
 
                 when State.charset
                     switch ch
@@ -1362,50 +1378,58 @@ class Terminal
             @element.classList.remove "bell"
         ), @visualBell
 
-    resize: (x, y) ->
-        x = 1 if x < 1
-        y = 1 if y < 1
+    resize: ->
+        old_cols = @cols
+        old_rows = @rows
+        term_size = @parent.getBoundingClientRect()
+        @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
+        @rows = Math.floor(term_size.height / @char_size.height)
+        if old_cols == @cols and old_rows == @rows
+            return
+
+        @ctl 'Resize', @cols, @rows
 
         # resize cols
-        j = @cols
-        if j < x
+        if old_cols < @cols
             # does xterm use the default attr?
             ch = [@defAttr, " "]
             i = @lines.length
             while i--
-                @lines[i].push ch while @lines[i].length < x
-        else if j > x
+                @lines[i].push ch while @lines[i].length < @cols
+        else if old_cols > @cols
             i = @lines.length
             while i--
-                @lines[i].pop() while @lines[i].length > x
+                @lines[i].pop() while @lines[i].length > @cols
 
-        @setupStops j
-        @cols = x
+        @setupStops old_cols
 
         # resize rows
-        j = @rows
-        if j < y
+        j = old_rows
+        if j < @rows
             el = @element
-            while j++ < y
+            while j++ < @rows
                 @lines.push @blankLine() if @lines.length < y + @ybase
-                if @children.length < y
+                if @children.length < @rows
                     line = @document.createElement("div")
+                    @line.className = 'line'
+                    line.style.height = @char_size.height + 'px'
                     el.appendChild line
                     @children.push line
-        else if j > y
-            while j-- > y
-                @lines.pop() if @lines.length > y + @ybase
-                if @children.length > y
+        else if j > @rows
+            while j-- > @rows
+                @lines.pop() if @lines.length > @rows + @ybase
+                if @children.length > @rows
                     el = @children.pop()
                     continue unless el
                     el.parentNode.removeChild el
-        @rows = y
 
         # make sure the cursor stays on screen
-        @y = y - 1 if @y >= y
-        @x = x - 1 if @x >= x
+        @y = @rows - 1 if @y >= @rows
+        @x = @cols - 1 if @x >= @cols
+
         @scrollTop = 0
-        @scrollBottom = y - 1
+        @scrollBottom = @rows - 1
+
         @refresh 0, @rows - 1
 
         # it's a real nightmare trying
@@ -1520,7 +1544,7 @@ class Terminal
 
     # ESC c Full Reset (RIS).
     reset: ->
-        @init()
+        @reset_vars()
         @refresh 0, @rows - 1
 
     # ESC H Tab Set (HTS is 0x88).
@@ -2907,12 +2931,12 @@ class Terminal
 
 
     get_html_height_in_lines: (html) ->
-        line_height = +@children[0].style.height.replace("px", "")
         temp_node = document.createElement("div")
         temp_node.innerHTML = html
         @element.appendChild temp_node
         html_height = temp_node.getBoundingClientRect().height
         @element.removeChild temp_node
+        Math.ceil(html_height / @char_size.height)
 
     # DEC Special Character and Line Drawing Set.
     # http://vt100.net/docs/vt102-ug/table5-13.html

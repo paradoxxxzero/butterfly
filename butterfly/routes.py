@@ -151,10 +151,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.log.debug('Adding handler')
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
-        # Set the size of the terminal window:
-        s = struct.pack("HHHH", 80, 80, 0, 0)
-        fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
-
         def utf8_error(e):
             self.log.error(e)
 
@@ -202,16 +198,14 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.pty()
 
     def on_message(self, message):
-        if message.startswith('RS|'):
-            message = message[3:]
-            cols, rows = map(int, message.split(','))
+        if message[0] == 'R':
+            cols, rows = map(int, message[1:].split(','))
             s = struct.pack("HHHH", rows, cols, 0, 0)
             fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
             self.log.info('SIZE (%d, %d)' % (cols, rows))
-        elif message.startswith('SH|'):
-            message = message[3:]
+        elif message[0] == 'S':
             self.log.info('WRIT<%r' % message)
-            self.writer.write(message)
+            self.writer.write(message[1:])
             self.writer.flush()
 
     def shell_handler(self, fd, events):
