@@ -12,8 +12,6 @@ commands = [
     'butterfly/static/coffees/backsel.coffee ' +
     'butterfly/static/coffees/virtual_input.coffee ' +
     'butterfly/static/coffees/main.coffee ',
-    'coffee -wcb -o butterfly/static/javascripts/ ' +
-    'butterfly/static/coffees/worker.coffee',
     'compass watch butterfly/static',
     'python butterfly.server.py ' + ' '.join(sys.argv[1:])
 ]

@@ -948,7 +948,7 @@ Terminal = (function() {
               }
               break;
             default:
-              this.error("Unknown CSI code: %s.", ch);
+              console.error("Unknown CSI code: %s.", ch);
           }
           this.prefix = "";
           break;
@@ -977,7 +977,7 @@ Terminal = (function() {
                     pt = "0m";
                     break;
                   default:
-                    this.error("Unknown DCS Pt: %s.", pt);
+                    console.error("Unknown DCS Pt: %s.", pt);
                     pt = "";
                 }
                 this.send("\x1bP" + +valid + "$r" + pt + "\x1b\\");
@@ -988,7 +988,7 @@ Terminal = (function() {
                 this.send("\x1bP" + +valid + "+r" + pt + "\x1b\\");
                 break;
               default:
-                this.error("Unknown DCS prefix: %s.", this.prefix);
+                console.error("Unknown DCS prefix: %s.", this.prefix);
             }
             this.currentParam = 0;
             this.prefix = "";
@@ -1736,7 +1736,7 @@ Terminal = (function() {
         fg = (this.defAttr >> 9) & 0x1ff;
         bg = this.defAttr & 0x1ff;
       } else {
-        this.error("Unknown SGR attribute: %d.", p);
+        console.error("Unknown SGR attribute: %d.", p);
       }
       i++;
     }
@@ -2005,7 +2005,7 @@ Terminal = (function() {
           this.vt200Mouse = params === 1000;
           this.normalMouse = params > 1000;
           this.mouseEvents = true;
-          return this.element.style.cursor = "default";
+          return this.element.style.cursor = 'pointer';
         case 1004:
           return this.sendFocus = true;
         case 1005:

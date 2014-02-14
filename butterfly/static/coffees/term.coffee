@@ -1018,7 +1018,7 @@ class Terminal
                                 @softReset @params
 
                         else
-                            @error "Unknown CSI code: %s.", ch
+                            console.error "Unknown CSI code: %s.", ch
                     @prefix = ""
 
                 when State.dcs
@@ -1053,7 +1053,7 @@ class Terminal
                                         pt = "0m"
 
                                     else
-                                        @error "Unknown DCS Pt: %s.", pt
+                                        console.error "Unknown DCS Pt: %s.", pt
                                         pt = ""
 
                                 @send "\x1bP" + +valid + "$r" + pt + "\x1b\\"
@@ -1064,7 +1064,7 @@ class Terminal
                                 @send "\x1bP" + +valid + "+r" + pt + "\x1b\\"
 
                             else
-                                @error "Unknown DCS prefix: %s.", @prefix
+                                console.error "Unknown DCS prefix: %s.", @prefix
 
                         @currentParam = 0
                         @prefix = ""
@@ -1830,7 +1830,7 @@ class Terminal
                 fg = (@defAttr >> 9) & 0x1ff
                 bg = @defAttr & 0x1ff
             else
-                @error "Unknown SGR attribute: %d.", p
+                console.error "Unknown SGR attribute: %d.", p
             i++
         @curAttr = (flags << 18) | (fg << 9) | bg
 
@@ -2205,7 +2205,7 @@ class Terminal
                     @vt200Mouse = params is 1000
                     @normalMouse = params > 1000
                     @mouseEvents = true
-                    @element.style.cursor = "default"
+                    @element.style.cursor = 'pointer'
                 when 1004 # send focusin/focusout events
                     # focusin: ^[[I
                     # focusout: ^[[O
