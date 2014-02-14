@@ -8,7 +8,7 @@ import shlex
 
 commands = [
     'coffee -wcb -j butterfly/static/javascripts/main.js ' +
-    'butterfly/static/coffees/term.coffee ' +
+    # 'butterfly/static/coffees/term.coffee ' +
     'butterfly/static/coffees/backsel.coffee ' +
     'butterfly/static/coffees/virtual_input.coffee ' +
     'butterfly/static/coffees/main.coffee ',
