@@ -1334,12 +1334,12 @@ Terminal = (function() {
     if (j < this.rows) {
       el = this.element;
       while (j++ < this.rows) {
-        if (this.lines.length < y + this.ybase) {
+        if (this.lines.length < this.rows + this.ybase) {
           this.lines.push(this.blankLine());
         }
         if (this.children.length < this.rows) {
           line = this.document.createElement("div");
-          this.line.className = 'line';
+          line.className = 'line';
           line.style.height = this.char_size.height + 'px';
           el.appendChild(line);
           this.children.push(line);

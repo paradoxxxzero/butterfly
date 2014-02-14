@@ -1408,10 +1408,10 @@ class Terminal
         if j < @rows
             el = @element
             while j++ < @rows
-                @lines.push @blankLine() if @lines.length < y + @ybase
+                @lines.push @blankLine() if @lines.length < @rows + @ybase
                 if @children.length < @rows
                     line = @document.createElement("div")
-                    @line.className = 'line'
+                    line.className = 'line'
                     line.style.height = @char_size.height + 'px'
                     el.appendChild line
                     @children.push line
