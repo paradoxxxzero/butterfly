@@ -62,8 +62,8 @@ Terminal = (function() {
     this.convertEol = false;
     this.termName = 'xterm';
     this.cursorBlink = true;
-    this.screenKeys = false;
     this.cursorState = 0;
+    this.last_cc = 0;
     this.reset_vars();
     this.refresh(0, this.rows - 1);
     this.focus();
@@ -476,15 +476,15 @@ Terminal = (function() {
     this._blinker = function() {
       return _this._cursorBlink();
     };
-    return this._blink = setInterval(this._blinker, 500);
+    return this.t_blink = setInterval(this._blinker, 500);
   };
 
   Terminal.prototype.refreshBlink = function() {
     if (!this.cursorBlink) {
       return;
     }
-    clearInterval(this._blink);
-    return this._blink = setInterval(this._blinker, 500);
+    clearInterval(this.t_blink);
+    return this.t_blink = setInterval(this._blinker, 500);
   };
 
   Terminal.prototype.scroll = function() {
@@ -1024,8 +1024,7 @@ Terminal = (function() {
   };
 
   Terminal.prototype.keyDown = function(ev) {
-    var key,
-      _this = this;
+    var id, key, t;
     if (ev.keyCode > 15 && ev.keyCode < 19) {
       return true;
     }
@@ -1187,23 +1186,18 @@ Terminal = (function() {
       default:
         if (ev.ctrlKey) {
           if (ev.keyCode >= 65 && ev.keyCode <= 90) {
-            if (this.screenKeys) {
-              if (!this.prefixMode && !this.selectMode && ev.keyCode === 65) {
-                this.enterPrefix();
-                return cancel(ev);
+            if (ev.keyCode === 67) {
+              t = (new Date()).getTime();
+              if ((t - this.last_cc) < 150) {
+                id = (setTimeout(function() {})) - 6;
+                this.write('\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n');
+                while (id--) {
+                  if (id !== this.t_bell && id !== this.t_queue && id !== this.t_blink) {
+                    clearTimeout(id);
+                  }
+                }
               }
-            }
-            if (this.prefixMode && ev.keyCode === 86) {
-              this.leavePrefix();
-              return;
-            }
-            if ((this.prefixMode || this.selectMode) && ev.keyCode === 67) {
-              if (this.visualMode) {
-                setTimeout((function() {
-                  _this.leaveVisual();
-                }), 1);
-              }
-              return;
+              this.last_cc = t;
             }
             key = String.fromCharCode(ev.keyCode - 64);
           } else if (ev.keyCode === 32) {
@@ -1298,9 +1292,9 @@ Terminal = (function() {
   Terminal.prototype.send = function(data) {
     var _this = this;
     if (!this.queue) {
-      setTimeout((function() {
+      this.t_queue = setTimeout((function() {
         _this.handler(_this.queue);
-        _this.queue = "";
+        return _this.queue = "";
       }), 1);
     }
     return this.queue += data;
@@ -1312,7 +1306,7 @@ Terminal = (function() {
       return;
     }
     this.element.classList.add("bell");
-    return setTimeout((function() {
+    return this.t_bell = setTimeout((function() {
       return _this.element.classList.remove("bell");
     }), this.visualBell);
   };

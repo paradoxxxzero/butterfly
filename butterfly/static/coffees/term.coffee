@@ -87,9 +87,8 @@ class Terminal
         @convertEol = false
         @termName = 'xterm'
         @cursorBlink = true
-        @screenKeys = false
         @cursorState = 0
-
+        @last_cc = 0
         @reset_vars()
 
         # Draw screen
@@ -476,13 +475,13 @@ class Terminal
     startBlink: ->
         return unless @cursorBlink
         @_blinker = => @_cursorBlink()
-        @_blink = setInterval(@_blinker, 500)
+        @t_blink = setInterval(@_blinker, 500)
 
 
     refreshBlink: ->
         return unless @cursorBlink
-        clearInterval @_blink
-        @_blink = setInterval(@_blinker, 500)
+        clearInterval @t_blink
+        @t_blink = setInterval(@_blinker, 500)
 
 
     scroll: ->
@@ -1271,26 +1270,13 @@ class Terminal
                 # a-z and space
                 if ev.ctrlKey
                     if ev.keyCode >= 65 and ev.keyCode <= 90
-
-                        # Ctrl-A
-                        if @screenKeys
-                            if not @prefixMode and not @selectMode and ev.keyCode is 65
-                                @enterPrefix()
-                                return cancel(ev)
-
-                        # Ctrl-V
-                        if @prefixMode and ev.keyCode is 86
-                            @leavePrefix()
-                            return
-
-                        # Ctrl-C
-                        if (@prefixMode or @selectMode) and ev.keyCode is 67
-                            if @visualMode
-                                setTimeout (=>
-                                    @leaveVisual()
-                                    return
-                                ), 1
-                            return
+                        if ev.keyCode is 67
+                            t = (new Date()).getTime()
+                            if (t - @last_cc) < 150
+                                id = (setTimeout ->) - 6  # Let the end write
+                                @write '\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n'
+                                (clearTimeout id if id not in [@t_bell, @t_queue, @t_blink]) while id--
+                            @last_cc = t
                         key = String.fromCharCode(ev.keyCode - 64)
                     else if ev.keyCode is 32
 
@@ -1376,10 +1362,9 @@ class Terminal
 
     send: (data) ->
         unless @queue
-            setTimeout (=>
+            @t_queue = setTimeout (=>
                 @handler @queue
                 @queue = ""
-                return
             ), 1
 
         @queue += data
@@ -1387,7 +1372,7 @@ class Terminal
     bell: ->
         return unless @visualBell
         @element.classList.add "bell"
-        setTimeout (=>
+        @t_bell = setTimeout (=>
             @element.classList.remove "bell"
         ), @visualBell
 
