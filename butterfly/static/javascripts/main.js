@@ -27,7 +27,8 @@ State = {
 
 Terminal = (function() {
   function Terminal(parent, out, ctl) {
-    var div, i, term_size;
+    var div, i, term_size,
+      _this = this;
     this.parent = parent;
     this.out = out;
     this.ctl = ctl != null ? ctl : function() {};
@@ -73,6 +74,16 @@ Terminal = (function() {
     addEventListener('blur', this.blur.bind(this));
     addEventListener('paste', this.paste.bind(this));
     addEventListener('resize', this.resize.bind(this));
+    if (typeof InstallTrigger !== "undefined") {
+      this.element.contentEditable = 'true';
+      this.element.addEventListener("mouseup", function(ev) {
+        var sel;
+        sel = getSelection().getRangeAt(0);
+        if (sel.startOffset === sel.endOffset) {
+          return getSelection().removeAllRanges();
+        }
+      });
+    }
     this.initmouse();
   }
 
@@ -107,7 +118,7 @@ Terminal = (function() {
       this.lines.push(this.blankLine());
     }
     this.setupStops();
-    return this.skipNextKey = false;
+    return this.skipNextKey = null;
   };
 
   Terminal.prototype.compute_char_size = function() {
@@ -1261,6 +1272,10 @@ Terminal = (function() {
 
   Terminal.prototype.keyPress = function(ev) {
     var key;
+    if (this.skipNextKey === false) {
+      this.skipNextKey = null;
+      return true;
+    }
     cancel(ev);
     if (ev.charCode) {
       key = ev.charCode;

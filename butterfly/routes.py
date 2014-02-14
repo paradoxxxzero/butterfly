@@ -121,6 +121,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if self.socket.local:
             # All users are the same -> launch shell
             if self.caller == self.callee and server == self.callee:
+                args.append('-i')
                 os.execvpe(
                     tornado.options.options.shell or self.callee.shell,
                     args, env)

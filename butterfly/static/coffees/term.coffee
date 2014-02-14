@@ -104,6 +104,15 @@ class Terminal
         addEventListener 'blur', @blur.bind(@)
         addEventListener 'paste', @paste.bind(@)
         addEventListener 'resize', @resize.bind(@)
+
+        # Horrible Firefox paste workaround
+        if typeof InstallTrigger isnt "undefined"
+            @element.contentEditable = 'true'
+            @element.addEventListener "mouseup", (ev) =>
+                sel = getSelection().getRangeAt(0)
+                if sel.startOffset is sel.endOffset
+                    getSelection().removeAllRanges()
+
         @initmouse()
 
     reset_vars: ->
@@ -140,7 +149,7 @@ class Terminal
         i = @rows
         @lines.push @blankLine() while i--
         @setupStops()
-        @skipNextKey = false
+        @skipNextKey = null
 
     compute_char_size: ->
         test_span = document.createElement('span')
@@ -1343,6 +1352,10 @@ class Terminal
         @charset = charset if @glevel is g
 
     keyPress: (ev) ->
+        if @skipNextKey is false
+            @skipNextKey = null
+            return true
+
         cancel ev
 
         if ev.charCode
