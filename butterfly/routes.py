@@ -43,7 +43,7 @@ B                   `         '
    `Y888888bo.       :     :       .od888888Y'
      8888888888b.     :   :     .d8888888888      AWelcome to RbutterflyB
      88888Y'  `Y8b.   `   '   .d8Y'  `Y88888
-    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k     AServer runnging as G%rB
+    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k     AServer running as G%rB
       `888  RY88YB    `b ( ) d'    RY88YB  888'
        888b  R'"B        ,',        R"'B  d888        AConnecting to:B
       j888888bd8gf"'   ':'   `"?g8bd888888k         AHost: G%sB
