@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-wdb
+Butterfly - A sleek web based terminal emulator
 """
 import os
 import re
