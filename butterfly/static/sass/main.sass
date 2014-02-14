@@ -42,7 +42,7 @@ html, body
 
 #wrapper
   height: 100%
-  background-color: black
+  background-color: $bg
   overflow: hidden
   white-space: nowrap
 
@@ -51,13 +51,13 @@ html, body
   background-color: $bg
   color: $fg
   text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
-  transition: 200ms
+  +transition(200ms)
 
   &.bell
-    -webkit-filter: blur(2px)
+    +filter(blur(2px))
 
   &.skip
-    -webkit-filter: sepia(1)
+    +filter(sepia(1))
 
 .line
   overflow: visible
@@ -67,7 +67,7 @@ html, body
 
 
 .focus .cursor
-  transition: 300ms
+  +transition(300ms)
 
 ::selection
   background-color: black
