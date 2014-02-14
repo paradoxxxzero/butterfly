@@ -30,24 +30,30 @@ ctl = (type, args...) ->
 
 ws_url = 'ws://' + document.location.host + '/ws' + location.pathname
 ws = new WebSocket ws_url
-term = new Terminal $('#wrapper')[0], send, ctl
 
-ws.onopen = ->
+ws.addEventListener 'open', ->
     console.log "WebSocket open", arguments
     ws.send 'R' + term.cols + ',' + term.rows
+    if location.hash
+        setTimeout ->
+            ws.send 'S' + location.hash.slice(1) + '\n'
+        , 100
 
-ws.onerror = -> console.log "WebSocket error", arguments
-ws.onmessage = (e) ->
+ws.addEventListener 'error', ->
+    console.log "WebSocket error", arguments
+
+ws.addEventListener 'message', (e) ->
     setTimeout ->
         term.write e.data
     , 1
 
-
-ws.onclose = ->
+ws.addEventListener 'close', ->
     console.log "WebSocket closed", arguments
     quit = true
     open('','_self').close()
 
+
+term = new Terminal $('#wrapper')[0], send, ctl
 addEventListener 'beforeunload', ->
     if not quit
         'This will exit the terminal session'

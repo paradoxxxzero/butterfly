@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-try
-    document.createEvent("TouchEvent")
-    virtual_input = true
-catch e
-    virtual_input = false
 
-
-if virtual_input
+if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test navigator.userAgent
     ctrl = false
     alt = false
     first = true
