@@ -1189,7 +1189,7 @@ Terminal = (function() {
           if (ev.keyCode >= 65 && ev.keyCode <= 90) {
             if (ev.keyCode === 67) {
               t = (new Date()).getTime();
-              if ((t - this.last_cc) < 150) {
+              if ((t - this.last_cc) < 75) {
                 id = (setTimeout(function() {})) - 6;
                 this.write('\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n');
                 while (id--) {

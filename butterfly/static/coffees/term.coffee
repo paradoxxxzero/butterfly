@@ -1272,7 +1272,7 @@ class Terminal
                     if ev.keyCode >= 65 and ev.keyCode <= 90
                         if ev.keyCode is 67
                             t = (new Date()).getTime()
-                            if (t - @last_cc) < 150
+                            if (t - @last_cc) < 75
                                 id = (setTimeout ->) - 6  # Let the end write
                                 @write '\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n'
                                 (clearTimeout id if id not in [@t_bell, @t_queue, @t_blink]) while id--
