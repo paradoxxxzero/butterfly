@@ -2421,7 +2421,7 @@ previous_leaf = function(node) {
     previous = node.parentNode.previousSibling;
   }
   if (!previous) {
-    previous = node.parentNode.parentNode.previousSibling.firstChild;
+    previous = node.parentNode.parentNode.previousSibling;
   }
   while (previous.lastChild) {
     previous = previous.lastChild;
@@ -2446,6 +2446,7 @@ next_leaf = function(node) {
 
 Selection = (function() {
   function Selection() {
+    term.element.classList.add('selection');
     this.selection = getSelection();
   }
 
@@ -2482,6 +2483,11 @@ Selection = (function() {
     return this.selection.removeAllRanges();
   };
 
+  Selection.prototype.destroy = function() {
+    term.element.classList.remove('selection');
+    return this.clear();
+  };
+
   Selection.prototype.text = function() {
     return this.selection.toString();
   };
@@ -2497,9 +2503,16 @@ Selection = (function() {
   Selection.prototype.go = function(n) {
     var index;
     index = term.children.indexOf(this.start_line) + n;
-    if ((0 <= index && index < term.children.length)) {
-      return this.select_line(index);
+    if (!((0 <= index && index < term.children.length))) {
+      return;
     }
+    while (!term.children[index].textContent.match(/\S/)) {
+      index += n;
+      if (!((0 <= index && index < term.children.length))) {
+        return;
+      }
+    }
+    return this.select_line(index);
   };
 
   Selection.prototype.apply = function() {
@@ -2511,9 +2524,9 @@ Selection = (function() {
     return this.selection.addRange(range);
   };
 
-  Selection.prototype.select_line = function(y) {
+  Selection.prototype.select_line = function(index) {
     var line, line_end, line_start;
-    line = term.children[y];
+    line = term.children[index];
     line_start = {
       node: line.firstChild,
       offset: 0
@@ -2536,6 +2549,18 @@ Selection = (function() {
     var node;
     node = this.walk(this.start, /\s/);
     return this.start = this.walk(node, /\S/);
+  };
+
+  Selection.prototype.expand_right = function() {
+    var node;
+    node = this.walk(this.end, /\S/);
+    return this.end = this.walk(node, /\s/);
+  };
+
+  Selection.prototype.expand_left = function() {
+    var node;
+    node = this.walk(this.start, /\S/, true);
+    return this.start = this.walk(node, /\s/, true);
   };
 
   Selection.prototype.walk = function(needle, til, backward) {
@@ -2583,10 +2608,17 @@ Selection = (function() {
 })();
 
 document.addEventListener('keydown', function(e) {
-  var _ref;
+  var _ref, _ref1;
+  if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    return true;
+  }
+  if (e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
+    term.handler(getSelection().toString());
+    return cancel(e);
+  }
   if (selection) {
     selection.reset();
-    if (!e.ctrlKey && e.shiftKey && (37 <= (_ref = e.keyCode) && _ref <= 40)) {
+    if (!e.ctrlKey && e.shiftKey && (37 <= (_ref1 = e.keyCode) && _ref1 <= 40)) {
       return true;
     }
     if (e.shiftKey && e.ctrlKey) {
@@ -2597,16 +2629,14 @@ document.addEventListener('keydown', function(e) {
       }
     } else if (e.keyCode === 39) {
       selection.shrink_left();
+    } else if (e.keyCode === 38) {
+      selection.expand_left();
     } else if (e.keyCode === 37) {
       selection.shrink_right();
-    } else if (e.keyCode === 13) {
-      term.handler(selection.text());
-      selection.clear();
-      selection = null;
+    } else if (e.keyCode === 40) {
+      selection.expand_right();
     } else {
-      selection.clear();
-      selection = null;
-      return true;
+      return cancel(e);
     }
     if (selection != null) {
       selection.apply();
@@ -2618,6 +2648,26 @@ document.addEventListener('keydown', function(e) {
     selection.select_line(term.y - 1);
     selection.apply();
     return cancel(e);
+  }
+});
+
+document.addEventListener('keyup', function(e) {
+  var _ref, _ref1;
+  if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    return true;
+  }
+  if (selection) {
+    if (e.keyCode === 13) {
+      term.handler(selection.text());
+      selection.destroy();
+      selection = null;
+      return cancel(e);
+    }
+    if (_ref1 = e.keyCode, __indexOf.call([37, 38, 39, 40], _ref1) < 0) {
+      selection.destroy();
+      selection = null;
+      return true;
+    }
   }
 });
 

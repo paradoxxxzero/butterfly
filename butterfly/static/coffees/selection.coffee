@@ -30,7 +30,7 @@ previous_leaf = (node) ->
     if not previous
         previous = node.parentNode.previousSibling
     if not previous
-        previous = node.parentNode.parentNode.previousSibling.firstChild
+        previous = node.parentNode.parentNode.previousSibling
     while previous.lastChild
         previous = previous.lastChild
     previous
@@ -47,6 +47,7 @@ next_leaf = (node) ->
 
 class Selection
     constructor: ->
+        term.element.classList.add('selection')
         @selection = getSelection()
 
     reset: ->
@@ -75,6 +76,10 @@ class Selection
     clear: ->
         @selection.removeAllRanges()
 
+    destroy: ->
+        term.element.classList.remove('selection')
+        @clear()
+
     text: ->
         @selection.toString()
 
@@ -86,8 +91,13 @@ class Selection
 
     go: (n) ->
         index = term.children.indexOf(@start_line) + n
-        if 0 <= index < term.children.length
-            @select_line index
+        return unless 0 <= index < term.children.length
+
+        until term.children[index].textContent.match /\S/
+            index += n
+            return unless 0 <= index < term.children.length
+
+        @select_line index
 
     apply: ->
         @clear()
@@ -96,12 +106,12 @@ class Selection
         range.setEnd @end.node, @end.offset
         @selection.addRange range
 
-    select_line: (y) ->
-        line = term.children[y]
-
+    select_line: (index) ->
+        line = term.children[index]
         line_start =
             node: line.firstChild
             offset: 0
+
         line_end =
             node: line.lastChild
             offset: line.lastChild.textContent.length
@@ -116,6 +126,14 @@ class Selection
     shrink_left: ->
         node = @walk @start, /\s/
         @start = @walk node, /\S/
+
+    expand_right: ->
+        node = @walk @end, /\S/
+        @end = @walk node, /\s/
+
+    expand_left: ->
+        node = @walk @start, /\S/, true
+        @start = @walk node, /\s/, true
 
     walk: (needle, til, backward=false) ->
         node = if needle.node.firstChild then needle.node.firstChild else needle.node
@@ -142,6 +160,13 @@ class Selection
 
 
 document.addEventListener 'keydown', (e) ->
+    return true if e.keyCode in [16..19]
+
+    # Paste natural selection too
+    if e.keyCode is 13 and not selection and not getSelection().isCollapsed
+        term.handler getSelection().toString()
+        return cancel e
+
     if selection
         selection.reset()
         if not e.ctrlKey and e.shiftKey and 37 <= e.keyCode <= 40
@@ -153,16 +178,14 @@ document.addEventListener 'keydown', (e) ->
                 selection.down()
         else if e.keyCode == 39
             selection.shrink_left()
+        else if e.keyCode == 38
+            selection.expand_left()
         else if e.keyCode == 37
             selection.shrink_right()
-        else if e.keyCode == 13
-            term.handler selection.text()
-            selection.clear()
-            selection = null
+        else if e.keyCode == 40
+            selection.expand_right()
         else
-            selection.clear()
-            selection = null
-            return true
+            return cancel e
 
         selection?.apply()
         return cancel e
@@ -173,6 +196,20 @@ document.addEventListener 'keydown', (e) ->
         selection.select_line term.y - 1
         selection.apply()
         return cancel e
+
+document.addEventListener 'keyup', (e) ->
+    return true if e.keyCode in [16..19]
+
+    if selection
+        if e.keyCode == 13
+            term.handler selection.text()
+            selection.destroy()
+            selection = null
+            return cancel e
+        if e.keyCode not in [37..40]
+            selection.destroy()
+            selection = null
+            return true
 
 document.addEventListener 'dblclick', (e) ->
     return if e.ctrlKey or e.altkey
