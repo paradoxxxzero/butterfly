@@ -24,9 +24,30 @@ selection = null
 #     range.setStart first_node, 0
 #     range.setEnd last_node, last_node.length
 #     range
+
+previous_leaf = (node) ->
+    previous = node.previousSibling
+    if not previous
+        previous = node.parentNode.previousSibling
+    if not previous
+        previous = node.parentNode.parentNode.previousSibling.firstChild
+    while previous.lastChild
+        previous = previous.lastChild
+    previous
+
+next_leaf = (node) ->
+    next = node.nextSibling
+    if not next
+        next = node.parentNode.nextSibling
+    if not next
+        next = node.parentNode.parentNode.nextSibling
+    while next.firstChild
+        next = next.firstChild
+    next
+
 class Selection
     constructor: ->
-        @reset()
+        @selection = getSelection()
 
     reset: ->
         @selection = getSelection()
@@ -35,13 +56,21 @@ class Selection
         fake_range.setEnd(@selection.focusNode, @selection.focusOffset)
         @start =
             node: @selection.anchorNode
-            off: @selection.anchorOffset
+            offset: @selection.anchorOffset
         @end =
             node: @selection.focusNode
-            off: @selection.focusOffset
+            offset: @selection.focusOffset
 
         if fake_range.collapsed
             [@start, @end] = [@end, @start]
+
+        @start_line = @start.node
+        while not @start_line.classList or 'line' not in @start_line.classList
+            @start_line = @start_line.parentNode
+
+        @end_line = @end.node
+        while not @end_line.classList or 'line' not in @end_line.classList
+            @end_line = @end_line.parentNode
 
     clear: ->
         @selection.removeAllRanges()
@@ -56,50 +85,60 @@ class Selection
         @go +1
 
     go: (n) ->
-        index = term.children.indexOf @get_selected_line()
+        index = term.children.indexOf(@start_line) + n
+        if 0 <= index < term.children.length
+            @select_line index
 
-        if 0 <= index + n < term.children.length
-            @clear()
-            @selection.addRange get_line_range(index + n)
+    apply: ->
+        @clear()
+        range = document.createRange()
+        range.setStart @start.node, @start.offset
+        range.setEnd @end.node, @end.offset
+        @selection.addRange range
 
-    get_selected_line: ->
-        node = @start.node
-        while not node.classList or 'line' not in node.classList
-            node = node.parentNode
-        node
+    select_line: (y) ->
+        line = term.children[y]
 
+        line_start =
+            node: line.firstChild
+            offset: 0
+        line_end =
+            node: line.lastChild
+            offset: line.lastChild.textContent.length
 
-nextLeaf = (node) ->
-    next = node.nextSibling
-    if not next
-        next = node.parentNode.nextSibling
-    if not next
-        next = node.parentNode.parentNode.nextSibling.firstChild
-    next
+        @start = @walk line_start, /\S/
+        @end = @walk line_end, /\S/, true
 
-find_node_offset = (line, backward=false) ->
-    step = if backward then -1 else 1
+    shrink_right: ->
+        node = @walk @end, /\s/, true
+        @end = @walk node, /\S/, true
 
-    for node in line.childNodes by step
-        if node.nodeType != node.TEXT_NODE
-            node = node.firstChild
-        for c, offset in node.textContent by step
-            if not c.match  /\s/
-                return [node, offset + if backward then 1 else 0]
-    return [line.firstChild, 0]
+    shrink_left: ->
+        node = @walk @start, /\s/
+        @start = @walk node, /\S/
 
-get_line_range = (y) ->
-    line = term.children[y]
-    range = document.createRange()
-    range.setStart.apply range, find_node_offset(line)
-    range.setEnd.apply range, find_node_offset(line, true)
-    range
+    walk: (needle, til, backward=false) ->
+        node = if needle.node.firstChild then needle.node.firstChild else needle.node
+        text = node.textContent
+        i = needle.offset
+        if backward
+            while node
+                while i > 0
+                    if text[--i].match til
+                        return node: node, offset: i + 1
+                node = previous_leaf node
+                text = node.textContent
+                i = text.length
+        else
+            while node
+                while i < text.length
+                    if text[i++].match til
+                        return node: node, offset: i - 1
+                node = next_leaf node
+                text = node.textContent
+                i = 0
 
-
-sel_to_line = (y) ->
-    selection = getSelection()
-    selection.removeAllRanges()
-    selection.addRange get_line_range(y)
+        return needle
 
 
 document.addEventListener 'keydown', (e) ->
@@ -110,11 +149,12 @@ document.addEventListener 'keydown', (e) ->
         if e.shiftKey and e.ctrlKey
             if e.keyCode == 38
                 selection.up()
-                return cancel e
             else if e.keyCode == 40
                 selection.down()
-                return cancel e
-
+        else if e.keyCode == 39
+            selection.shrink_left()
+        else if e.keyCode == 37
+            selection.shrink_right()
         else if e.keyCode == 13
             term.handler selection.text()
             selection.clear()
@@ -123,12 +163,15 @@ document.addEventListener 'keydown', (e) ->
             selection.clear()
             selection = null
             return true
+
+        selection?.apply()
         return cancel e
 
     # Start selection mode with shift up
     if not selection and e.ctrlKey and e.shiftKey and e.keyCode == 38
-        sel_to_line term.y - 1
         selection = new Selection()
+        selection.select_line term.y - 1
+        selection.apply()
         return cancel e
 
 document.addEventListener 'dblclick', (e) ->
