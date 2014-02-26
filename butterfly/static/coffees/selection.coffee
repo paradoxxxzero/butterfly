@@ -165,6 +165,7 @@ document.addEventListener 'keydown', (e) ->
     # Paste natural selection too
     if e.keyCode is 13 and not selection and not getSelection().isCollapsed
         term.handler getSelection().toString()
+        getSelection().removeAllRanges()
         return cancel e
 
     if selection
