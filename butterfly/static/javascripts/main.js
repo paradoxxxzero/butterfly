@@ -2614,6 +2614,7 @@ document.addEventListener('keydown', function(e) {
   }
   if (e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
     term.handler(getSelection().toString());
+    getSelection().removeAllRanges();
     return cancel(e);
   }
   if (selection) {
