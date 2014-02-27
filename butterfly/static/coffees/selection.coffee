@@ -162,8 +162,8 @@ class Selection
 document.addEventListener 'keydown', (e) ->
     return true if e.keyCode in [16..19]
 
-    # Paste natural selection too
-    if e.keyCode is 13 and not selection and not getSelection().isCollapsed
+    # Paste natural selection too if shiftkey
+    if e.shiftKey and e.keyCode is 13 and not selection and not getSelection().isCollapsed
         term.handler getSelection().toString()
         getSelection().removeAllRanges()
         return cancel e

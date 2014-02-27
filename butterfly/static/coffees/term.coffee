@@ -107,7 +107,7 @@ class Terminal
         # Horrible Firefox paste workaround
         if typeof InstallTrigger isnt "undefined"
             @element.contentEditable = 'true'
-            @element.addEventListener "mouseup", (ev) =>
+            @element.addEventListener "mouseup", =>
                 sel = getSelection().getRangeAt(0)
                 if sel.startOffset is sel.endOffset
                     getSelection().removeAllRanges()
