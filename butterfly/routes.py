@@ -230,7 +230,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.close()
 
     def on_close(self):
-        if self.pid == 0:
+        if getattr(self, 'pid', 0) == 0:
             self.log.warning('pid is 0')
             return
         try:

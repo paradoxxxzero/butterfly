@@ -28,6 +28,7 @@ options = dict(
     package_data={
         'butterfly': [
             'static/fonts/*',
+            'static/images/favicon.png',
             'static/stylesheets/main.css',
             'static/javascripts/main.js',
             'templates/index.html'
