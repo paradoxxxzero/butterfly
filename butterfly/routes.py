@@ -41,6 +41,12 @@ except NameError:
     pass
 
 
+def u(s):
+    if sys.version_info[0] == 2:
+        return s.decode('utf-8')
+    return s
+
+
 def motd(socket, caller, callee):
     return (
 '''
@@ -237,7 +243,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.log.warning('pid is 0')
             return
         try:
-            self.writer.write('')
+            self.writer.write(u('\x04'))
             self.writer.flush()
         except OSError:
             self.log.warning('closing term fail', exc_info=True)
