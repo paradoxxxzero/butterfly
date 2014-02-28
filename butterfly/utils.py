@@ -132,7 +132,7 @@ class Socket(object):
             try:
                 self.env = get_env(self.inode)
             except:
-                log.warning('Unable to get env', exc_info=True)
+                log.debug('Unable to get env', exc_info=True)
 
     @property
     def local(self):
