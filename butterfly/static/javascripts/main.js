@@ -1,2 +1,2860 @@
-var $,Selection,State,Terminal,alt,bench,cancel,cbench,cols,ctl,ctrl,first,next_leaf,previous_leaf,quit,rows,s,selection,send,term,virtual_input,ws,ws_url,__indexOf=[].indexOf||function(t){for(var e=0,s=this.length;s>e;e++)if(e in this&&this[e]===t)return e;return-1},__slice=[].slice;cancel=function(t){return t.preventDefault&&t.preventDefault(),t.stopPropagation&&t.stopPropagation(),t.cancelBubble=!0,!1},s=0,State={normal:s++,escaped:s++,csi:s++,osc:s++,charset:s++,dcs:s++,ignore:s++},Terminal=function(){function t(t,e,s){var i,r,n;for(this.parent=t,this.out=e,this.ctl=null!=s?s:function(){},this.context=this.parent.ownerDocument.defaultView,this.document=this.parent.ownerDocument,this.body=this.document.getElementsByTagName("body")[0],this.element=this.document.createElement("div"),this.element.className="terminal focus",this.element.style.outline="none",this.element.setAttribute("tabindex",0),this.parent.appendChild(this.element),i=this.document.createElement("div"),i.className="line",this.element.appendChild(i),this.children=[i],this.compute_char_size(),i.style.height=this.char_size.height+"px",n=this.parent.getBoundingClientRect(),this.cols=Math.floor(n.width/this.char_size.width)-1,this.rows=Math.floor(n.height/this.char_size.height),r=this.rows-1;r--;)i=this.document.createElement("div"),i.style.height=this.char_size.height+"px",i.className="line",this.element.appendChild(i),this.children.push(i);this.scrollback=1e5,this.visualBell=100,this.convertEol=!1,this.termName="xterm",this.cursorBlink=!0,this.cursorState=0,this.last_cc=0,this.reset_vars(),this.refresh(0,this.rows-1),this.focus(),this.startBlink(),addEventListener("keydown",this.keyDown.bind(this)),addEventListener("keypress",this.keyPress.bind(this)),addEventListener("focus",this.focus.bind(this)),addEventListener("blur",this.blur.bind(this)),addEventListener("paste",this.paste.bind(this)),addEventListener("resize",this.resize.bind(this)),"undefined"!=typeof InstallTrigger&&(this.element.contentEditable="true",this.element.addEventListener("mouseup",function(){var t;return t=getSelection().getRangeAt(0),t.startOffset===t.endOffset?getSelection().removeAllRanges():void 0})),this.initmouse()}return t.prototype.reset_vars=function(){var t;for(this.ybase=0,this.ydisp=0,this.x=0,this.y=0,this.cursorHidden=!1,this.state=State.normal,this.queue="",this.scrollTop=0,this.scrollBottom=this.rows-1,this.applicationKeypad=!1,this.applicationCursor=!1,this.originMode=!1,this.wraparoundMode=!1,this.normal=null,this.charset=null,this.gcharset=null,this.glevel=0,this.charsets=[null],this.defAttr=131840,this.curAttr=this.defAttr,this.params=[],this.currentParam=0,this.prefix="",this.lines=[],t=this.rows;t--;)this.lines.push(this.blankLine());return this.setupStops(),this.skipNextKey=null},t.prototype.compute_char_size=function(){var t;return t=document.createElement("span"),t.textContent="0123456789",this.children[0].appendChild(t),this.char_size={width:t.getBoundingClientRect().width/10,height:this.children[0].getBoundingClientRect().height},this.children[0].removeChild(t)},t.prototype.eraseAttr=function(){return-512&this.defAttr|511&this.curAttr},t.prototype.focus=function(){return this.sendFocus&&this.send("[I"),this.showCursor(),this.element.classList.add("focus"),this.element.classList.remove("blur")},t.prototype.blur=function(){return this.cursorState=1,this.refresh(this.y,this.y),this.sendFocus&&this.send("[O"),this.element.classList.add("blur"),this.element.classList.remove("focus")},t.prototype.paste=function(t){return t.clipboardData?this.send(t.clipboardData.getData("text/plain")):this.context.clipboardData&&this.send(this.context.clipboardData.getData("Text")),cancel(t)},t.prototype.initmouse=function(){var t,e,s,i,r,n,o,a=this;return i=32,r=function(t){var r,o;if(r=e(t),o=s(t))switch(n(r,o),t.type){case"mousedown":return i=r;case"mouseup":return i=32}},o=function(t){var e,r;return e=i,(r=s(t))?(e+=32,n(e,r)):void 0},t=function(t,e){return a.utfMouse?2047===e?t.push(0):127>e?t.push(e):(e>2047&&(e=2047),t.push(192|e>>6),t.push(128|63&e)):255===e?t.push(0):(e>127&&(e=127),t.push(e))},n=function(e,s){var i;return a.urxvtMouse?(s.x-=32,s.y-=32,s.x++,s.y++,void a.send("["+e+";"+s.x+";"+s.y+"M")):a.sgrMouse?(s.x-=32,s.y-=32,void a.send("[<"+(3===(3&e)?-4&e:e)+";"+s.x+";"+s.y+(3===(3&e)?"m":"M"))):(i=[],t(i,e),t(i,s.x),t(i,s.y),a.send("[M"+String.fromCharCode.apply(String,i)))},e=function(t){var e,s,i,r,n;switch(t.type){case"mousedown":e=null!=t.button?+t.button:null!=t.which?t.which-1:null;break;case"mouseup":e=3;break;case"wheel":e=t.deltaY<0?64:65}return n=t.shiftKey?4:0,i=t.metaKey?8:0,s=t.ctrlKey?16:0,r=n|i|s,a.vt200Mouse?r&=s:a.normalMouse||(r=0),32+(r<<2)+e},s=function(t){var e,s,i,r,n;for(r=t.pageX,n=t.pageY,e=a.element;e&&e!==a.document.documentElement;)r-=e.offsetLeft,n-=e.offsetTop,e="offsetParent"in e?e.offsetParent:e.parentNode;return i=a.element.clientWidth,s=a.element.clientHeight,r=Math.ceil(r/i*a.cols),n=Math.ceil(n/s*a.rows),0>r&&(r=0),r>a.cols&&(r=a.cols),0>n&&(n=0),n>a.rows&&(n=a.rows),r+=32,n+=32,{x:r,y:n,type:t.type}},addEventListener("mousedown",function(t){var e;if(a.mouseEvents)return r(t),a.vt200Mouse?(r({__proto__:t,type:"mouseup"}),cancel(t)):(a.normalMouse&&addEventListener("mousemove",o.bind(a)),a.x10Mouse||addEventListener("mouseup",e=function(t){return r(t),a.normalMouse&&removeEventListener("mousemove",o),removeEventListener("mouseup",e),cancel(t)}),cancel(t))}),addEventListener("wheel",function(t){if(a.mouseEvents){if(a.x10Mouse)return;r(t)}else{if(a.applicationKeypad)return;a.scrollDisp(t.deltaY>0?5:-5)}return cancel(t)})},t.prototype.refresh=function(t,e){var s,i,r,n,o,a,h,c,l,u,p,d,f,y,m;for(e-t>=this.rows/3&&(p=this.element.parentNode,null!=p&&p.removeChild(this.element)),f=this.cols,m=t,e>=this.lines.length&&(e=this.lines.length-1);e>=m;){for(d=m+this.ydisp,l=this.lines[d],u="",y=m!==this.y||this.ydisp!==this.ybase&&!this.selectMode||this.cursorHidden?-1/0:this.x,s=this.defAttr,c=0;f>c;){if(o=l[c][0],r=l[c][1],o!==s&&(s!==this.defAttr&&(u+="</span>"),o!==this.defAttr&&(n=[],u+="<span ",i=511&o,a=o>>9&511,h=o>>18,1&h&&n.push("bold"),2&h&&n.push("underline"),4&h&&n.push("blink"),8&h&&n.push("reverse-video"),16&h&&n.push("invisible"),1&h&&8>a&&(a+=8),n.push("bg-color-"+i),n.push("fg-color-"+a),u+='class="',u+=n.join(" "),u+='">')),c===y&&(u+='<span class="'+(this.cursorState?"reverse-video ":"")+'cursor">'),r.length>1)u+=r;else switch(r){case"&":u+="&amp;";break;case"<":u+="&lt;";break;case">":u+="&gt;";break;default:" ">=r?u+="&nbsp;":(r>"＀"&&"￯">r&&c++,u+=r)}c===y&&(u+="</span>"),s=o,c++}s!==this.defAttr&&(u+="</span>"),this.children[m].innerHTML=u,m++}return null!=p?p.appendChild(this.element):void 0},t.prototype._cursorBlink=function(){var t;return this.cursorState^=1,(t=this.element.querySelector(".cursor"))?t.classList.contains("reverse-video")?t.classList.remove("reverse-video"):t.classList.add("reverse-video"):void 0},t.prototype.showCursor=function(){return this.cursorState?void 0:(this.cursorState=1,this.refresh(this.y,this.y))},t.prototype.startBlink=function(){var t=this;if(this.cursorBlink)return this._blinker=function(){return t._cursorBlink()},this.t_blink=setInterval(this._blinker,500)},t.prototype.refreshBlink=function(){return this.cursorBlink?(clearInterval(this.t_blink),this.t_blink=setInterval(this._blinker,500)):void 0},t.prototype.scroll=function(){var t;return++this.ybase===this.scrollback&&(this.ybase=this.ybase/2|0,this.lines=this.lines.slice(-(this.ybase+this.rows)+1)),this.ydisp=this.ybase,t=this.ybase+this.rows-1,t-=this.rows-1-this.scrollBottom,t===this.lines.length?this.lines.push(this.blankLine()):this.lines.splice(t,0,this.blankLine()),0!==this.scrollTop&&(0!==this.ybase&&(this.ybase--,this.ydisp=this.ybase),this.lines.splice(this.ybase+this.scrollTop,1)),this.updateRange(this.scrollTop),this.updateRange(this.scrollBottom)},t.prototype.scrollDisp=function(t){return this.ydisp+=t,this.ydisp>this.ybase?this.ydisp=this.ybase:this.ydisp<0&&(this.ydisp=0),this.refresh(0,this.rows-1)},t.prototype.write=function(e){var s,i,r,n,o,a,h,c,l,u;for(this.refreshStart=this.y,this.refreshEnd=this.y,this.ybase!==this.ydisp&&(this.ydisp=this.ybase,this.maxRange()),n=0,a=e.length;a>n;){switch(s=e[n],this.state){case State.normal:switch(s){case"":this.bell();break;case"\n":case"":case"\f":this.convertEol&&(this.x=0),this.y++,this.y>this.scrollBottom&&(this.y--,this.scroll());break;case"\r":this.x=0;break;case"\b":this.x>0&&this.x--;break;case"	":this.x=this.nextStop();break;case"":this.setgLevel(1);break;case"":this.setgLevel(0);break;case"":this.state=State.escaped;break;default:if(s>=" "&&((null!=(u=this.charset)?u[s]:void 0)&&(s=this.charset[s]),this.x>=this.cols&&(this.x=0,this.y++,this.y>this.scrollBottom&&(this.y--,this.scroll())),this.lines[this.y+this.ybase][this.x]=[this.curAttr,s],this.x++,this.updateRange(this.y),s>"＀"&&"￯">s)){if(o=this.y+this.ybase,this.cols<2||this.x>=this.cols){this.lines[o][this.x-1]=[this.curAttr," "];break}this.lines[o][this.x]=[this.curAttr," "],this.x++}}break;case State.escaped:switch(s){case"[":this.params=[],this.currentParam=0,this.state=State.csi;break;case"]":this.params=[],this.currentParam=0,this.state=State.osc;break;case"P":this.params=[],this.currentParam=0,this.state=State.dcs;break;case"_":this.state=State.ignore;break;case"^":this.state=State.ignore;break;case"c":this.reset();break;case"E":this.x=0,this.index();break;case"D":this.index();break;case"M":this.reverseIndex();break;case"%":this.setgLevel(0),this.setgCharset(0,t.prototype.charsets.US),this.state=State.normal,n++;break;case"(":case")":case"*":case"+":case"-":case".":switch(s){case"(":this.gcharset=0;break;case")":case"-":this.gcharset=1;break;case"*":case".":this.gcharset=2;break;case"+":this.gcharset=3}this.state=State.charset;break;case"/":this.gcharset=3,this.state=State.charset,n--;break;case"n":this.setgLevel(2);break;case"o":this.setgLevel(3);break;case"|":this.setgLevel(3);break;case"}":this.setgLevel(2);break;case"~":this.setgLevel(1);break;case"7":this.saveCursor(),this.state=State.normal;break;case"8":this.restoreCursor(),this.state=State.normal;break;case"#":this.state=State.normal,n++;break;case"H":this.tabSet();break;case"=":this.applicationKeypad=!0,this.state=State.normal;break;case">":this.applicationKeypad=!1,this.state=State.normal;break;default:this.state=State.normal,console.log("Unknown ESC control:",s)}break;case State.charset:switch(s){case"0":i=t.prototype.charsets.SCLD;break;case"A":i=t.prototype.charsets.UK;break;case"B":i=t.prototype.charsets.US;break;case"4":i=t.prototype.charsets.Dutch;break;case"C":case"5":i=t.prototype.charsets.Finnish;break;case"R":i=t.prototype.charsets.French;break;case"Q":i=t.prototype.charsets.FrenchCanadian;break;case"K":i=t.prototype.charsets.German;break;case"Y":i=t.prototype.charsets.Italian;break;case"E":case"6":i=t.prototype.charsets.NorwegianDanish;break;case"Z":i=t.prototype.charsets.Spanish;break;case"H":case"7":i=t.prototype.charsets.Swedish;break;case"=":i=t.prototype.charsets.Swiss;break;case"/":i=t.prototype.charsets.ISOLatin,n++;break;default:i=t.prototype.charsets.US}this.setgCharset(this.gcharset,i),this.gcharset=null,this.state=State.normal;break;case State.osc:if(""===s||""===s){switch(""===s&&n++,this.params.push(this.currentParam),this.params[0]){case 0:case 1:case 2:this.params[1]&&(this.title=this.params[1]+" - ƸӜƷ butterfly",this.handleTitle(this.title));break;case 99:for(r='<div class="inline-html">'+this.params[1]+"</div>",this.lines[this.y+this.ybase][this.x]=[this.curAttr,r],h=0;h<this.get_html_height_in_lines(r)-1;)this.y++,this.y>this.scrollBottom&&(this.y--,this.scroll()),h++;this.updateRange(this.y)}this.params=[],this.currentParam=0,this.state=State.normal}else this.params.length?this.currentParam+=s:s>="0"&&"9">=s?this.currentParam=10*this.currentParam+s.charCodeAt(0)-48:";"===s&&(this.params.push(this.currentParam),this.currentParam="");break;case State.csi:if("?"===s||">"===s||"!"===s){this.prefix=s;break}if(s>="0"&&"9">=s){this.currentParam=10*this.currentParam+s.charCodeAt(0)-48;break}if("$"===s||'"'===s||" "===s||"'"===s)break;if(this.params.push(this.currentParam),this.currentParam=0,";"===s)break;switch(this.state=State.normal,s){case"A":this.cursorUp(this.params);break;case"B":this.cursorDown(this.params);break;case"C":this.cursorForward(this.params);break;case"D":this.cursorBackward(this.params);break;case"H":this.cursorPos(this.params);break;case"J":this.eraseInDisplay(this.params);break;case"K":this.eraseInLine(this.params);break;case"m":this.prefix||this.charAttributes(this.params);break;case"n":this.prefix||this.deviceStatus(this.params);break;case"@":this.insertChars(this.params);break;case"E":this.cursorNextLine(this.params);break;case"F":this.cursorPrecedingLine(this.params);break;case"G":this.cursorCharAbsolute(this.params);break;case"L":this.insertLines(this.params);break;case"M":this.deleteLines(this.params);break;case"P":this.deleteChars(this.params);break;case"X":this.eraseChars(this.params);break;case"`":this.charPosAbsolute(this.params);break;case"a":this.HPositionRelative(this.params);break;case"c":this.sendDeviceAttributes(this.params);break;case"d":this.linePosAbsolute(this.params);break;case"e":this.VPositionRelative(this.params);break;case"f":this.HVPosition(this.params);break;case"h":this.setMode(this.params);break;case"l":this.resetMode(this.params);break;case"r":this.setScrollRegion(this.params);break;case"s":this.saveCursor(this.params);break;case"u":this.restoreCursor(this.params);break;case"I":this.cursorForwardTab(this.params);break;case"S":this.scrollUp(this.params);break;case"T":this.params.length<2&&!this.prefix&&this.scrollDown(this.params);break;case"Z":this.cursorBackwardTab(this.params);break;case"b":this.repeatPrecedingCharacter(this.params);break;case"g":this.tabClear(this.params);break;case"p":"!"===this.prefix&&this.softReset(this.params);break;default:console.error("Unknown CSI code: %s.",s)}this.prefix="";break;case State.dcs:if(""===s||""===s){switch(""===s&&n++,this.prefix){case"":break;case"$q":switch(c=this.currentParam,l=!1,c){case'"q':c='0"q';break;case'"p':c='61"p';break;case"r":c=""+(this.scrollTop+1)+";"+(this.scrollBottom+1)+"r";break;case"m":c="0m";break;default:console.error("Unknown DCS Pt: %s.",c),c=""}this.send("P"+ +l+"$r"+c+"\\");break;case"+q":c=this.currentParam,l=!1,this.send("P"+ +l+"+r"+c+"\\");break;default:console.error("Unknown DCS prefix: %s.",this.prefix)}this.currentParam=0,this.prefix="",this.state=State.normal}else this.currentParam?this.currentParam+=s:this.prefix||"$"===s||"+"===s?2===this.prefix.length?this.currentParam=s:this.prefix+=s:this.currentParam=s;break;case State.ignore:(""===s||""===s)&&(""===s&&n++,this.state=State.normal)}n++}return this.updateRange(this.y),this.refresh(this.refreshStart,this.refreshEnd)},t.prototype.writeln=function(t){return this.write(""+t+"\r\n")},t.prototype.keyDown=function(t){var e,s,i;if(t.keyCode>15&&t.keyCode<19)return!0;if((t.shiftKey||t.ctrlKey)&&45===t.keyCode)return!0;if(t.altKey&&90===t.keyCode&&!this.skipNextKey)return this.skipNextKey=!0,this.element.classList.add("skip"),cancel(t);if(this.skipNextKey)return this.skipNextKey=!1,this.element.classList.remove("skip"),!0;switch(t.keyCode){case 8:if(s=t.altKey?"":"",t.shiftKey){s+="\b";break}s+="";break;case 9:if(t.shiftKey){s="[Z";break}s="	";break;case 13:s="\r";break;case 27:s="";break;case 37:if(this.applicationCursor){s="OD";break}if(t.shiftKey)return!0;s="[D";break;case 39:if(this.applicationCursor){s="OC";break}if(t.shiftKey)return!0;s="[C";break;case 38:if(this.applicationCursor){s="OA";break}if(t.ctrlKey)return this.scrollDisp(-1),cancel(t);if(t.shiftKey)return!0;s="[A";break;case 40:if(this.applicationCursor){s="OB";break}if(t.ctrlKey)return this.scrollDisp(1),cancel(t);if(t.shiftKey)return!0;s="[B";break;case 46:s="[3~";break;case 45:s="[2~";break;case 36:if(this.applicationKeypad){s="OH";break}s="OH";break;case 35:if(this.applicationKeypad){s="OF";break}s="OF";break;case 33:if(t.shiftKey)return this.scrollDisp(-(this.rows-1)),cancel(t);s="[5~";break;case 34:if(t.shiftKey)return this.scrollDisp(this.rows-1),cancel(t);s="[6~";break;case 112:s="OP";break;case 113:s="OQ";break;case 114:s="OR";break;case 115:s="OS";break;case 116:s="[15~";break;case 117:s="[17~";break;case 118:s="[18~";break;case 119:s="[19~";break;case 120:s="[20~";break;case 121:s="[21~";break;case 122:s="[23~";break;case 123:s="[24~";break;default:if(t.ctrlKey)if(t.keyCode>=65&&t.keyCode<=90){if(67===t.keyCode){if(i=(new Date).getTime(),i-this.last_cc<75)for(e=setTimeout(function(){})-6,this.write("\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n");e--;)e!==this.t_bell&&e!==this.t_queue&&e!==this.t_blink&&clearTimeout(e);this.last_cc=i}s=String.fromCharCode(t.keyCode-64)}else 32===t.keyCode?s=String.fromCharCode(0):t.keyCode>=51&&t.keyCode<=55?s=String.fromCharCode(t.keyCode-51+27):56===t.keyCode?s=String.fromCharCode(127):219===t.keyCode?s=String.fromCharCode(27):221===t.keyCode&&(s=String.fromCharCode(29));else t.altKey&&(t.keyCode>=65&&t.keyCode<=90?s=""+String.fromCharCode(t.keyCode+32):192===t.keyCode?s="`":t.keyCode>=48&&t.keyCode<=57&&(s=""+(t.keyCode-48)))}return t.keyCode>=37&&t.keyCode<=40&&(t.ctrlKey?s=s.slice(0,-1)+"1;5"+s.slice(-1):t.altKey?s=s.slice(0,-1)+"1;3"+s.slice(-1):t.shiftKey&&(s=s.slice(0,-1)+"1;4"+s.slice(-1))),s?this.prefixMode?(this.leavePrefix(),cancel(t)):this.selectMode?(this.keySelect(t,s),cancel(t)):(this.showCursor(),this.handler(s),cancel(t)):!0},t.prototype.setgLevel=function(t){return this.glevel=t,this.charset=this.charsets[t]},t.prototype.setgCharset=function(t,e){return this.charsets[t]=e,this.glevel===t?this.charset=e:void 0},t.prototype.keyPress=function(t){var e;if(this.skipNextKey===!1)return this.skipNextKey=null,!0;if(cancel(t),t.charCode)e=t.charCode;else if(null==t.which)e=t.keyCode;else{if(0===t.which||0===t.charCode)return!1;e=t.which}return!e||t.ctrlKey||t.altKey||t.metaKey?!1:(e=String.fromCharCode(e),this.showCursor(),this.handler(e),!1)},t.prototype.send=function(t){var e=this;return this.queue||(this.t_queue=setTimeout(function(){return e.handler(e.queue),e.queue=""},1)),this.queue+=t},t.prototype.bell=function(){var t=this;if(this.visualBell)return this.element.classList.add("bell"),this.t_bell=setTimeout(function(){return t.element.classList.remove("bell")},this.visualBell)},t.prototype.resize=function(){var t,e,s,i,r,n,o,a;if(n=this.cols,o=this.rows,a=this.parent.getBoundingClientRect(),this.cols=Math.floor(a.width/this.char_size.width)-1,this.rows=Math.floor(a.height/this.char_size.height),n!==this.cols||o!==this.rows){if(this.ctl("Resize",this.cols,this.rows),n<this.cols)for(t=[this.defAttr," "],s=this.lines.length;s--;)for(;this.lines[s].length<this.cols;)this.lines[s].push(t);else if(n>this.cols)for(s=this.lines.length;s--;)for(;this.lines[s].length>this.cols;)this.lines[s].pop();if(this.setupStops(n),i=o,i<this.rows)for(e=this.element;i++<this.rows;)this.lines.length<this.rows+this.ybase&&this.lines.push(this.blankLine()),this.children.length<this.rows&&(r=this.document.createElement("div"),r.className="line",r.style.height=this.char_size.height+"px",e.appendChild(r),this.children.push(r));else if(i>this.rows)for(;i-->this.rows;)if(this.lines.length>this.rows+this.ybase&&this.lines.pop(),this.children.length>this.rows){if(e=this.children.pop(),!e)continue;e.parentNode.removeChild(e)}return this.y>=this.rows&&(this.y=this.rows-1),this.x>=this.cols&&(this.x=this.cols-1),this.scrollTop=0,this.scrollBottom=this.rows-1,this.refresh(0,this.rows-1),this.normal=null}},t.prototype.updateRange=function(t){return t<this.refreshStart&&(this.refreshStart=t),t>this.refreshEnd?this.refreshEnd=t:void 0},t.prototype.maxRange=function(){return this.refreshStart=0,this.refreshEnd=this.rows-1},t.prototype.setupStops=function(t){var e;for(null!=t?this.tabs[t]||(t=this.prevStop(t)):(this.tabs={},t=0),e=[];t<this.cols;)this.tabs[t]=!0,e.push(t+=8);return e},t.prototype.prevStop=function(t){for(null==t&&(t=this.x);!this.tabs[--t]&&t>0;);return t>=this.cols?this.cols-1:0>t?0:t},t.prototype.nextStop=function(t){for(null==t&&(t=this.x);!this.tabs[++t]&&t<this.cols;);return t>=this.cols?this.cols-1:0>t?0:t},t.prototype.eraseRight=function(t,e){var s,i;for(i=this.lines[this.ybase+e],s=[this.eraseAttr()," "];t<this.cols;)i[t]=s,t++;return this.updateRange(e)},t.prototype.eraseLeft=function(t,e){var s,i;for(i=this.lines[this.ybase+e],s=[this.eraseAttr()," "],t++;t--;)i[t]=s;return this.updateRange(e)},t.prototype.eraseLine=function(t){return this.eraseRight(0,t)},t.prototype.blankLine=function(t){var e,s,i,r;for(e=t?this.eraseAttr():this.defAttr,s=[e," "],r=[],i=0;i<this.cols;)r[i]=s,i++;return r},t.prototype.ch=function(t){return t?[this.eraseAttr()," "]:[this.defAttr," "]},t.prototype.isterm=function(t){return 0===(""+this.termName).indexOf(t)},t.prototype.handler=function(t){return this.out(t)},t.prototype.handleTitle=function(t){return document.title=t},t.prototype.index=function(){return this.y++,this.y>this.scrollBottom&&(this.y--,this.scroll()),this.state=State.normal},t.prototype.reverseIndex=function(){var t;return this.y--,this.y<this.scrollTop&&(this.y++,this.lines.splice(this.y+this.ybase,0,this.blankLine(!0)),t=this.rows-1-this.scrollBottom,this.lines.splice(this.rows-1+this.ybase-t+1,1),this.updateRange(this.scrollTop),this.updateRange(this.scrollBottom)),this.state=State.normal},t.prototype.reset=function(){return this.reset_vars(),this.refresh(0,this.rows-1)},t.prototype.tabSet=function(){return this.tabs[this.x]=!0,this.state=State.normal},t.prototype.cursorUp=function(t){var e;return e=t[0],1>e&&(e=1),this.y-=e,this.y<0?this.y=0:void 0},t.prototype.cursorDown=function(t){var e;return e=t[0],1>e&&(e=1),this.y+=e,this.y>=this.rows?this.y=this.rows-1:void 0},t.prototype.cursorForward=function(t){var e;return e=t[0],1>e&&(e=1),this.x+=e,this.x>=this.cols?this.x=this.cols-1:void 0},t.prototype.cursorBackward=function(t){var e;return e=t[0],1>e&&(e=1),this.x-=e,this.x<0?this.x=0:void 0},t.prototype.cursorPos=function(t){var e,s;return s=t[0]-1,e=t.length>=2?t[1]-1:0,0>s?s=0:s>=this.rows&&(s=this.rows-1),0>e?e=0:e>=this.cols&&(e=this.cols-1),this.x=e,this.y=s},t.prototype.eraseInDisplay=function(t){var e,s,i,r;switch(t[0]){case 0:for(this.eraseRight(this.x,this.y),e=this.y+1,s=[];e<this.rows;)this.eraseLine(e),s.push(e++);return s;case 1:for(this.eraseLeft(this.x,this.y),e=this.y,i=[];e--;)i.push(this.eraseLine(e));return i;case 2:for(e=this.rows,r=[];e--;)r.push(this.eraseLine(e));return r}},t.prototype.eraseInLine=function(t){switch(t[0]){case 0:return this.eraseRight(this.x,this.y);case 1:return this.eraseLeft(this.x,this.y);case 2:return this.eraseLine(this.y)}},t.prototype.charAttributes=function(t){var e,s,i,r,n,o;if(1===t.length&&0===t[0])return void(this.curAttr=this.defAttr);for(i=this.curAttr>>18,s=this.curAttr>>9&511,e=511&this.curAttr,n=t.length,r=0;n>r;)o=t[r],o>=30&&37>=o?s=o-30:o>=40&&47>=o?e=o-40:o>=90&&97>=o?(o+=8,s=o-90):o>=100&&107>=o?(o+=8,e=o-100):0===o?(i=this.defAttr>>18,s=this.defAttr>>9&511,e=511&this.defAttr):1===o?i|=1:4===o?i|=2:5===o?i|=4:7===o?i|=8:8===o?i|=16:22===o?i&=-2:24===o?i&=-3:25===o?i&=-5:27===o?i&=-9:28===o?i&=-17:39===o?s=this.defAttr>>9&511:49===o?e=511&this.defAttr:38===o?2===t[r+1]?(r+=2,s="#"+t[r]&255+t[r+1]&255+t[r+2]&255,r+=2):5===t[r+1]&&(r+=2,s=255&t[r]):48===o?2===t[r+1]?(r+=2,e="#"+t[r]&255+t[r+1]&255+t[r+2]&255,r+=2):5===t[r+1]&&(r+=2,e=255&t[r]):100===o?(s=this.defAttr>>9&511,e=511&this.defAttr):console.error("Unknown SGR attribute: %d.",o),r++;return this.curAttr=i<<18|s<<9|e},t.prototype.deviceStatus=function(t){if(this.prefix){if("?"===this.prefix&&6===t[0])return this.send("[?"+(this.y+1)+";"+(this.x+1)+"R")}else switch(t[0]){case 5:return this.send("[0n");case 6:return this.send("["+(this.y+1)+";"+(this.x+1)+"R")}},t.prototype.insertChars=function(t){var e,s,i,r,n;for(i=t[0],1>i&&(i=1),r=this.y+this.ybase,s=this.x,e=[this.eraseAttr()," "],n=[];i--&&s<this.cols;)this.lines[r].splice(s++,0,e),n.push(this.lines[r].pop());return n},t.prototype.cursorNextLine=function(t){var e;return e=t[0],1>e&&(e=1),this.y+=e,this.y>=this.rows&&(this.y=this.rows-1),this.x=0},t.prototype.cursorPrecedingLine=function(t){var e;return e=t[0],1>e&&(e=1),this.y-=e,this.y<0&&(this.y=0),this.x=0},t.prototype.cursorCharAbsolute=function(t){var e;return e=t[0],1>e&&(e=1),this.x=e-1},t.prototype.insertLines=function(t){var e,s,i;for(s=t[0],1>s&&(s=1),i=this.y+this.ybase,e=this.rows-1-this.scrollBottom,e=this.rows-1+this.ybase-e+1;s--;)this.lines.splice(i,0,this.blankLine(!0)),this.lines.splice(e,1);return this.updateRange(this.y),this.updateRange(this.scrollBottom)},t.prototype.deleteLines=function(t){var e,s,i;for(s=t[0],1>s&&(s=1),i=this.y+this.ybase,e=this.rows-1-this.scrollBottom,e=this.rows-1+this.ybase-e;s--;)this.lines.splice(e+1,0,this.blankLine(!0)),this.lines.splice(i,1);return this.updateRange(this.y),this.updateRange(this.scrollBottom)},t.prototype.deleteChars=function(t){var e,s,i,r;for(s=t[0],1>s&&(s=1),i=this.y+this.ybase,e=[this.eraseAttr()," "],r=[];s--;)this.lines[i].splice(this.x,1),r.push(this.lines[i].push(e));return r},t.prototype.eraseChars=function(t){var e,s,i,r,n;for(i=t[0],1>i&&(i=1),r=this.y+this.ybase,s=this.x,e=[this.eraseAttr()," "],n=[];i--&&s<this.cols;)n.push(this.lines[r][s++]=e);return n},t.prototype.charPosAbsolute=function(t){var e;return e=t[0],1>e&&(e=1),this.x=e-1,this.x>=this.cols?this.x=this.cols-1:void 0},t.prototype.HPositionRelative=function(t){var e;return e=t[0],1>e&&(e=1),this.x+=e,this.x>=this.cols?this.x=this.cols-1:void 0},t.prototype.sendDeviceAttributes=function(t){if(!(t[0]>0))if(this.prefix){if(">"===this.prefix){if(this.isterm("xterm"))return this.send("[>0;276;0c");if(this.isterm("rxvt-unicode"))return this.send("[>85;95;0c");if(this.isterm("linux"))return this.send(t[0]+"c");if(this.isterm("screen"))return this.send("[>83;40003;0c")}}else{if(this.isterm("xterm")||this.isterm("rxvt-unicode")||this.isterm("screen"))return this.send("[?1;2c");if(this.isterm("linux"))return this.send("[?6c")}},t.prototype.linePosAbsolute=function(t){var e;return e=t[0],1>e&&(e=1),this.y=e-1,this.y>=this.rows?this.y=this.rows-1:void 0},t.prototype.VPositionRelative=function(t){var e;return e=t[0],1>e&&(e=1),this.y+=e,this.y>=this.rows?this.y=this.rows-1:void 0},t.prototype.HVPosition=function(t){return t[0]<1&&(t[0]=1),t[1]<1&&(t[1]=1),this.y=t[0]-1,this.y>=this.rows&&(this.y=this.rows-1),this.x=t[1]-1,this.x>=this.cols?this.x=this.cols-1:void 0},t.prototype.setMode=function(e){var s,i,r;if("object"!=typeof e){if("?"===this.prefix)switch(e){case 1:return this.applicationCursor=!0;case 2:return this.setgCharset(0,t.prototype.charsets.US),this.setgCharset(1,t.prototype.charsets.US),this.setgCharset(2,t.prototype.charsets.US),this.setgCharset(3,t.prototype.charsets.US);case 3:return this.savedCols=this.cols,this.resize(132,this.rows);case 6:return this.originMode=!0;case 7:return this.wraparoundMode=!0;case 66:return this.applicationKeypad=!0;case 9:case 1e3:case 1002:case 1003:return this.x10Mouse=9===e,this.vt200Mouse=1e3===e,this.normalMouse=e>1e3,this.mouseEvents=!0,this.element.style.cursor="pointer";case 1004:return this.sendFocus=!0;case 1005:return this.utfMouse=!0;case 1006:return this.sgrMouse=!0;case 1015:return this.urxvtMouse=!0;case 25:return this.cursorHidden=!1;case 1049:case 47:case 1047:if(!this.normal)return r={lines:this.lines,ybase:this.ybase,ydisp:this.ydisp,x:this.x,y:this.y,scrollTop:this.scrollTop,scrollBottom:this.scrollBottom,tabs:this.tabs},this.reset(),this.normal=r,this.showCursor()}}else for(i=e.length,s=0;i>s;)this.setMode(e[s]),s++},t.prototype.resetMode=function(t){var e,s;if("object"!=typeof t){if("?"===this.prefix)switch(t){case 1:return this.applicationCursor=!1;case 3:return 132===this.cols&&this.savedCols&&this.resize(this.savedCols,this.rows),delete this.savedCols;case 6:return this.originMode=!1;case 7:return this.wraparoundMode=!1;case 66:return this.applicationKeypad=!1;case 9:case 1e3:case 1002:case 1003:return this.x10Mouse=!1,this.vt200Mouse=!1,this.normalMouse=!1,this.mouseEvents=!1,this.element.style.cursor="";case 1004:return this.sendFocus=!1;case 1005:return this.utfMouse=!1;case 1006:return this.sgrMouse=!1;case 1015:return this.urxvtMouse=!1;case 25:return this.cursorHidden=!0;case 1049:case 47:case 1047:if(this.normal)return this.lines=this.normal.lines,this.ybase=this.normal.ybase,this.ydisp=this.normal.ydisp,this.x=this.normal.x,this.y=this.normal.y,this.scrollTop=this.normal.scrollTop,this.scrollBottom=this.normal.scrollBottom,this.tabs=this.normal.tabs,this.normal=null,this.refresh(0,this.rows-1),this.showCursor()}}else for(s=t.length,e=0;s>e;)this.resetMode(t[e]),e++},t.prototype.setScrollRegion=function(t){return this.prefix?void 0:(this.scrollTop=(t[0]||1)-1,this.scrollBottom=(t[1]||this.rows)-1,this.x=0,this.y=0)},t.prototype.saveCursor=function(){return this.savedX=this.x,this.savedY=this.y},t.prototype.restoreCursor=function(){return this.x=this.savedX||0,this.y=this.savedY||0},t.prototype.cursorForwardTab=function(t){var e,s;for(e=t[0]||1,s=[];e--;)s.push(this.x=this.nextStop());return s},t.prototype.scrollUp=function(t){var e;for(e=t[0]||1;e--;)this.lines.splice(this.ybase+this.scrollTop,1),this.lines.splice(this.ybase+this.scrollBottom,0,this.blankLine());return this.updateRange(this.scrollTop),this.updateRange(this.scrollBottom)},t.prototype.scrollDown=function(t){var e;for(e=t[0]||1;e--;)this.lines.splice(this.ybase+this.scrollBottom,1),this.lines.splice(this.ybase+this.scrollTop,0,this.blankLine());return this.updateRange(this.scrollTop),this.updateRange(this.scrollBottom)},t.prototype.initMouseTracking=function(){},t.prototype.resetTitleModes=function(){},t.prototype.cursorBackwardTab=function(t){var e,s;for(e=t[0]||1,s=[];e--;)s.push(this.x=this.prevStop());return s},t.prototype.repeatPrecedingCharacter=function(t){var e,s,i,r;for(i=t[0]||1,s=this.lines[this.ybase+this.y],e=s[this.x-1]||[this.defAttr," "],r=[];i--;)r.push(s[this.x++]=e);return r},t.prototype.tabClear=function(t){var e;return e=t[0],0>=e?delete this.tabs[this.x]:3===e?this.tabs={}:void 0},t.prototype.mediaCopy=function(){},t.prototype.setResources=function(){},t.prototype.disableModifiers=function(){},t.prototype.setPointerMode=function(){},t.prototype.softReset=function(){return this.cursorHidden=!1,this.insertMode=!1,this.originMode=!1,this.wraparoundMode=!1,this.applicationKeypad=!1,this.applicationCursor=!1,this.scrollTop=0,this.scrollBottom=this.rows-1,this.curAttr=this.defAttr,this.x=this.y=0,this.charset=null,this.glevel=0,this.charsets=[null]},t.prototype.requestAnsiMode=function(){},t.prototype.requestPrivateMode=function(){},t.prototype.setConformanceLevel=function(){},t.prototype.loadLEDs=function(){},t.prototype.setCursorStyle=function(){},t.prototype.setCharProtectionAttr=function(){},t.prototype.restorePrivateValues=function(){},t.prototype.setAttrInRectangle=function(t){var e,s,i,r,n,o,a;for(a=t[0],r=t[1],s=t[2],o=t[3],e=t[4];s+1>a;){for(n=this.lines[this.ybase+a],i=r;o>i;)n[i]=[e,n[i][1]],i++;a++}return this.updateRange(t[0]),this.updateRange(t[2])},t.prototype.savePrivateValues=function(){},t.prototype.manipulateWindow=function(){},t.prototype.reverseAttrInRectangle=function(){},t.prototype.setTitleModeFeature=function(){},t.prototype.setWarningBellVolume=function(){},t.prototype.setMarginBellVolume=function(){},t.prototype.copyRectangle=function(){},t.prototype.enableFilterRectangle=function(){},t.prototype.requestParameters=function(){},t.prototype.selectChangeExtent=function(){},t.prototype.fillRectangle=function(t){var e,s,i,r,n,o,a;for(s=t[0],a=t[1],r=t[2],e=t[3],o=t[4];e+1>a;){for(n=this.lines[this.ybase+a],i=r;o>i;)n[i]=[n[i][0],String.fromCharCode(s)],i++;a++}return this.updateRange(t[1]),this.updateRange(t[3])
-},t.prototype.enableLocatorReporting=function(t){var e;return e=t[0]>0},t.prototype.eraseRectangle=function(t){var e,s,i,r,n,o,a;for(a=t[0],r=t[1],e=t[2],o=t[3],s=[this.eraseAttr()," "];e+1>a;){for(n=this.lines[this.ybase+a],i=r;o>i;)n[i]=s,i++;a++}return this.updateRange(t[0]),this.updateRange(t[2])},t.prototype.setLocatorEvents=function(){},t.prototype.selectiveEraseRectangle=function(){},t.prototype.requestLocatorPosition=function(){},t.prototype.insertColumns=function(){var t,e,s,i;for(i=params[0],s=this.ybase+this.rows,t=[this.eraseAttr()," "];i--;)for(e=this.ybase;s>e;)this.lines[e].splice(this.x+1,0,t),this.lines[e].pop(),e++;return this.maxRange()},t.prototype.deleteColumns=function(){var t,e,s,i;for(i=params[0],s=this.ybase+this.rows,t=[this.eraseAttr()," "];i--;)for(e=this.ybase;s>e;)this.lines[e].splice(this.x,1),this.lines[e].push(t),e++;return this.maxRange()},t.prototype.get_html_height_in_lines=function(t){var e,s;return s=document.createElement("div"),s.innerHTML=t,this.element.appendChild(s),e=s.getBoundingClientRect().height,this.element.removeChild(s),Math.ceil(e/this.char_size.height)},t.prototype.charsets={SCLD:{"`":"◆",a:"▒",b:"	",c:"\f",d:"\r",e:"\n",f:"°",g:"±",h:"␤",i:"",j:"┘",k:"┐",l:"┌",m:"└",n:"┼",o:"⎺",p:"⎻",q:"─",r:"⎼",s:"⎽",t:"├",u:"┤",v:"┴",w:"┬",x:"│",y:"≤",z:"≥","{":"π","|":"≠","}":"£","~":"·"},UK:null,US:null,Dutch:null,Finnish:null,French:null,FrenchCanadian:null,German:null,Italian:null,NorwegianDanish:null,Spanish:null,Swedish:null,Swiss:null,ISOLatin:null},t}(),selection=null,previous_leaf=function(t){var e;for(e=t.previousSibling,e||(e=t.parentNode.previousSibling),e||(e=t.parentNode.parentNode.previousSibling);e.lastChild;)e=e.lastChild;return e},next_leaf=function(t){var e;for(e=t.nextSibling,e||(e=t.parentNode.nextSibling),e||(e=t.parentNode.parentNode.nextSibling);e.firstChild;)e=e.firstChild;return e},Selection=function(){function t(){term.element.classList.add("selection"),this.selection=getSelection()}return t.prototype.reset=function(){var t,e,s;for(this.selection=getSelection(),t=document.createRange(),t.setStart(this.selection.anchorNode,this.selection.anchorOffset),t.setEnd(this.selection.focusNode,this.selection.focusOffset),this.start={node:this.selection.anchorNode,offset:this.selection.anchorOffset},this.end={node:this.selection.focusNode,offset:this.selection.focusOffset},t.collapsed&&(e=[this.end,this.start],this.start=e[0],this.end=e[1]),this.start_line=this.start.node;!this.start_line.classList||__indexOf.call(this.start_line.classList,"line")<0;)this.start_line=this.start_line.parentNode;for(this.end_line=this.end.node,s=[];!this.end_line.classList||__indexOf.call(this.end_line.classList,"line")<0;)s.push(this.end_line=this.end_line.parentNode);return s},t.prototype.clear=function(){return this.selection.removeAllRanges()},t.prototype.destroy=function(){return term.element.classList.remove("selection"),this.clear()},t.prototype.text=function(){return this.selection.toString()},t.prototype.up=function(){return this.go(-1)},t.prototype.down=function(){return this.go(1)},t.prototype.go=function(t){var e;if(e=term.children.indexOf(this.start_line)+t,e>=0&&e<term.children.length){for(;!term.children[e].textContent.match(/\S/);)if(e+=t,!(e>=0&&e<term.children.length))return;return this.select_line(e)}},t.prototype.apply=function(){var t;return this.clear(),t=document.createRange(),t.setStart(this.start.node,this.start.offset),t.setEnd(this.end.node,this.end.offset),this.selection.addRange(t)},t.prototype.select_line=function(t){var e,s,i;return e=term.children[t],i={node:e.firstChild,offset:0},s={node:e.lastChild,offset:e.lastChild.textContent.length},this.start=this.walk(i,/\S/),this.end=this.walk(s,/\S/,!0)},t.prototype.shrink_right=function(){var t;return t=this.walk(this.end,/\s/,!0),this.end=this.walk(t,/\S/,!0)},t.prototype.shrink_left=function(){var t;return t=this.walk(this.start,/\s/),this.start=this.walk(t,/\S/)},t.prototype.expand_right=function(){var t;return t=this.walk(this.end,/\S/),this.end=this.walk(t,/\s/)},t.prototype.expand_left=function(){var t;return t=this.walk(this.start,/\S/,!0),this.start=this.walk(t,/\s/,!0)},t.prototype.walk=function(t,e,s){var i,r,n;if(null==s&&(s=!1),r=t.node.firstChild?t.node.firstChild:t.node,n=r.textContent,i=t.offset,s)for(;r;){for(;i>0;)if(n[--i].match(e))return{node:r,offset:i+1};r=previous_leaf(r),n=r.textContent,i=n.length}else for(;r;){for(;i<n.length;)if(n[i++].match(e))return{node:r,offset:i-1};r=next_leaf(r),n=r.textContent,i=0}return t},t}(),document.addEventListener("keydown",function(t){var e,s;if(e=t.keyCode,__indexOf.call([16,17,18,19],e)>=0)return!0;if(t.shiftKey&&13===t.keyCode&&!selection&&!getSelection().isCollapsed)return term.handler(getSelection().toString()),getSelection().removeAllRanges(),cancel(t);if(selection){if(selection.reset(),!t.ctrlKey&&t.shiftKey&&37<=(s=t.keyCode)&&40>=s)return!0;if(t.shiftKey&&t.ctrlKey)38===t.keyCode?selection.up():40===t.keyCode&&selection.down();else if(39===t.keyCode)selection.shrink_left();else if(38===t.keyCode)selection.expand_left();else if(37===t.keyCode)selection.shrink_right();else{if(40!==t.keyCode)return cancel(t);selection.expand_right()}return null!=selection&&selection.apply(),cancel(t)}return!selection&&t.ctrlKey&&t.shiftKey&&38===t.keyCode?(selection=new Selection,selection.select_line(term.y-1),selection.apply(),cancel(t)):void 0}),document.addEventListener("keyup",function(t){var e,s;if(e=t.keyCode,__indexOf.call([16,17,18,19],e)>=0)return!0;if(selection){if(13===t.keyCode)return term.handler(selection.text()),selection.destroy(),selection=null,cancel(t);if(s=t.keyCode,__indexOf.call([37,38,39,40],s)<0)return selection.destroy(),selection=null,!0}}),document.addEventListener("dblclick",function(t){var e,s,i,r,n;if(!(t.ctrlKey||t.altkey||(n=getSelection(),n.isCollapsed||n.toString().match(/\s/)))){for(r=document.createRange(),r.setStart(n.anchorNode,n.anchorOffset),r.setEnd(n.focusNode,n.focusOffset),r.collapsed&&(n.removeAllRanges(),i=document.createRange(),i.setStart(n.focusNode,n.focusOffset),i.setEnd(n.anchorNode,n.anchorOffset),n.addRange(i)),r.detach();!n.toString().match(/\s/)&&n.toString();)n.modify("extend","forward","character");for(n.modify("extend","backward","character"),e=n.anchorNode,s=n.anchorOffset,n.collapseToEnd(),n.extend(e,s);!n.toString().match(/\s/)&&n.toString();)n.modify("extend","backward","character");return n.modify("extend","forward","character")}}),/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)&&(ctrl=!1,alt=!1,first=!0,virtual_input=document.createElement("input"),virtual_input.type="password",virtual_input.style.position="fixed",virtual_input.style.top=0,virtual_input.style.left=0,virtual_input.style.border="none",virtual_input.style.outline="none",virtual_input.style.opacity=0,virtual_input.value="0",document.body.appendChild(virtual_input),virtual_input.addEventListener("blur",function(){var t=this;return setTimeout(function(){return t.focus()},10)}),addEventListener("click",function(){return virtual_input.focus()}),addEventListener("touchstart",function(t){return 1===t.touches.length?ctrl=!0:2===t.touches.length?(ctrl=!1,alt=!0):3===t.touches.length?(ctrl=!0,alt=!0):void 0}),virtual_input.addEventListener("keydown",function(t){return term.keyDown(t),!0}),virtual_input.addEventListener("input",function(t){var e;return e=this.value.length,0===e?(t.keyCode=8,term.keyDown(t),this.value="0",!0):(t.keyCode=this.value.charAt(1).charCodeAt(0),!ctrl&&!alt||first?(term.keyPress(t),first=!1,this.value="0",!0):(t.keyCode=this.value.charAt(1).charCodeAt(0),t.ctrlKey=ctrl,t.altKey=alt,t.keyCode>=97&&t.keyCode<=122&&(t.keyCode-=32),term.keyDown(t),this.value="0",ctrl=alt=!1,!0))})),cols=rows=null,quit=!1,$=document.querySelectorAll.bind(document),send=function(t){return ws.send("S"+t)},ctl=function(){var t,e,s;return s=arguments[0],t=2<=arguments.length?__slice.call(arguments,1):[],e=t.join(","),"Resize"===s?ws.send("R"+e):void 0},ws_url="ws://"+document.location.host+"/ws"+location.pathname,ws=new WebSocket(ws_url),ws.addEventListener("open",function(){return console.log("WebSocket open",arguments),ws.send("R"+term.cols+","+term.rows),location.hash?setTimeout(function(){return ws.send("S"+location.hash.slice(1)+"\n")},100):void 0}),ws.addEventListener("error",function(){return console.log("WebSocket error",arguments)}),ws.addEventListener("message",function(t){return setTimeout(function(){return term.write(t.data)},1)}),ws.addEventListener("close",function(){return console.log("WebSocket closed",arguments),quit=!0,open("","_self").close()}),term=new Terminal($("#wrapper")[0],send,ctl),addEventListener("beforeunload",function(){return quit?void 0:"This will exit the terminal session"}),bench=function(t){var e,s;for(null==t&&(t=1e8),e="";e.length<t;)e+=Math.random().toString(36).substring(2);return s=(new Date).getTime(),term.write(e),console.log(""+t+" chars in "+((new Date).getTime()-s)+" ms")},cbench=function(t){var e,s;for(null==t&&(t=1e8),e="";e.length<t;)e+="["+(30+parseInt(20*Math.random()))+"m",e+=Math.random().toString(36).substring(2);return s=(new Date).getTime(),term.write(e),console.log(""+t+" chars + colors in "+((new Date).getTime()-s)+" ms")};
+// Generated by CoffeeScript 1.6.3
+var $, Selection, State, Terminal, alt, bench, cancel, cbench, cols, ctl, ctrl, first, next_leaf, previous_leaf, quit, rows, s, selection, send, term, virtual_input, ws, ws_url,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
+
+cancel = function(ev) {
+  if (ev.preventDefault) {
+    ev.preventDefault();
+  }
+  if (ev.stopPropagation) {
+    ev.stopPropagation();
+  }
+  ev.cancelBubble = true;
+  return false;
+};
+
+s = 0;
+
+State = {
+  normal: s++,
+  escaped: s++,
+  csi: s++,
+  osc: s++,
+  charset: s++,
+  dcs: s++,
+  ignore: s++
+};
+
+Terminal = (function() {
+  function Terminal(parent, out, ctl) {
+    var div, i, term_size,
+      _this = this;
+    this.parent = parent;
+    this.out = out;
+    this.ctl = ctl != null ? ctl : function() {};
+    this.context = this.parent.ownerDocument.defaultView;
+    this.document = this.parent.ownerDocument;
+    this.body = this.document.getElementsByTagName('body')[0];
+    this.element = this.document.createElement('div');
+    this.element.className = 'terminal focus';
+    this.element.style.outline = 'none';
+    this.element.setAttribute('tabindex', 0);
+    this.parent.appendChild(this.element);
+    div = this.document.createElement('div');
+    div.className = 'line';
+    this.element.appendChild(div);
+    this.children = [div];
+    this.compute_char_size();
+    div.style.height = this.char_size.height + 'px';
+    term_size = this.parent.getBoundingClientRect();
+    this.cols = Math.floor(term_size.width / this.char_size.width) - 1;
+    this.rows = Math.floor(term_size.height / this.char_size.height);
+    i = this.rows - 1;
+    while (i--) {
+      div = this.document.createElement('div');
+      div.style.height = this.char_size.height + 'px';
+      div.className = 'line';
+      this.element.appendChild(div);
+      this.children.push(div);
+    }
+    this.scrollback = 100000;
+    this.visualBell = 100;
+    this.convertEol = false;
+    this.termName = 'xterm';
+    this.cursorBlink = true;
+    this.cursorState = 0;
+    this.last_cc = 0;
+    this.reset_vars();
+    this.refresh(0, this.rows - 1);
+    this.focus();
+    this.startBlink();
+    addEventListener('keydown', this.keyDown.bind(this));
+    addEventListener('keypress', this.keyPress.bind(this));
+    addEventListener('focus', this.focus.bind(this));
+    addEventListener('blur', this.blur.bind(this));
+    addEventListener('paste', this.paste.bind(this));
+    addEventListener('resize', this.resize.bind(this));
+    if (typeof InstallTrigger !== "undefined") {
+      this.element.contentEditable = 'true';
+      this.element.addEventListener("mouseup", function() {
+        var sel;
+        sel = getSelection().getRangeAt(0);
+        if (sel.startOffset === sel.endOffset) {
+          return getSelection().removeAllRanges();
+        }
+      });
+    }
+    this.initmouse();
+  }
+
+  Terminal.prototype.reset_vars = function() {
+    var i;
+    this.ybase = 0;
+    this.ydisp = 0;
+    this.x = 0;
+    this.y = 0;
+    this.cursorHidden = false;
+    this.state = State.normal;
+    this.queue = '';
+    this.scrollTop = 0;
+    this.scrollBottom = this.rows - 1;
+    this.applicationKeypad = false;
+    this.applicationCursor = false;
+    this.originMode = false;
+    this.wraparoundMode = false;
+    this.normal = null;
+    this.charset = null;
+    this.gcharset = null;
+    this.glevel = 0;
+    this.charsets = [null];
+    this.defAttr = (0 << 18) | (257 << 9) | (256 << 0);
+    this.curAttr = this.defAttr;
+    this.params = [];
+    this.currentParam = 0;
+    this.prefix = "";
+    this.lines = [];
+    i = this.rows;
+    while (i--) {
+      this.lines.push(this.blankLine());
+    }
+    this.setupStops();
+    return this.skipNextKey = null;
+  };
+
+  Terminal.prototype.compute_char_size = function() {
+    var test_span;
+    test_span = document.createElement('span');
+    test_span.textContent = '0123456789';
+    this.children[0].appendChild(test_span);
+    this.char_size = {
+      width: test_span.getBoundingClientRect().width / 10,
+      height: this.children[0].getBoundingClientRect().height
+    };
+    return this.children[0].removeChild(test_span);
+  };
+
+  Terminal.prototype.eraseAttr = function() {
+    return (this.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
+  };
+
+  Terminal.prototype.focus = function() {
+    if (this.sendFocus) {
+      this.send('\x1b[I');
+    }
+    this.showCursor();
+    this.element.classList.add('focus');
+    return this.element.classList.remove('blur');
+  };
+
+  Terminal.prototype.blur = function() {
+    this.cursorState = 1;
+    this.refresh(this.y, this.y);
+    if (this.sendFocus) {
+      this.send('\x1b[O');
+    }
+    this.element.classList.add('blur');
+    return this.element.classList.remove('focus');
+  };
+
+  Terminal.prototype.paste = function(ev) {
+    if (ev.clipboardData) {
+      this.send(ev.clipboardData.getData('text/plain'));
+    } else if (this.context.clipboardData) {
+      this.send(this.context.clipboardData.getData('Text'));
+    }
+    return cancel(ev);
+  };
+
+  Terminal.prototype.initmouse = function() {
+    var encode, getButton, getCoords, pressed, sendButton, sendEvent, sendMove,
+      _this = this;
+    pressed = 32;
+    sendButton = function(ev) {
+      var button, pos;
+      button = getButton(ev);
+      pos = getCoords(ev);
+      if (!pos) {
+        return;
+      }
+      sendEvent(button, pos);
+      switch (ev.type) {
+        case "mousedown":
+          return pressed = button;
+        case "mouseup":
+          return pressed = 32;
+      }
+    };
+    sendMove = function(ev) {
+      var button, pos;
+      button = pressed;
+      pos = getCoords(ev);
+      if (!pos) {
+        return;
+      }
+      button += 32;
+      return sendEvent(button, pos);
+    };
+    encode = function(data, ch) {
+      if (!_this.utfMouse) {
+        if (ch === 255) {
+          return data.push(0);
+        }
+        if (ch > 127) {
+          ch = 127;
+        }
+        return data.push(ch);
+      } else {
+        if (ch === 2047) {
+          return data.push(0);
+        }
+        if (ch < 127) {
+          return data.push(ch);
+        } else {
+          if (ch > 2047) {
+            ch = 2047;
+          }
+          data.push(0xC0 | (ch >> 6));
+          return data.push(0x80 | (ch & 0x3F));
+        }
+      }
+    };
+    sendEvent = function(button, pos) {
+      var data;
+      if (_this.urxvtMouse) {
+        pos.x -= 32;
+        pos.y -= 32;
+        pos.x++;
+        pos.y++;
+        _this.send("\x1b[" + button + ";" + pos.x + ";" + pos.y + "M");
+        return;
+      }
+      if (_this.sgrMouse) {
+        pos.x -= 32;
+        pos.y -= 32;
+        _this.send("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
+        return;
+      }
+      data = [];
+      encode(data, button);
+      encode(data, pos.x);
+      encode(data, pos.y);
+      return _this.send("\x1b[M" + String.fromCharCode.apply(String, data));
+    };
+    getButton = function(ev) {
+      var button, ctrl, meta, mod, shift;
+      switch (ev.type) {
+        case "mousedown":
+          button = ev.button != null ? +ev.button : (ev.which != null ? ev.which - 1 : null);
+          break;
+        case "mouseup":
+          button = 3;
+          break;
+        case "wheel":
+          button = ev.deltaY < 0 ? 64 : 65;
+      }
+      shift = ev.shiftKey ? 4 : 0;
+      meta = ev.metaKey ? 8 : 0;
+      ctrl = ev.ctrlKey ? 16 : 0;
+      mod = shift | meta | ctrl;
+      if (_this.vt200Mouse) {
+        mod &= ctrl;
+      } else {
+        if (!_this.normalMouse) {
+          mod = 0;
+        }
+      }
+      return (32 + (mod << 2)) + button;
+    };
+    getCoords = function(ev) {
+      var el, h, w, x, y;
+      x = ev.pageX;
+      y = ev.pageY;
+      el = _this.element;
+      while (el && el !== _this.document.documentElement) {
+        x -= el.offsetLeft;
+        y -= el.offsetTop;
+        el = "offsetParent" in el ? el.offsetParent : el.parentNode;
+      }
+      w = _this.element.clientWidth;
+      h = _this.element.clientHeight;
+      x = Math.ceil((x / w) * _this.cols);
+      y = Math.ceil((y / h) * _this.rows);
+      if (x < 0) {
+        x = 0;
+      }
+      if (x > _this.cols) {
+        x = _this.cols;
+      }
+      if (y < 0) {
+        y = 0;
+      }
+      if (y > _this.rows) {
+        y = _this.rows;
+      }
+      x += 32;
+      y += 32;
+      return {
+        x: x,
+        y: y,
+        type: ev.type
+      };
+    };
+    addEventListener("mousedown", function(ev) {
+      var up;
+      if (!_this.mouseEvents) {
+        return;
+      }
+      sendButton(ev);
+      if (_this.vt200Mouse) {
+        sendButton({
+          __proto__: ev,
+          type: "mouseup"
+        });
+        return cancel(ev);
+      }
+      if (_this.normalMouse) {
+        addEventListener("mousemove", sendMove.bind(_this));
+      }
+      if (!_this.x10Mouse) {
+        addEventListener("mouseup", up = function(ev) {
+          sendButton(ev);
+          if (_this.normalMouse) {
+            removeEventListener("mousemove", sendMove);
+          }
+          removeEventListener("mouseup", up);
+          return cancel(ev);
+        });
+      }
+      return cancel(ev);
+    });
+    return addEventListener("wheel", function(ev) {
+      if (_this.mouseEvents) {
+        if (_this.x10Mouse) {
+          return;
+        }
+        sendButton(ev);
+      } else {
+        if (_this.applicationKeypad) {
+          return;
+        }
+        _this.scrollDisp(ev.deltaY > 0 ? 5 : -5);
+      }
+      return cancel(ev);
+    });
+  };
+
+  Terminal.prototype.refresh = function(start, end) {
+    var attr, bg, ch, classes, data, fg, flags, i, line, out, parent, row, width, x, y;
+    if (end - start >= this.rows / 3) {
+      parent = this.element.parentNode;
+      if (parent != null) {
+        parent.removeChild(this.element);
+      }
+    }
+    width = this.cols;
+    y = start;
+    if (end >= this.lines.length) {
+      end = this.lines.length - 1;
+    }
+    while (y <= end) {
+      row = y + this.ydisp;
+      line = this.lines[row];
+      out = "";
+      if (y === this.y && (this.ydisp === this.ybase || this.selectMode) && !this.cursorHidden) {
+        x = this.x;
+      } else {
+        x = -Infinity;
+      }
+      attr = this.defAttr;
+      i = 0;
+      while (i < width) {
+        data = line[i][0];
+        ch = line[i][1];
+        if (data !== attr) {
+          if (attr !== this.defAttr) {
+            out += "</span>";
+          }
+          if (data !== this.defAttr) {
+            classes = [];
+            out += "<span ";
+            bg = data & 0x1ff;
+            fg = (data >> 9) & 0x1ff;
+            flags = data >> 18;
+            if (flags & 1) {
+              classes.push("bold");
+            }
+            if (flags & 2) {
+              classes.push("underline");
+            }
+            if (flags & 4) {
+              classes.push("blink");
+            }
+            if (flags & 8) {
+              classes.push("reverse-video");
+            }
+            if (flags & 16) {
+              classes.push("invisible");
+            }
+            if (flags & 1 && fg < 8) {
+              fg += 8;
+            }
+            classes.push("bg-color-" + bg);
+            classes.push("fg-color-" + fg);
+            out += "class=\"";
+            out += classes.join(" ");
+            out += "\">";
+          }
+        }
+        if (i === x) {
+          out += "<span class=\"" + (this.cursorState ? "reverse-video " : "") + "cursor\">";
+        }
+        if (ch.length > 1) {
+          out += ch;
+        } else {
+          switch (ch) {
+            case "&":
+              out += "&amp;";
+              break;
+            case "<":
+              out += "&lt;";
+              break;
+            case ">":
+              out += "&gt;";
+              break;
+            default:
+              if (ch <= " ") {
+                out += "&nbsp;";
+              } else {
+                if (("\uff00" < ch && ch < "\uffef")) {
+                  i++;
+                }
+                out += ch;
+              }
+          }
+        }
+        if (i === x) {
+          out += "</span>";
+        }
+        attr = data;
+        i++;
+      }
+      if (attr !== this.defAttr) {
+        out += "</span>";
+      }
+      this.children[y].innerHTML = out;
+      y++;
+    }
+    return parent != null ? parent.appendChild(this.element) : void 0;
+  };
+
+  Terminal.prototype._cursorBlink = function() {
+    var cursor;
+    this.cursorState ^= 1;
+    cursor = this.element.querySelector(".cursor");
+    if (!cursor) {
+      return;
+    }
+    if (cursor.classList.contains("reverse-video")) {
+      return cursor.classList.remove("reverse-video");
+    } else {
+      return cursor.classList.add("reverse-video");
+    }
+  };
+
+  Terminal.prototype.showCursor = function() {
+    if (!this.cursorState) {
+      this.cursorState = 1;
+      return this.refresh(this.y, this.y);
+    }
+  };
+
+  Terminal.prototype.startBlink = function() {
+    var _this = this;
+    if (!this.cursorBlink) {
+      return;
+    }
+    this._blinker = function() {
+      return _this._cursorBlink();
+    };
+    return this.t_blink = setInterval(this._blinker, 500);
+  };
+
+  Terminal.prototype.refreshBlink = function() {
+    if (!this.cursorBlink) {
+      return;
+    }
+    clearInterval(this.t_blink);
+    return this.t_blink = setInterval(this._blinker, 500);
+  };
+
+  Terminal.prototype.scroll = function() {
+    var row;
+    if (++this.ybase === this.scrollback) {
+      this.ybase = this.ybase / 2 | 0;
+      this.lines = this.lines.slice(-(this.ybase + this.rows) + 1);
+    }
+    this.ydisp = this.ybase;
+    row = this.ybase + this.rows - 1;
+    row -= this.rows - 1 - this.scrollBottom;
+    if (row === this.lines.length) {
+      this.lines.push(this.blankLine());
+    } else {
+      this.lines.splice(row, 0, this.blankLine());
+    }
+    if (this.scrollTop !== 0) {
+      if (this.ybase !== 0) {
+        this.ybase--;
+        this.ydisp = this.ybase;
+      }
+      this.lines.splice(this.ybase + this.scrollTop, 1);
+    }
+    this.updateRange(this.scrollTop);
+    return this.updateRange(this.scrollBottom);
+  };
+
+  Terminal.prototype.scrollDisp = function(disp) {
+    this.ydisp += disp;
+    if (this.ydisp > this.ybase) {
+      this.ydisp = this.ybase;
+    } else {
+      if (this.ydisp < 0) {
+        this.ydisp = 0;
+      }
+    }
+    return this.refresh(0, this.rows - 1);
+  };
+
+  Terminal.prototype.write = function(data) {
+    var ch, cs, html, i, j, l, line, pt, valid, _ref;
+    this.refreshStart = this.y;
+    this.refreshEnd = this.y;
+    if (this.ybase !== this.ydisp) {
+      this.ydisp = this.ybase;
+      this.maxRange();
+    }
+    i = 0;
+    l = data.length;
+    while (i < l) {
+      ch = data[i];
+      switch (this.state) {
+        case State.normal:
+          switch (ch) {
+            case "\x07":
+              this.bell();
+              break;
+            case "\n":
+            case "\x0b":
+            case "\x0c":
+              if (this.convertEol) {
+                this.x = 0;
+              }
+              this.y++;
+              if (this.y > this.scrollBottom) {
+                this.y--;
+                this.scroll();
+              }
+              break;
+            case "\r":
+              this.x = 0;
+              break;
+            case "\b":
+              if (this.x > 0) {
+                this.x--;
+              }
+              break;
+            case "\t":
+              this.x = this.nextStop();
+              break;
+            case "\x0e":
+              this.setgLevel(1);
+              break;
+            case "\x0f":
+              this.setgLevel(0);
+              break;
+            case "\x1b":
+              this.state = State.escaped;
+              break;
+            default:
+              if (ch >= " ") {
+                if ((_ref = this.charset) != null ? _ref[ch] : void 0) {
+                  ch = this.charset[ch];
+                }
+                if (this.x >= this.cols) {
+                  this.x = 0;
+                  this.y++;
+                  if (this.y > this.scrollBottom) {
+                    this.y--;
+                    this.scroll();
+                  }
+                }
+                this.lines[this.y + this.ybase][this.x] = [this.curAttr, ch];
+                this.x++;
+                this.updateRange(this.y);
+                if (("\uff00" < ch && ch < "\uffef")) {
+                  j = this.y + this.ybase;
+                  if (this.cols < 2 || this.x >= this.cols) {
+                    this.lines[j][this.x - 1] = [this.curAttr, " "];
+                    break;
+                  }
+                  this.lines[j][this.x] = [this.curAttr, " "];
+                  this.x++;
+                }
+              }
+          }
+          break;
+        case State.escaped:
+          switch (ch) {
+            case "[":
+              this.params = [];
+              this.currentParam = 0;
+              this.state = State.csi;
+              break;
+            case "]":
+              this.params = [];
+              this.currentParam = 0;
+              this.state = State.osc;
+              break;
+            case "P":
+              this.params = [];
+              this.currentParam = 0;
+              this.state = State.dcs;
+              break;
+            case "_":
+              this.state = State.ignore;
+              break;
+            case "^":
+              this.state = State.ignore;
+              break;
+            case "c":
+              this.reset();
+              break;
+            case "E":
+              this.x = 0;
+              this.index();
+              break;
+            case "D":
+              this.index();
+              break;
+            case "M":
+              this.reverseIndex();
+              break;
+            case "%":
+              this.setgLevel(0);
+              this.setgCharset(0, Terminal.prototype.charsets.US);
+              this.state = State.normal;
+              i++;
+              break;
+            case "(":
+            case ")":
+            case "*":
+            case "+":
+            case "-":
+            case ".":
+              switch (ch) {
+                case "(":
+                  this.gcharset = 0;
+                  break;
+                case ")":
+                case "-":
+                  this.gcharset = 1;
+                  break;
+                case "*":
+                case ".":
+                  this.gcharset = 2;
+                  break;
+                case "+":
+                  this.gcharset = 3;
+              }
+              this.state = State.charset;
+              break;
+            case "/":
+              this.gcharset = 3;
+              this.state = State.charset;
+              i--;
+              break;
+            case "n":
+              this.setgLevel(2);
+              break;
+            case "o":
+              this.setgLevel(3);
+              break;
+            case "|":
+              this.setgLevel(3);
+              break;
+            case "}":
+              this.setgLevel(2);
+              break;
+            case "~":
+              this.setgLevel(1);
+              break;
+            case "7":
+              this.saveCursor();
+              this.state = State.normal;
+              break;
+            case "8":
+              this.restoreCursor();
+              this.state = State.normal;
+              break;
+            case "#":
+              this.state = State.normal;
+              i++;
+              break;
+            case "H":
+              this.tabSet();
+              break;
+            case "=":
+              this.applicationKeypad = true;
+              this.state = State.normal;
+              break;
+            case ">":
+              this.applicationKeypad = false;
+              this.state = State.normal;
+              break;
+            default:
+              this.state = State.normal;
+              console.log("Unknown ESC control:", ch);
+          }
+          break;
+        case State.charset:
+          switch (ch) {
+            case "0":
+              cs = Terminal.prototype.charsets.SCLD;
+              break;
+            case "A":
+              cs = Terminal.prototype.charsets.UK;
+              break;
+            case "B":
+              cs = Terminal.prototype.charsets.US;
+              break;
+            case "4":
+              cs = Terminal.prototype.charsets.Dutch;
+              break;
+            case "C":
+            case "5":
+              cs = Terminal.prototype.charsets.Finnish;
+              break;
+            case "R":
+              cs = Terminal.prototype.charsets.French;
+              break;
+            case "Q":
+              cs = Terminal.prototype.charsets.FrenchCanadian;
+              break;
+            case "K":
+              cs = Terminal.prototype.charsets.German;
+              break;
+            case "Y":
+              cs = Terminal.prototype.charsets.Italian;
+              break;
+            case "E":
+            case "6":
+              cs = Terminal.prototype.charsets.NorwegianDanish;
+              break;
+            case "Z":
+              cs = Terminal.prototype.charsets.Spanish;
+              break;
+            case "H":
+            case "7":
+              cs = Terminal.prototype.charsets.Swedish;
+              break;
+            case "=":
+              cs = Terminal.prototype.charsets.Swiss;
+              break;
+            case "/":
+              cs = Terminal.prototype.charsets.ISOLatin;
+              i++;
+              break;
+            default:
+              cs = Terminal.prototype.charsets.US;
+          }
+          this.setgCharset(this.gcharset, cs);
+          this.gcharset = null;
+          this.state = State.normal;
+          break;
+        case State.osc:
+          if (ch === "\x1b" || ch === "\x07") {
+            if (ch === "\x1b") {
+              i++;
+            }
+            this.params.push(this.currentParam);
+            switch (this.params[0]) {
+              case 0:
+              case 1:
+              case 2:
+                if (this.params[1]) {
+                  this.title = this.params[1] + " - ƸӜƷ butterfly";
+                  this.handleTitle(this.title);
+                }
+                break;
+              case 99:
+                html = "<div class=\"inline-html\">" + this.params[1] + "</div>";
+                this.lines[this.y + this.ybase][this.x] = [this.curAttr, html];
+                line = 0;
+                while (line < this.get_html_height_in_lines(html) - 1) {
+                  this.y++;
+                  if (this.y > this.scrollBottom) {
+                    this.y--;
+                    this.scroll();
+                  }
+                  line++;
+                }
+                this.updateRange(this.y);
+            }
+            this.params = [];
+            this.currentParam = 0;
+            this.state = State.normal;
+          } else {
+            if (!this.params.length) {
+              if (ch >= "0" && ch <= "9") {
+                this.currentParam = this.currentParam * 10 + ch.charCodeAt(0) - 48;
+              } else if (ch === ";") {
+                this.params.push(this.currentParam);
+                this.currentParam = "";
+              }
+            } else {
+              this.currentParam += ch;
+            }
+          }
+          break;
+        case State.csi:
+          if (ch === "?" || ch === ">" || ch === "!") {
+            this.prefix = ch;
+            break;
+          }
+          if (ch >= "0" && ch <= "9") {
+            this.currentParam = this.currentParam * 10 + ch.charCodeAt(0) - 48;
+            break;
+          }
+          if (ch === "$" || ch === "\"" || ch === " " || ch === "'") {
+            break;
+          }
+          this.params.push(this.currentParam);
+          this.currentParam = 0;
+          if (ch === ";") {
+            break;
+          }
+          this.state = State.normal;
+          switch (ch) {
+            case "A":
+              this.cursorUp(this.params);
+              break;
+            case "B":
+              this.cursorDown(this.params);
+              break;
+            case "C":
+              this.cursorForward(this.params);
+              break;
+            case "D":
+              this.cursorBackward(this.params);
+              break;
+            case "H":
+              this.cursorPos(this.params);
+              break;
+            case "J":
+              this.eraseInDisplay(this.params);
+              break;
+            case "K":
+              this.eraseInLine(this.params);
+              break;
+            case "m":
+              if (!this.prefix) {
+                this.charAttributes(this.params);
+              }
+              break;
+            case "n":
+              if (!this.prefix) {
+                this.deviceStatus(this.params);
+              }
+              break;
+            case "@":
+              this.insertChars(this.params);
+              break;
+            case "E":
+              this.cursorNextLine(this.params);
+              break;
+            case "F":
+              this.cursorPrecedingLine(this.params);
+              break;
+            case "G":
+              this.cursorCharAbsolute(this.params);
+              break;
+            case "L":
+              this.insertLines(this.params);
+              break;
+            case "M":
+              this.deleteLines(this.params);
+              break;
+            case "P":
+              this.deleteChars(this.params);
+              break;
+            case "X":
+              this.eraseChars(this.params);
+              break;
+            case "`":
+              this.charPosAbsolute(this.params);
+              break;
+            case "a":
+              this.HPositionRelative(this.params);
+              break;
+            case "c":
+              this.sendDeviceAttributes(this.params);
+              break;
+            case "d":
+              this.linePosAbsolute(this.params);
+              break;
+            case "e":
+              this.VPositionRelative(this.params);
+              break;
+            case "f":
+              this.HVPosition(this.params);
+              break;
+            case "h":
+              this.setMode(this.params);
+              break;
+            case "l":
+              this.resetMode(this.params);
+              break;
+            case "r":
+              this.setScrollRegion(this.params);
+              break;
+            case "s":
+              this.saveCursor(this.params);
+              break;
+            case "u":
+              this.restoreCursor(this.params);
+              break;
+            case "I":
+              this.cursorForwardTab(this.params);
+              break;
+            case "S":
+              this.scrollUp(this.params);
+              break;
+            case "T":
+              if (this.params.length < 2 && !this.prefix) {
+                this.scrollDown(this.params);
+              }
+              break;
+            case "Z":
+              this.cursorBackwardTab(this.params);
+              break;
+            case "b":
+              this.repeatPrecedingCharacter(this.params);
+              break;
+            case "g":
+              this.tabClear(this.params);
+              break;
+            case "p":
+              if (this.prefix === '!') {
+                this.softReset(this.params);
+              }
+              break;
+            default:
+              console.error("Unknown CSI code: %s.", ch);
+          }
+          this.prefix = "";
+          break;
+        case State.dcs:
+          if (ch === "\x1b" || ch === "\x07") {
+            if (ch === "\x1b") {
+              i++;
+            }
+            switch (this.prefix) {
+              case "":
+                break;
+              case "$q":
+                pt = this.currentParam;
+                valid = false;
+                switch (pt) {
+                  case "\"q":
+                    pt = "0\"q";
+                    break;
+                  case "\"p":
+                    pt = "61\"p";
+                    break;
+                  case "r":
+                    pt = "" + (this.scrollTop + 1) + ";" + (this.scrollBottom + 1) + "r";
+                    break;
+                  case "m":
+                    pt = "0m";
+                    break;
+                  default:
+                    console.error("Unknown DCS Pt: %s.", pt);
+                    pt = "";
+                }
+                this.send("\x1bP" + +valid + "$r" + pt + "\x1b\\");
+                break;
+              case "+q":
+                pt = this.currentParam;
+                valid = false;
+                this.send("\x1bP" + +valid + "+r" + pt + "\x1b\\");
+                break;
+              default:
+                console.error("Unknown DCS prefix: %s.", this.prefix);
+            }
+            this.currentParam = 0;
+            this.prefix = "";
+            this.state = State.normal;
+          } else if (!this.currentParam) {
+            if (!this.prefix && ch !== "$" && ch !== "+") {
+              this.currentParam = ch;
+            } else if (this.prefix.length === 2) {
+              this.currentParam = ch;
+            } else {
+              this.prefix += ch;
+            }
+          } else {
+            this.currentParam += ch;
+          }
+          break;
+        case State.ignore:
+          if (ch === "\x1b" || ch === "\x07") {
+            if (ch === "\x1b") {
+              i++;
+            }
+            this.state = State.normal;
+          }
+      }
+      i++;
+    }
+    this.updateRange(this.y);
+    return this.refresh(this.refreshStart, this.refreshEnd);
+  };
+
+  Terminal.prototype.writeln = function(data) {
+    return this.write("" + data + "\r\n");
+  };
+
+  Terminal.prototype.keyDown = function(ev) {
+    var id, key, t;
+    if (ev.keyCode > 15 && ev.keyCode < 19) {
+      return true;
+    }
+    if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
+      return true;
+    }
+    if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
+      this.skipNextKey = true;
+      this.element.classList.add('skip');
+      return cancel(ev);
+    }
+    if (this.skipNextKey) {
+      this.skipNextKey = false;
+      this.element.classList.remove('skip');
+      return true;
+    }
+    switch (ev.keyCode) {
+      case 8:
+        key = ev.altKey ? "\x1b" : "";
+        if (ev.shiftKey) {
+          key += "\x08";
+          break;
+        }
+        key += "\x7f";
+        break;
+      case 9:
+        if (ev.shiftKey) {
+          key = "\x1b[Z";
+          break;
+        }
+        key = "\t";
+        break;
+      case 13:
+        key = "\r";
+        break;
+      case 27:
+        key = "\x1b";
+        break;
+      case 37:
+        if (this.applicationCursor) {
+          key = "\x1bOD";
+          break;
+        }
+        if (ev.shiftKey) {
+          return true;
+        }
+        key = "\x1b[D";
+        break;
+      case 39:
+        if (this.applicationCursor) {
+          key = "\x1bOC";
+          break;
+        }
+        if (ev.shiftKey) {
+          return true;
+        }
+        key = "\x1b[C";
+        break;
+      case 38:
+        if (this.applicationCursor) {
+          key = "\x1bOA";
+          break;
+        }
+        if (ev.ctrlKey) {
+          this.scrollDisp(-1);
+          return cancel(ev);
+        } else if (ev.shiftKey) {
+          return true;
+        } else {
+          key = "\x1b[A";
+        }
+        break;
+      case 40:
+        if (this.applicationCursor) {
+          key = "\x1bOB";
+          break;
+        }
+        if (ev.ctrlKey) {
+          this.scrollDisp(1);
+          return cancel(ev);
+        } else if (ev.shiftKey) {
+          return true;
+        } else {
+          key = "\x1b[B";
+        }
+        break;
+      case 46:
+        key = "\x1b[3~";
+        break;
+      case 45:
+        key = "\x1b[2~";
+        break;
+      case 36:
+        if (this.applicationKeypad) {
+          key = "\x1bOH";
+          break;
+        }
+        key = "\x1bOH";
+        break;
+      case 35:
+        if (this.applicationKeypad) {
+          key = "\x1bOF";
+          break;
+        }
+        key = "\x1bOF";
+        break;
+      case 33:
+        if (ev.shiftKey) {
+          this.scrollDisp(-(this.rows - 1));
+          return cancel(ev);
+        } else {
+          key = "\x1b[5~";
+        }
+        break;
+      case 34:
+        if (ev.shiftKey) {
+          this.scrollDisp(this.rows - 1);
+          return cancel(ev);
+        } else {
+          key = "\x1b[6~";
+        }
+        break;
+      case 112:
+        key = "\x1bOP";
+        break;
+      case 113:
+        key = "\x1bOQ";
+        break;
+      case 114:
+        key = "\x1bOR";
+        break;
+      case 115:
+        key = "\x1bOS";
+        break;
+      case 116:
+        key = "\x1b[15~";
+        break;
+      case 117:
+        key = "\x1b[17~";
+        break;
+      case 118:
+        key = "\x1b[18~";
+        break;
+      case 119:
+        key = "\x1b[19~";
+        break;
+      case 120:
+        key = "\x1b[20~";
+        break;
+      case 121:
+        key = "\x1b[21~";
+        break;
+      case 122:
+        key = "\x1b[23~";
+        break;
+      case 123:
+        key = "\x1b[24~";
+        break;
+      default:
+        if (ev.ctrlKey) {
+          if (ev.keyCode >= 65 && ev.keyCode <= 90) {
+            if (ev.keyCode === 67) {
+              t = (new Date()).getTime();
+              if ((t - this.last_cc) < 75) {
+                id = (setTimeout(function() {})) - 6;
+                this.write('\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n');
+                while (id--) {
+                  if (id !== this.t_bell && id !== this.t_queue && id !== this.t_blink) {
+                    clearTimeout(id);
+                  }
+                }
+              }
+              this.last_cc = t;
+            }
+            key = String.fromCharCode(ev.keyCode - 64);
+          } else if (ev.keyCode === 32) {
+            key = String.fromCharCode(0);
+          } else if (ev.keyCode >= 51 && ev.keyCode <= 55) {
+            key = String.fromCharCode(ev.keyCode - 51 + 27);
+          } else if (ev.keyCode === 56) {
+            key = String.fromCharCode(127);
+          } else if (ev.keyCode === 219) {
+            key = String.fromCharCode(27);
+          } else {
+            if (ev.keyCode === 221) {
+              key = String.fromCharCode(29);
+            }
+          }
+        } else if (ev.altKey) {
+          if (ev.keyCode >= 65 && ev.keyCode <= 90) {
+            key = "\x1b" + String.fromCharCode(ev.keyCode + 32);
+          } else if (ev.keyCode === 192) {
+            key = "\x1b`";
+          } else {
+            if (ev.keyCode >= 48 && ev.keyCode <= 57) {
+              key = "\x1b" + (ev.keyCode - 48);
+            }
+          }
+        }
+    }
+    if (ev.keyCode >= 37 && ev.keyCode <= 40) {
+      if (ev.ctrlKey) {
+        key = key.slice(0, -1) + "1;5" + key.slice(-1);
+      } else if (ev.altKey) {
+        key = key.slice(0, -1) + "1;3" + key.slice(-1);
+      } else {
+        if (ev.shiftKey) {
+          key = key.slice(0, -1) + "1;4" + key.slice(-1);
+        }
+      }
+    }
+    if (!key) {
+      return true;
+    }
+    if (this.prefixMode) {
+      this.leavePrefix();
+      return cancel(ev);
+    }
+    if (this.selectMode) {
+      this.keySelect(ev, key);
+      return cancel(ev);
+    }
+    this.showCursor();
+    this.handler(key);
+    return cancel(ev);
+  };
+
+  Terminal.prototype.setgLevel = function(g) {
+    this.glevel = g;
+    return this.charset = this.charsets[g];
+  };
+
+  Terminal.prototype.setgCharset = function(g, charset) {
+    this.charsets[g] = charset;
+    if (this.glevel === g) {
+      return this.charset = charset;
+    }
+  };
+
+  Terminal.prototype.keyPress = function(ev) {
+    var key;
+    if (this.skipNextKey === false) {
+      this.skipNextKey = null;
+      return true;
+    }
+    cancel(ev);
+    if (ev.charCode) {
+      key = ev.charCode;
+    } else if (ev.which == null) {
+      key = ev.keyCode;
+    } else if (ev.which !== 0 && ev.charCode !== 0) {
+      key = ev.which;
+    } else {
+      return false;
+    }
+    if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) {
+      return false;
+    }
+    key = String.fromCharCode(key);
+    this.showCursor();
+    this.handler(key);
+    return false;
+  };
+
+  Terminal.prototype.send = function(data) {
+    var _this = this;
+    if (!this.queue) {
+      this.t_queue = setTimeout((function() {
+        _this.handler(_this.queue);
+        return _this.queue = "";
+      }), 1);
+    }
+    return this.queue += data;
+  };
+
+  Terminal.prototype.bell = function() {
+    var _this = this;
+    if (!this.visualBell) {
+      return;
+    }
+    this.element.classList.add("bell");
+    return this.t_bell = setTimeout((function() {
+      return _this.element.classList.remove("bell");
+    }), this.visualBell);
+  };
+
+  Terminal.prototype.resize = function() {
+    var ch, el, i, j, line, old_cols, old_rows, term_size;
+    old_cols = this.cols;
+    old_rows = this.rows;
+    term_size = this.parent.getBoundingClientRect();
+    this.cols = Math.floor(term_size.width / this.char_size.width) - 1;
+    this.rows = Math.floor(term_size.height / this.char_size.height);
+    if (old_cols === this.cols && old_rows === this.rows) {
+      return;
+    }
+    this.ctl('Resize', this.cols, this.rows);
+    if (old_cols < this.cols) {
+      ch = [this.defAttr, " "];
+      i = this.lines.length;
+      while (i--) {
+        while (this.lines[i].length < this.cols) {
+          this.lines[i].push(ch);
+        }
+      }
+    } else if (old_cols > this.cols) {
+      i = this.lines.length;
+      while (i--) {
+        while (this.lines[i].length > this.cols) {
+          this.lines[i].pop();
+        }
+      }
+    }
+    this.setupStops(old_cols);
+    j = old_rows;
+    if (j < this.rows) {
+      el = this.element;
+      while (j++ < this.rows) {
+        if (this.lines.length < this.rows + this.ybase) {
+          this.lines.push(this.blankLine());
+        }
+        if (this.children.length < this.rows) {
+          line = this.document.createElement("div");
+          line.className = 'line';
+          line.style.height = this.char_size.height + 'px';
+          el.appendChild(line);
+          this.children.push(line);
+        }
+      }
+    } else if (j > this.rows) {
+      while (j-- > this.rows) {
+        if (this.lines.length > this.rows + this.ybase) {
+          this.lines.pop();
+        }
+        if (this.children.length > this.rows) {
+          el = this.children.pop();
+          if (!el) {
+            continue;
+          }
+          el.parentNode.removeChild(el);
+        }
+      }
+    }
+    if (this.y >= this.rows) {
+      this.y = this.rows - 1;
+    }
+    if (this.x >= this.cols) {
+      this.x = this.cols - 1;
+    }
+    this.scrollTop = 0;
+    this.scrollBottom = this.rows - 1;
+    this.refresh(0, this.rows - 1);
+    return this.normal = null;
+  };
+
+  Terminal.prototype.updateRange = function(y) {
+    if (y < this.refreshStart) {
+      this.refreshStart = y;
+    }
+    if (y > this.refreshEnd) {
+      return this.refreshEnd = y;
+    }
+  };
+
+  Terminal.prototype.maxRange = function() {
+    this.refreshStart = 0;
+    return this.refreshEnd = this.rows - 1;
+  };
+
+  Terminal.prototype.setupStops = function(i) {
+    var _results;
+    if (i != null) {
+      if (!this.tabs[i]) {
+        i = this.prevStop(i);
+      }
+    } else {
+      this.tabs = {};
+      i = 0;
+    }
+    _results = [];
+    while (i < this.cols) {
+      this.tabs[i] = true;
+      _results.push(i += 8);
+    }
+    return _results;
+  };
+
+  Terminal.prototype.prevStop = function(x) {
+    if (x == null) {
+      x = this.x;
+    }
+    while (!this.tabs[--x] && x > 0) {
+      1;
+    }
+    if (x >= this.cols) {
+      return this.cols - 1;
+    } else {
+      if (x < 0) {
+        return 0;
+      } else {
+        return x;
+      }
+    }
+  };
+
+  Terminal.prototype.nextStop = function(x) {
+    if (x == null) {
+      x = this.x;
+    }
+    while (!this.tabs[++x] && x < this.cols) {
+      1;
+    }
+    if (x >= this.cols) {
+      return this.cols - 1;
+    } else {
+      if (x < 0) {
+        return 0;
+      } else {
+        return x;
+      }
+    }
+  };
+
+  Terminal.prototype.eraseRight = function(x, y) {
+    var ch, line;
+    line = this.lines[this.ybase + y];
+    ch = [this.eraseAttr(), " "];
+    while (x < this.cols) {
+      line[x] = ch;
+      x++;
+    }
+    return this.updateRange(y);
+  };
+
+  Terminal.prototype.eraseLeft = function(x, y) {
+    var ch, line;
+    line = this.lines[this.ybase + y];
+    ch = [this.eraseAttr(), " "];
+    x++;
+    while (x--) {
+      line[x] = ch;
+    }
+    return this.updateRange(y);
+  };
+
+  Terminal.prototype.eraseLine = function(y) {
+    return this.eraseRight(0, y);
+  };
+
+  Terminal.prototype.blankLine = function(cur) {
+    var attr, ch, i, line;
+    attr = (cur ? this.eraseAttr() : this.defAttr);
+    ch = [attr, " "];
+    line = [];
+    i = 0;
+    while (i < this.cols) {
+      line[i] = ch;
+      i++;
+    }
+    return line;
+  };
+
+  Terminal.prototype.ch = function(cur) {
+    if (cur) {
+      return [this.eraseAttr(), " "];
+    } else {
+      return [this.defAttr, " "];
+    }
+  };
+
+  Terminal.prototype.isterm = function(term) {
+    return ("" + this.termName).indexOf(term) === 0;
+  };
+
+  Terminal.prototype.handler = function(data) {
+    return this.out(data);
+  };
+
+  Terminal.prototype.handleTitle = function(title) {
+    return document.title = title;
+  };
+
+  Terminal.prototype.index = function() {
+    this.y++;
+    if (this.y > this.scrollBottom) {
+      this.y--;
+      this.scroll();
+    }
+    return this.state = State.normal;
+  };
+
+  Terminal.prototype.reverseIndex = function() {
+    var j;
+    this.y--;
+    if (this.y < this.scrollTop) {
+      this.y++;
+      this.lines.splice(this.y + this.ybase, 0, this.blankLine(true));
+      j = this.rows - 1 - this.scrollBottom;
+      this.lines.splice(this.rows - 1 + this.ybase - j + 1, 1);
+      this.updateRange(this.scrollTop);
+      this.updateRange(this.scrollBottom);
+    }
+    return this.state = State.normal;
+  };
+
+  Terminal.prototype.reset = function() {
+    this.reset_vars();
+    return this.refresh(0, this.rows - 1);
+  };
+
+  Terminal.prototype.tabSet = function() {
+    this.tabs[this.x] = true;
+    return this.state = State.normal;
+  };
+
+  Terminal.prototype.cursorUp = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.y -= param;
+    if (this.y < 0) {
+      return this.y = 0;
+    }
+  };
+
+  Terminal.prototype.cursorDown = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.y += param;
+    if (this.y >= this.rows) {
+      return this.y = this.rows - 1;
+    }
+  };
+
+  Terminal.prototype.cursorForward = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.x += param;
+    if (this.x >= this.cols) {
+      return this.x = this.cols - 1;
+    }
+  };
+
+  Terminal.prototype.cursorBackward = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.x -= param;
+    if (this.x < 0) {
+      return this.x = 0;
+    }
+  };
+
+  Terminal.prototype.cursorPos = function(params) {
+    var col, row;
+    row = params[0] - 1;
+    if (params.length >= 2) {
+      col = params[1] - 1;
+    } else {
+      col = 0;
+    }
+    if (row < 0) {
+      row = 0;
+    } else {
+      if (row >= this.rows) {
+        row = this.rows - 1;
+      }
+    }
+    if (col < 0) {
+      col = 0;
+    } else {
+      if (col >= this.cols) {
+        col = this.cols - 1;
+      }
+    }
+    this.x = col;
+    return this.y = row;
+  };
+
+  Terminal.prototype.eraseInDisplay = function(params) {
+    var j, _results, _results1, _results2;
+    switch (params[0]) {
+      case 0:
+        this.eraseRight(this.x, this.y);
+        j = this.y + 1;
+        _results = [];
+        while (j < this.rows) {
+          this.eraseLine(j);
+          _results.push(j++);
+        }
+        return _results;
+        break;
+      case 1:
+        this.eraseLeft(this.x, this.y);
+        j = this.y;
+        _results1 = [];
+        while (j--) {
+          _results1.push(this.eraseLine(j));
+        }
+        return _results1;
+        break;
+      case 2:
+        j = this.rows;
+        _results2 = [];
+        while (j--) {
+          _results2.push(this.eraseLine(j));
+        }
+        return _results2;
+    }
+  };
+
+  Terminal.prototype.eraseInLine = function(params) {
+    switch (params[0]) {
+      case 0:
+        return this.eraseRight(this.x, this.y);
+      case 1:
+        return this.eraseLeft(this.x, this.y);
+      case 2:
+        return this.eraseLine(this.y);
+    }
+  };
+
+  Terminal.prototype.charAttributes = function(params) {
+    var bg, fg, flags, i, l, p;
+    if (params.length === 1 && params[0] === 0) {
+      this.curAttr = this.defAttr;
+      return;
+    }
+    flags = this.curAttr >> 18;
+    fg = (this.curAttr >> 9) & 0x1ff;
+    bg = this.curAttr & 0x1ff;
+    l = params.length;
+    i = 0;
+    while (i < l) {
+      p = params[i];
+      if (p >= 30 && p <= 37) {
+        fg = p - 30;
+      } else if (p >= 40 && p <= 47) {
+        bg = p - 40;
+      } else if (p >= 90 && p <= 97) {
+        p += 8;
+        fg = p - 90;
+      } else if (p >= 100 && p <= 107) {
+        p += 8;
+        bg = p - 100;
+      } else if (p === 0) {
+        flags = this.defAttr >> 18;
+        fg = (this.defAttr >> 9) & 0x1ff;
+        bg = this.defAttr & 0x1ff;
+      } else if (p === 1) {
+        flags |= 1;
+      } else if (p === 4) {
+        flags |= 2;
+      } else if (p === 5) {
+        flags |= 4;
+      } else if (p === 7) {
+        flags |= 8;
+      } else if (p === 8) {
+        flags |= 16;
+      } else if (p === 22) {
+        flags &= ~1;
+      } else if (p === 24) {
+        flags &= ~2;
+      } else if (p === 25) {
+        flags &= ~4;
+      } else if (p === 27) {
+        flags &= ~8;
+      } else if (p === 28) {
+        flags &= ~16;
+      } else if (p === 39) {
+        fg = (this.defAttr >> 9) & 0x1ff;
+      } else if (p === 49) {
+        bg = this.defAttr & 0x1ff;
+      } else if (p === 38) {
+        if (params[i + 1] === 2) {
+          i += 2;
+          fg = "#" + params[i] & 0xff + params[i + 1] & 0xff + params[i + 2] & 0xff;
+          i += 2;
+        } else if (params[i + 1] === 5) {
+          i += 2;
+          fg = params[i] & 0xff;
+        }
+      } else if (p === 48) {
+        if (params[i + 1] === 2) {
+          i += 2;
+          bg = "#" + params[i] & 0xff + params[i + 1] & 0xff + params[i + 2] & 0xff;
+          i += 2;
+        } else if (params[i + 1] === 5) {
+          i += 2;
+          bg = params[i] & 0xff;
+        }
+      } else if (p === 100) {
+        fg = (this.defAttr >> 9) & 0x1ff;
+        bg = this.defAttr & 0x1ff;
+      } else {
+        console.error("Unknown SGR attribute: %d.", p);
+      }
+      i++;
+    }
+    return this.curAttr = (flags << 18) | (fg << 9) | bg;
+  };
+
+  Terminal.prototype.deviceStatus = function(params) {
+    if (!this.prefix) {
+      switch (params[0]) {
+        case 5:
+          return this.send("\x1b[0n");
+        case 6:
+          return this.send("\x1b[" + (this.y + 1) + ";" + (this.x + 1) + "R");
+      }
+    } else if (this.prefix === "?") {
+      if (params[0] === 6) {
+        return this.send("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
+      }
+    }
+  };
+
+  Terminal.prototype.insertChars = function(params) {
+    var ch, j, param, row, _results;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    row = this.y + this.ybase;
+    j = this.x;
+    ch = [this.eraseAttr(), " "];
+    _results = [];
+    while (param-- && j < this.cols) {
+      this.lines[row].splice(j++, 0, ch);
+      _results.push(this.lines[row].pop());
+    }
+    return _results;
+  };
+
+  Terminal.prototype.cursorNextLine = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.y += param;
+    if (this.y >= this.rows) {
+      this.y = this.rows - 1;
+    }
+    return this.x = 0;
+  };
+
+  Terminal.prototype.cursorPrecedingLine = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.y -= param;
+    if (this.y < 0) {
+      this.y = 0;
+    }
+    return this.x = 0;
+  };
+
+  Terminal.prototype.cursorCharAbsolute = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    return this.x = param - 1;
+  };
+
+  Terminal.prototype.insertLines = function(params) {
+    var j, param, row;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    row = this.y + this.ybase;
+    j = this.rows - 1 - this.scrollBottom;
+    j = this.rows - 1 + this.ybase - j + 1;
+    while (param--) {
+      this.lines.splice(row, 0, this.blankLine(true));
+      this.lines.splice(j, 1);
+    }
+    this.updateRange(this.y);
+    return this.updateRange(this.scrollBottom);
+  };
+
+  Terminal.prototype.deleteLines = function(params) {
+    var j, param, row;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    row = this.y + this.ybase;
+    j = this.rows - 1 - this.scrollBottom;
+    j = this.rows - 1 + this.ybase - j;
+    while (param--) {
+      this.lines.splice(j + 1, 0, this.blankLine(true));
+      this.lines.splice(row, 1);
+    }
+    this.updateRange(this.y);
+    return this.updateRange(this.scrollBottom);
+  };
+
+  Terminal.prototype.deleteChars = function(params) {
+    var ch, param, row, _results;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    row = this.y + this.ybase;
+    ch = [this.eraseAttr(), " "];
+    _results = [];
+    while (param--) {
+      this.lines[row].splice(this.x, 1);
+      _results.push(this.lines[row].push(ch));
+    }
+    return _results;
+  };
+
+  Terminal.prototype.eraseChars = function(params) {
+    var ch, j, param, row, _results;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    row = this.y + this.ybase;
+    j = this.x;
+    ch = [this.eraseAttr(), " "];
+    _results = [];
+    while (param-- && j < this.cols) {
+      _results.push(this.lines[row][j++] = ch);
+    }
+    return _results;
+  };
+
+  Terminal.prototype.charPosAbsolute = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.x = param - 1;
+    if (this.x >= this.cols) {
+      return this.x = this.cols - 1;
+    }
+  };
+
+  Terminal.prototype.HPositionRelative = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.x += param;
+    if (this.x >= this.cols) {
+      return this.x = this.cols - 1;
+    }
+  };
+
+  Terminal.prototype.sendDeviceAttributes = function(params) {
+    if (params[0] > 0) {
+      return;
+    }
+    if (!this.prefix) {
+      if (this.isterm("xterm") || this.isterm("rxvt-unicode") || this.isterm("screen")) {
+        return this.send("\x1b[?1;2c");
+      } else {
+        if (this.isterm("linux")) {
+          return this.send("\x1b[?6c");
+        }
+      }
+    } else if (this.prefix === ">") {
+      if (this.isterm("xterm")) {
+        return this.send("\x1b[>0;276;0c");
+      } else if (this.isterm("rxvt-unicode")) {
+        return this.send("\x1b[>85;95;0c");
+      } else if (this.isterm("linux")) {
+        return this.send(params[0] + "c");
+      } else {
+        if (this.isterm("screen")) {
+          return this.send("\x1b[>83;40003;0c");
+        }
+      }
+    }
+  };
+
+  Terminal.prototype.linePosAbsolute = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.y = param - 1;
+    if (this.y >= this.rows) {
+      return this.y = this.rows - 1;
+    }
+  };
+
+  Terminal.prototype.VPositionRelative = function(params) {
+    var param;
+    param = params[0];
+    if (param < 1) {
+      param = 1;
+    }
+    this.y += param;
+    if (this.y >= this.rows) {
+      return this.y = this.rows - 1;
+    }
+  };
+
+  Terminal.prototype.HVPosition = function(params) {
+    if (params[0] < 1) {
+      params[0] = 1;
+    }
+    if (params[1] < 1) {
+      params[1] = 1;
+    }
+    this.y = params[0] - 1;
+    if (this.y >= this.rows) {
+      this.y = this.rows - 1;
+    }
+    this.x = params[1] - 1;
+    if (this.x >= this.cols) {
+      return this.x = this.cols - 1;
+    }
+  };
+
+  Terminal.prototype.setMode = function(params) {
+    var i, l, normal;
+    if (typeof params === "object") {
+      l = params.length;
+      i = 0;
+      while (i < l) {
+        this.setMode(params[i]);
+        i++;
+      }
+      return;
+    }
+    if (this.prefix === "?") {
+      switch (params) {
+        case 1:
+          return this.applicationCursor = true;
+        case 2:
+          this.setgCharset(0, Terminal.prototype.charsets.US);
+          this.setgCharset(1, Terminal.prototype.charsets.US);
+          this.setgCharset(2, Terminal.prototype.charsets.US);
+          return this.setgCharset(3, Terminal.prototype.charsets.US);
+        case 3:
+          this.savedCols = this.cols;
+          return this.resize(132, this.rows);
+        case 6:
+          return this.originMode = true;
+        case 7:
+          return this.wraparoundMode = true;
+        case 66:
+          return this.applicationKeypad = true;
+        case 9:
+        case 1000:
+        case 1002:
+        case 1003:
+          this.x10Mouse = params === 9;
+          this.vt200Mouse = params === 1000;
+          this.normalMouse = params > 1000;
+          this.mouseEvents = true;
+          return this.element.style.cursor = 'pointer';
+        case 1004:
+          return this.sendFocus = true;
+        case 1005:
+          return this.utfMouse = true;
+        case 1006:
+          return this.sgrMouse = true;
+        case 1015:
+          return this.urxvtMouse = true;
+        case 25:
+          return this.cursorHidden = false;
+        case 1049:
+        case 47:
+        case 1047:
+          if (!this.normal) {
+            normal = {
+              lines: this.lines,
+              ybase: this.ybase,
+              ydisp: this.ydisp,
+              x: this.x,
+              y: this.y,
+              scrollTop: this.scrollTop,
+              scrollBottom: this.scrollBottom,
+              tabs: this.tabs
+            };
+            this.reset();
+            this.normal = normal;
+            return this.showCursor();
+          }
+      }
+    }
+  };
+
+  Terminal.prototype.resetMode = function(params) {
+    var i, l;
+    if (typeof params === "object") {
+      l = params.length;
+      i = 0;
+      while (i < l) {
+        this.resetMode(params[i]);
+        i++;
+      }
+      return;
+    }
+    if (this.prefix === "?") {
+      switch (params) {
+        case 1:
+          return this.applicationCursor = false;
+        case 3:
+          if (this.cols === 132 && this.savedCols) {
+            this.resize(this.savedCols, this.rows);
+          }
+          return delete this.savedCols;
+        case 6:
+          return this.originMode = false;
+        case 7:
+          return this.wraparoundMode = false;
+        case 66:
+          return this.applicationKeypad = false;
+        case 9:
+        case 1000:
+        case 1002:
+        case 1003:
+          this.x10Mouse = false;
+          this.vt200Mouse = false;
+          this.normalMouse = false;
+          this.mouseEvents = false;
+          return this.element.style.cursor = "";
+        case 1004:
+          return this.sendFocus = false;
+        case 1005:
+          return this.utfMouse = false;
+        case 1006:
+          return this.sgrMouse = false;
+        case 1015:
+          return this.urxvtMouse = false;
+        case 25:
+          return this.cursorHidden = true;
+        case 1049:
+        case 47:
+        case 1047:
+          if (this.normal) {
+            this.lines = this.normal.lines;
+            this.ybase = this.normal.ybase;
+            this.ydisp = this.normal.ydisp;
+            this.x = this.normal.x;
+            this.y = this.normal.y;
+            this.scrollTop = this.normal.scrollTop;
+            this.scrollBottom = this.normal.scrollBottom;
+            this.tabs = this.normal.tabs;
+            this.normal = null;
+            this.refresh(0, this.rows - 1);
+            return this.showCursor();
+          }
+      }
+    }
+  };
+
+  Terminal.prototype.setScrollRegion = function(params) {
+    if (this.prefix) {
+      return;
+    }
+    this.scrollTop = (params[0] || 1) - 1;
+    this.scrollBottom = (params[1] || this.rows) - 1;
+    this.x = 0;
+    return this.y = 0;
+  };
+
+  Terminal.prototype.saveCursor = function(params) {
+    this.savedX = this.x;
+    return this.savedY = this.y;
+  };
+
+  Terminal.prototype.restoreCursor = function(params) {
+    this.x = this.savedX || 0;
+    return this.y = this.savedY || 0;
+  };
+
+  Terminal.prototype.cursorForwardTab = function(params) {
+    var param, _results;
+    param = params[0] || 1;
+    _results = [];
+    while (param--) {
+      _results.push(this.x = this.nextStop());
+    }
+    return _results;
+  };
+
+  Terminal.prototype.scrollUp = function(params) {
+    var param;
+    param = params[0] || 1;
+    while (param--) {
+      this.lines.splice(this.ybase + this.scrollTop, 1);
+      this.lines.splice(this.ybase + this.scrollBottom, 0, this.blankLine());
+    }
+    this.updateRange(this.scrollTop);
+    return this.updateRange(this.scrollBottom);
+  };
+
+  Terminal.prototype.scrollDown = function(params) {
+    var param;
+    param = params[0] || 1;
+    while (param--) {
+      this.lines.splice(this.ybase + this.scrollBottom, 1);
+      this.lines.splice(this.ybase + this.scrollTop, 0, this.blankLine());
+    }
+    this.updateRange(this.scrollTop);
+    return this.updateRange(this.scrollBottom);
+  };
+
+  Terminal.prototype.initMouseTracking = function(params) {};
+
+  Terminal.prototype.resetTitleModes = function(params) {};
+
+  Terminal.prototype.cursorBackwardTab = function(params) {
+    var param, _results;
+    param = params[0] || 1;
+    _results = [];
+    while (param--) {
+      _results.push(this.x = this.prevStop());
+    }
+    return _results;
+  };
+
+  Terminal.prototype.repeatPrecedingCharacter = function(params) {
+    var ch, line, param, _results;
+    param = params[0] || 1;
+    line = this.lines[this.ybase + this.y];
+    ch = line[this.x - 1] || [this.defAttr, " "];
+    _results = [];
+    while (param--) {
+      _results.push(line[this.x++] = ch);
+    }
+    return _results;
+  };
+
+  Terminal.prototype.tabClear = function(params) {
+    var param;
+    param = params[0];
+    if (param <= 0) {
+      return delete this.tabs[this.x];
+    } else {
+      if (param === 3) {
+        return this.tabs = {};
+      }
+    }
+  };
+
+  Terminal.prototype.mediaCopy = function(params) {};
+
+  Terminal.prototype.setResources = function(params) {};
+
+  Terminal.prototype.disableModifiers = function(params) {};
+
+  Terminal.prototype.setPointerMode = function(params) {};
+
+  Terminal.prototype.softReset = function(params) {
+    this.cursorHidden = false;
+    this.insertMode = false;
+    this.originMode = false;
+    this.wraparoundMode = false;
+    this.applicationKeypad = false;
+    this.applicationCursor = false;
+    this.scrollTop = 0;
+    this.scrollBottom = this.rows - 1;
+    this.curAttr = this.defAttr;
+    this.x = this.y = 0;
+    this.charset = null;
+    this.glevel = 0;
+    return this.charsets = [null];
+  };
+
+  Terminal.prototype.requestAnsiMode = function(params) {};
+
+  Terminal.prototype.requestPrivateMode = function(params) {};
+
+  Terminal.prototype.setConformanceLevel = function(params) {};
+
+  Terminal.prototype.loadLEDs = function(params) {};
+
+  Terminal.prototype.setCursorStyle = function(params) {};
+
+  Terminal.prototype.setCharProtectionAttr = function(params) {};
+
+  Terminal.prototype.restorePrivateValues = function(params) {};
+
+  Terminal.prototype.setAttrInRectangle = function(params) {
+    var attr, b, i, l, line, r, t;
+    t = params[0];
+    l = params[1];
+    b = params[2];
+    r = params[3];
+    attr = params[4];
+    while (t < b + 1) {
+      line = this.lines[this.ybase + t];
+      i = l;
+      while (i < r) {
+        line[i] = [attr, line[i][1]];
+        i++;
+      }
+      t++;
+    }
+    this.updateRange(params[0]);
+    return this.updateRange(params[2]);
+  };
+
+  Terminal.prototype.savePrivateValues = function(params) {};
+
+  Terminal.prototype.manipulateWindow = function(params) {};
+
+  Terminal.prototype.reverseAttrInRectangle = function(params) {};
+
+  Terminal.prototype.setTitleModeFeature = function(params) {};
+
+  Terminal.prototype.setWarningBellVolume = function(params) {};
+
+  Terminal.prototype.setMarginBellVolume = function(params) {};
+
+  Terminal.prototype.copyRectangle = function(params) {};
+
+  Terminal.prototype.enableFilterRectangle = function(params) {};
+
+  Terminal.prototype.requestParameters = function(params) {};
+
+  Terminal.prototype.selectChangeExtent = function(params) {};
+
+  Terminal.prototype.fillRectangle = function(params) {
+    var b, ch, i, l, line, r, t;
+    ch = params[0];
+    t = params[1];
+    l = params[2];
+    b = params[3];
+    r = params[4];
+    while (t < b + 1) {
+      line = this.lines[this.ybase + t];
+      i = l;
+      while (i < r) {
+        line[i] = [line[i][0], String.fromCharCode(ch)];
+        i++;
+      }
+      t++;
+    }
+    this.updateRange(params[1]);
+    return this.updateRange(params[3]);
+  };
+
+  Terminal.prototype.enableLocatorReporting = function(params) {
+    var val;
+    return val = params[0] > 0;
+  };
+
+  Terminal.prototype.eraseRectangle = function(params) {
+    var b, ch, i, l, line, r, t;
+    t = params[0];
+    l = params[1];
+    b = params[2];
+    r = params[3];
+    ch = [this.eraseAttr(), " "];
+    while (t < b + 1) {
+      line = this.lines[this.ybase + t];
+      i = l;
+      while (i < r) {
+        line[i] = ch;
+        i++;
+      }
+      t++;
+    }
+    this.updateRange(params[0]);
+    return this.updateRange(params[2]);
+  };
+
+  Terminal.prototype.setLocatorEvents = function(params) {};
+
+  Terminal.prototype.selectiveEraseRectangle = function(params) {};
+
+  Terminal.prototype.requestLocatorPosition = function(params) {};
+
+  Terminal.prototype.insertColumns = function() {
+    var ch, i, l, param;
+    param = params[0];
+    l = this.ybase + this.rows;
+    ch = [this.eraseAttr(), " "];
+    while (param--) {
+      i = this.ybase;
+      while (i < l) {
+        this.lines[i].splice(this.x + 1, 0, ch);
+        this.lines[i].pop();
+        i++;
+      }
+    }
+    return this.maxRange();
+  };
+
+  Terminal.prototype.deleteColumns = function() {
+    var ch, i, l, param;
+    param = params[0];
+    l = this.ybase + this.rows;
+    ch = [this.eraseAttr(), " "];
+    while (param--) {
+      i = this.ybase;
+      while (i < l) {
+        this.lines[i].splice(this.x, 1);
+        this.lines[i].push(ch);
+        i++;
+      }
+    }
+    return this.maxRange();
+  };
+
+  Terminal.prototype.get_html_height_in_lines = function(html) {
+    var html_height, temp_node;
+    temp_node = document.createElement("div");
+    temp_node.innerHTML = html;
+    this.element.appendChild(temp_node);
+    html_height = temp_node.getBoundingClientRect().height;
+    this.element.removeChild(temp_node);
+    return Math.ceil(html_height / this.char_size.height);
+  };
+
+  Terminal.prototype.charsets = {
+    SCLD: {
+      "`": "◆",
+      a: "▒",
+      b: "\t",
+      c: "\f",
+      d: "\r",
+      e: "\n",
+      f: "°",
+      g: "±",
+      h: "␤",
+      i: "\x0b",
+      j: "┘",
+      k: "┐",
+      l: "┌",
+      m: "└",
+      n: "┼",
+      o: "⎺",
+      p: "⎻",
+      q: "─",
+      r: "⎼",
+      s: "⎽",
+      t: "├",
+      u: "┤",
+      v: "┴",
+      w: "┬",
+      x: "│",
+      y: "≤",
+      z: "≥",
+      "{": "π",
+      "|": "≠",
+      "}": "£",
+      "~": "·"
+    },
+    UK: null,
+    US: null,
+    Dutch: null,
+    Finnish: null,
+    French: null,
+    FrenchCanadian: null,
+    German: null,
+    Italian: null,
+    NorwegianDanish: null,
+    Spanish: null,
+    Swedish: null,
+    Swiss: null,
+    ISOLatin: null
+  };
+
+  return Terminal;
+
+})();
+
+selection = null;
+
+previous_leaf = function(node) {
+  var previous;
+  previous = node.previousSibling;
+  if (!previous) {
+    previous = node.parentNode.previousSibling;
+  }
+  if (!previous) {
+    previous = node.parentNode.parentNode.previousSibling;
+  }
+  while (previous.lastChild) {
+    previous = previous.lastChild;
+  }
+  return previous;
+};
+
+next_leaf = function(node) {
+  var next;
+  next = node.nextSibling;
+  if (!next) {
+    next = node.parentNode.nextSibling;
+  }
+  if (!next) {
+    next = node.parentNode.parentNode.nextSibling;
+  }
+  while (next.firstChild) {
+    next = next.firstChild;
+  }
+  return next;
+};
+
+Selection = (function() {
+  function Selection() {
+    term.element.classList.add('selection');
+    this.selection = getSelection();
+  }
+
+  Selection.prototype.reset = function() {
+    var fake_range, _ref, _results;
+    this.selection = getSelection();
+    fake_range = document.createRange();
+    fake_range.setStart(this.selection.anchorNode, this.selection.anchorOffset);
+    fake_range.setEnd(this.selection.focusNode, this.selection.focusOffset);
+    this.start = {
+      node: this.selection.anchorNode,
+      offset: this.selection.anchorOffset
+    };
+    this.end = {
+      node: this.selection.focusNode,
+      offset: this.selection.focusOffset
+    };
+    if (fake_range.collapsed) {
+      _ref = [this.end, this.start], this.start = _ref[0], this.end = _ref[1];
+    }
+    this.start_line = this.start.node;
+    while (!this.start_line.classList || __indexOf.call(this.start_line.classList, 'line') < 0) {
+      this.start_line = this.start_line.parentNode;
+    }
+    this.end_line = this.end.node;
+    _results = [];
+    while (!this.end_line.classList || __indexOf.call(this.end_line.classList, 'line') < 0) {
+      _results.push(this.end_line = this.end_line.parentNode);
+    }
+    return _results;
+  };
+
+  Selection.prototype.clear = function() {
+    return this.selection.removeAllRanges();
+  };
+
+  Selection.prototype.destroy = function() {
+    term.element.classList.remove('selection');
+    return this.clear();
+  };
+
+  Selection.prototype.text = function() {
+    return this.selection.toString();
+  };
+
+  Selection.prototype.up = function() {
+    return this.go(-1);
+  };
+
+  Selection.prototype.down = function() {
+    return this.go(+1);
+  };
+
+  Selection.prototype.go = function(n) {
+    var index;
+    index = term.children.indexOf(this.start_line) + n;
+    if (!((0 <= index && index < term.children.length))) {
+      return;
+    }
+    while (!term.children[index].textContent.match(/\S/)) {
+      index += n;
+      if (!((0 <= index && index < term.children.length))) {
+        return;
+      }
+    }
+    return this.select_line(index);
+  };
+
+  Selection.prototype.apply = function() {
+    var range;
+    this.clear();
+    range = document.createRange();
+    range.setStart(this.start.node, this.start.offset);
+    range.setEnd(this.end.node, this.end.offset);
+    return this.selection.addRange(range);
+  };
+
+  Selection.prototype.select_line = function(index) {
+    var line, line_end, line_start;
+    line = term.children[index];
+    line_start = {
+      node: line.firstChild,
+      offset: 0
+    };
+    line_end = {
+      node: line.lastChild,
+      offset: line.lastChild.textContent.length
+    };
+    this.start = this.walk(line_start, /\S/);
+    return this.end = this.walk(line_end, /\S/, true);
+  };
+
+  Selection.prototype.shrink_right = function() {
+    var node;
+    node = this.walk(this.end, /\s/, true);
+    return this.end = this.walk(node, /\S/, true);
+  };
+
+  Selection.prototype.shrink_left = function() {
+    var node;
+    node = this.walk(this.start, /\s/);
+    return this.start = this.walk(node, /\S/);
+  };
+
+  Selection.prototype.expand_right = function() {
+    var node;
+    node = this.walk(this.end, /\S/);
+    return this.end = this.walk(node, /\s/);
+  };
+
+  Selection.prototype.expand_left = function() {
+    var node;
+    node = this.walk(this.start, /\S/, true);
+    return this.start = this.walk(node, /\s/, true);
+  };
+
+  Selection.prototype.walk = function(needle, til, backward) {
+    var i, node, text;
+    if (backward == null) {
+      backward = false;
+    }
+    node = needle.node.firstChild ? needle.node.firstChild : needle.node;
+    text = node.textContent;
+    i = needle.offset;
+    if (backward) {
+      while (node) {
+        while (i > 0) {
+          if (text[--i].match(til)) {
+            return {
+              node: node,
+              offset: i + 1
+            };
+          }
+        }
+        node = previous_leaf(node);
+        text = node.textContent;
+        i = text.length;
+      }
+    } else {
+      while (node) {
+        while (i < text.length) {
+          if (text[i++].match(til)) {
+            return {
+              node: node,
+              offset: i - 1
+            };
+          }
+        }
+        node = next_leaf(node);
+        text = node.textContent;
+        i = 0;
+      }
+    }
+    return needle;
+  };
+
+  return Selection;
+
+})();
+
+document.addEventListener('keydown', function(e) {
+  var _ref, _ref1;
+  if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    return true;
+  }
+  if (e.shiftKey && e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
+    term.handler(getSelection().toString());
+    getSelection().removeAllRanges();
+    return cancel(e);
+  }
+  if (selection) {
+    selection.reset();
+    if (!e.ctrlKey && e.shiftKey && (37 <= (_ref1 = e.keyCode) && _ref1 <= 40)) {
+      return true;
+    }
+    if (e.shiftKey && e.ctrlKey) {
+      if (e.keyCode === 38) {
+        selection.up();
+      } else if (e.keyCode === 40) {
+        selection.down();
+      }
+    } else if (e.keyCode === 39) {
+      selection.shrink_left();
+    } else if (e.keyCode === 38) {
+      selection.expand_left();
+    } else if (e.keyCode === 37) {
+      selection.shrink_right();
+    } else if (e.keyCode === 40) {
+      selection.expand_right();
+    } else {
+      return cancel(e);
+    }
+    if (selection != null) {
+      selection.apply();
+    }
+    return cancel(e);
+  }
+  if (!selection && e.ctrlKey && e.shiftKey && e.keyCode === 38) {
+    selection = new Selection();
+    selection.select_line(term.y - 1);
+    selection.apply();
+    return cancel(e);
+  }
+});
+
+document.addEventListener('keyup', function(e) {
+  var _ref, _ref1;
+  if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    return true;
+  }
+  if (selection) {
+    if (e.keyCode === 13) {
+      term.handler(selection.text());
+      selection.destroy();
+      selection = null;
+      return cancel(e);
+    }
+    if (_ref1 = e.keyCode, __indexOf.call([37, 38, 39, 40], _ref1) < 0) {
+      selection.destroy();
+      selection = null;
+      return true;
+    }
+  }
+});
+
+document.addEventListener('dblclick', function(e) {
+  var anchorNode, anchorOffset, new_range, range, sel;
+  if (e.ctrlKey || e.altkey) {
+    return;
+  }
+  sel = getSelection();
+  if (sel.isCollapsed || sel.toString().match(/\s/)) {
+    return;
+  }
+  range = document.createRange();
+  range.setStart(sel.anchorNode, sel.anchorOffset);
+  range.setEnd(sel.focusNode, sel.focusOffset);
+  if (range.collapsed) {
+    sel.removeAllRanges();
+    new_range = document.createRange();
+    new_range.setStart(sel.focusNode, sel.focusOffset);
+    new_range.setEnd(sel.anchorNode, sel.anchorOffset);
+    sel.addRange(new_range);
+  }
+  range.detach();
+  while (!(sel.toString().match(/\s/) || !sel.toString())) {
+    sel.modify('extend', 'forward', 'character');
+  }
+  sel.modify('extend', 'backward', 'character');
+  anchorNode = sel.anchorNode;
+  anchorOffset = sel.anchorOffset;
+  sel.collapseToEnd();
+  sel.extend(anchorNode, anchorOffset);
+  while (!(sel.toString().match(/\s/) || !sel.toString())) {
+    sel.modify('extend', 'backward', 'character');
+  }
+  return sel.modify('extend', 'forward', 'character');
+});
+
+if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+  ctrl = false;
+  alt = false;
+  first = true;
+  virtual_input = document.createElement('input');
+  virtual_input.type = 'password';
+  virtual_input.style.position = 'fixed';
+  virtual_input.style.top = 0;
+  virtual_input.style.left = 0;
+  virtual_input.style.border = 'none';
+  virtual_input.style.outline = 'none';
+  virtual_input.style.opacity = 0;
+  virtual_input.value = '0';
+  document.body.appendChild(virtual_input);
+  virtual_input.addEventListener('blur', function() {
+    var _this = this;
+    return setTimeout((function() {
+      return _this.focus();
+    }), 10);
+  });
+  addEventListener('click', function() {
+    return virtual_input.focus();
+  });
+  addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+      return ctrl = true;
+    } else if (e.touches.length === 2) {
+      ctrl = false;
+      return alt = true;
+    } else if (e.touches.length === 3) {
+      ctrl = true;
+      return alt = true;
+    }
+  });
+  virtual_input.addEventListener('keydown', function(e) {
+    term.keyDown(e);
+    return true;
+  });
+  virtual_input.addEventListener('input', function(e) {
+    var len;
+    len = this.value.length;
+    if (len === 0) {
+      e.keyCode = 8;
+      term.keyDown(e);
+      this.value = '0';
+      return true;
+    }
+    e.keyCode = this.value.charAt(1).charCodeAt(0);
+    if ((ctrl || alt) && !first) {
+      e.keyCode = this.value.charAt(1).charCodeAt(0);
+      e.ctrlKey = ctrl;
+      e.altKey = alt;
+      if (e.keyCode >= 97 && e.keyCode <= 122) {
+        e.keyCode -= 32;
+      }
+      term.keyDown(e);
+      this.value = '0';
+      ctrl = alt = false;
+      return true;
+    }
+    term.keyPress(e);
+    first = false;
+    this.value = '0';
+    return true;
+  });
+}
+
+cols = rows = null;
+
+quit = false;
+
+$ = document.querySelectorAll.bind(document);
+
+send = function(data) {
+  return ws.send('S' + data);
+};
+
+ctl = function() {
+  var args, params, type;
+  type = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+  params = args.join(',');
+  if (type === 'Resize') {
+    return ws.send('R' + params);
+  }
+};
+
+ws_url = 'ws://' + document.location.host + '/ws' + location.pathname;
+
+ws = new WebSocket(ws_url);
+
+ws.addEventListener('open', function() {
+  console.log("WebSocket open", arguments);
+  ws.send('R' + term.cols + ',' + term.rows);
+  if (location.hash) {
+    return setTimeout(function() {
+      return ws.send('S' + location.hash.slice(1) + '\n');
+    }, 100);
+  }
+});
+
+ws.addEventListener('error', function() {
+  return console.log("WebSocket error", arguments);
+});
+
+ws.addEventListener('message', function(e) {
+  return setTimeout(function() {
+    return term.write(e.data);
+  }, 1);
+});
+
+ws.addEventListener('close', function() {
+  console.log("WebSocket closed", arguments);
+  quit = true;
+  return open('', '_self').close();
+});
+
+term = new Terminal($('#wrapper')[0], send, ctl);
+
+addEventListener('beforeunload', function() {
+  if (!quit) {
+    return 'This will exit the terminal session';
+  }
+});
+
+bench = function(n) {
+  var rnd, t0;
+  if (n == null) {
+    n = 100000000;
+  }
+  rnd = '';
+  while (rnd.length < n) {
+    rnd += Math.random().toString(36).substring(2);
+  }
+  t0 = (new Date()).getTime();
+  term.write(rnd);
+  return console.log("" + n + " chars in " + ((new Date()).getTime() - t0) + " ms");
+};
+
+cbench = function(n) {
+  var rnd, t0;
+  if (n == null) {
+    n = 100000000;
+  }
+  rnd = '';
+  while (rnd.length < n) {
+    rnd += "\x1b[" + (30 + parseInt(Math.random() * 20)) + "m";
+    rnd += Math.random().toString(36).substring(2);
+  }
+  t0 = (new Date()).getTime();
+  term.write(rnd);
+  return console.log("" + n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
+};

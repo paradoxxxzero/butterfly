@@ -19,6 +19,7 @@
 
 import tornado.options
 import tornado.ioloop
+import tornado.httpserver
 
 tornado.options.define("secret", default='secret', help="Secret")
 tornado.options.define("debug", default=False, help="Debug mode")
@@ -41,8 +42,9 @@ ioloop = tornado.ioloop.IOLoop.instance()
 
 
 from butterfly import application
-application.listen(tornado.options.options.port)
-
+http_server = tornado.httpserver.HTTPServer(application)
+http_server.listen(
+    tornado.options.options.port, address=tornado.options.options.host)
 
 url = "http://%s:%d/*" % (
     tornado.options.options.host, tornado.options.options.port)
