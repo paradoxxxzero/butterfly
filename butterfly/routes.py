@@ -180,6 +180,14 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
+        if self.request.headers['Origin'] != 'http://%s' % (
+                self.request.headers['Host']):
+            self.log.warning(
+                'Unauthorized connection attempt: from : %s to: %s' % (
+                    self.request.headers['Origin'],
+                    self.request.headers['Host']))
+            self.close()
+            return
         self.socket = utils.Socket(self.ws_connection.stream.socket)
         self.set_nodelay(True)
         self.log.info('Websocket opened %r' % self.socket)
@@ -208,6 +216,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.pty()
 
     def on_message(self, message):
+        if not hasattr(self, 'writer'):
+            self.close()
+            return
         if message[0] == 'R':
             cols, rows = map(int, message[1:].split(','))
             s = struct.pack("HHHH", rows, cols, 0, 0)
