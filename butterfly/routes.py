@@ -105,26 +105,23 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         except:
             pass
 
+        shell = tornado.options.options.shell or self.callee.shell
         env = os.environ
         env.update(self.socket.env)
-
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "butterfly"
         env["HOME"] = self.callee.dir
-        env["SHELL"] = self.callee.shell
         env["LOCATION"] = "http://%s:%d/" % (
             tornado.options.options.host, tornado.options.options.port)
         env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
             os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
-        args = ['butterfly']
+        args = [shell]
 
         if self.socket.local:
             # All users are the same -> launch shell
             if self.caller == self.callee and server == self.callee:
                 args.append('-i')
-                os.execvpe(
-                    tornado.options.options.shell or self.callee.shell,
-                    args, env)
+                os.execvpe(shell, args, env)
                 # This process has been replaced
                 return
 
