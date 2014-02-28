@@ -34,6 +34,12 @@ ioloop = tornado.ioloop.IOLoop.instance()
 server = utils.User()
 daemon = utils.User(name='daemon')
 
+# Python 2 backward compatibility
+try:
+    input = raw_input
+except NameError:
+    pass
+
 
 def motd(socket, caller, callee):
     return (
