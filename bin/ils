@@ -23,7 +23,7 @@ for f in os.listdir(os.getcwd()):
                 mime,
                 base64.b64encode(buf.read()).decode('ascii'),
                 f)
-        except:
+        except Exception:
             pass
 
 print(out)
