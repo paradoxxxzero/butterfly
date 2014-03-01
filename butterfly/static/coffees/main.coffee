@@ -28,7 +28,7 @@ ctl = (type, args...) ->
     if type == 'Resize'
         ws.send 'R' + params
 
-if localtion.protocol == 'https:'
+if location.protocol == 'https:'
     ws_url = 'wss://'
 else
     ws_url = 'ws://'
