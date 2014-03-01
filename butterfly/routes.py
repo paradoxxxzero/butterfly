@@ -123,8 +123,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "butterfly"
         env["HOME"] = self.callee.dir
-        env["LOCATION"] = "http://%s:%d/" % (
-            tornado.options.options.host, tornado.options.options.port)
+        env["LOCATION"] = "http%s://%s:%d/" % \
+		("s" if tornado.options.options.secure else "", \
+		tornado.options.options.host, tornado.options.options.port)
         env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
             os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
         args = [shell]
@@ -180,7 +181,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
-        if self.request.headers['Origin'] != 'http://%s' % (
+        if self.request.headers['Origin'] != 'http%s://%s' % \
+		("s" if tornado.options.options.secure else "", 
                 self.request.headers['Host']):
             self.log.warning(
                 'Unauthorized connection attempt: from : %s to: %s' % (
@@ -194,12 +196,19 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.path = path
         self.user = user.decode('utf-8') if user else None
         self.caller = self.callee = None
+        if tornado.options.options.secure:
+            cert = self.request.get_ssl_certificate()
+            if cert != None:
+                for field in cert['subject']:
+                    if field[0][0] == 'commonName':
+                        self.user = self.callee = field[0][1]
+
         if self.socket.local:
             self.caller = utils.User(uid=self.socket.uid)
         else:
             # We don't know uid is on the other machine
             pass
-
+	
         if self.user:
             try:
                 self.callee = utils.User(name=self.user)

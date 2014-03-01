@@ -31,7 +31,10 @@ class User(object):
         if uid is not None:
             self.pw = pwd.getpwuid(uid)
         else:
-            self.pw = pwd.getpwnam(name)
+	    try:
+                self.pw = pwd.getpwnam(name)
+            except:
+                self.pw = pwd.getpwnam('daemon')
         if self.pw is None:
             raise LookupError('Unknown user')
 

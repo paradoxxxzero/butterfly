@@ -28,7 +28,11 @@ ctl = (type, args...) ->
     if type == 'Resize'
         ws.send 'R' + params
 
-ws_url = 'ws://' + document.location.host + '/ws' + location.pathname
+if localtion.protocol == 'https:'
+    ws_url = 'wss://'
+else
+    ws_url = 'ws://'
+ws_url += document.location.host + '/ws' + location.pathname
 ws = new WebSocket ws_url
 
 ws.addEventListener 'open', ->

@@ -20,15 +20,19 @@
 import tornado.options
 import tornado.ioloop
 import tornado.httpserver
+import ssl
 
 tornado.options.define("secret", default='secret', help="Secret")
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("host", default='127.0.0.1', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
+tornado.options.define("secure", default=False, \
+	help="Choose whether or not to use SSL")
+tornado.options.define("reallysecure", default=False, \
+	help="Require certificate authentication.")
 
 tornado.options.parse_command_line()
-
 
 import logging
 for logger in ('tornado.access', 'tornado.application',
@@ -42,11 +46,23 @@ ioloop = tornado.ioloop.IOLoop.instance()
 
 
 from butterfly import application
-http_server = tornado.httpserver.HTTPServer(application)
+
+if tornado.options.options.reallysecure:
+    tornado.options.options.secure = True
+    reqs = ssl.CERT_REQUIRED
+elif tornado.options.options.secure:
+    reqs = ssl.CERT_OPTIONAL
+
+ssl_opts = None
+if tornado.options.options.secure:
+    ssl_opts = dict(certfile="butterfly.crt", keyfile="butterfly.key", \
+	cert_reqs=reqs, ca_certs="butterflyca.crt")
+
+http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_opts)
 http_server.listen(
     tornado.options.options.port, address=tornado.options.options.host)
 
-url = "http://%s:%d/*" % (
+url = "http%s://%s:%d/*" % ( "s" if tornado.options.options.secure else "",
     tornado.options.options.host, tornado.options.options.port)
 
 # This is for debugging purpose
