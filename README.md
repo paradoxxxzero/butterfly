@@ -1,6 +1,6 @@
 # ƸӜƷ butterfly
 
-![](https://raw.github.com/paradoxxxzero/butterfly/master/butterfly.png)
+![](http://paradoxxxzero.github.io/assets/butterfly_1.gif)
 
 
 ## Description
@@ -20,9 +20,22 @@ The js part is heavily based on [term.js](https://github.com/chjj/term.js/) whic
 Then open [localhost:57575](http://localhost:57575) in your favorite browser and done.
 
 
+## Contribute
+
+and make the world better (or just butterfly).
+
+Don't hesitate to fork the repository and start hacking on it, I am very open to pull requests.
+
+If you don't know what to do go to the github issues and pick one you like.
+
+If you want to motivate me to continue working on this project you can tip me, see: http://paradoxxxzero.github.io/about/
+
+The dev requirements are coffee script and compass for the client side.
+Run `python dev.py --debug --port=12345` and you are set (yes you can launch it from your regular butterfly instance)
+
 ## Author
 
-[Florian Mounier](http://github.com/paradoxxxzero)
+[Florian Mounier](http://paradoxxxzero.github.io/)
 
 
 ## License
