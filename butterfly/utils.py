@@ -31,7 +31,7 @@ class User(object):
         if uid is not None:
             self.pw = pwd.getpwuid(uid)
         else:
-	    try:
+            try:
                 self.pw = pwd.getpwnam(name)
             except:
                 self.pw = pwd.getpwnam('daemon')
