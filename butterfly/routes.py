@@ -108,7 +108,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 self.callee = utils.User(name=user)
             except:
-                self.callee = utils.User(name='nologin')
+                self.callee = utils.User(name='daemon')
 
         try:
             os.chdir(self.path or self.callee.dir)
@@ -268,15 +268,15 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         try:
             self.writer.write(u('\x04'))
             self.writer.flush()
-        except OSError:
+        except Exception:
             self.log.warning('closing term fail', exc_info=True)
         try:
             os.close(self.fd)
-        except OSError:
+        except Exception:
             self.log.warning('closing fd fail', exc_info=True)
         try:
             os.waitpid(self.pid, 0)
-        except OSError:
+        except Exception:
             self.log.warning('waitpid fail', exc_info=True)
 
         try:
