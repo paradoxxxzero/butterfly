@@ -55,15 +55,15 @@ B                   `         '
    `Y888888bo.       :     :       .od888888Y'
      8888888888b.     :   :     .d8888888888      AWelcome to RbutterflyB
      88888Y'  `Y8b.   `   '   .d8Y'  `Y88888
-    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k     AServer running as G%rB
+    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k     
       `888  RY88YB    `b ( ) d'    RY88YB  888'
        888b  R'"B        ,',        R"'B  d888        AConnecting to:B
       j888888bd8gf"'   ':'   `"?g8bd888888k         AHost: G%sB
-        R'Y'B   .8'     d' 'b     '8.   R'Y'X           AUser: G%rB
+        R'Y'B   .8'     d' 'b     '8.   R'Y'X         
          R!B   .8' RdbB  d'; ;`b  RdbB '8.   R!B
             d88  R`'B  8 ; ; 8  R`'B  88b             AFrom:B
            d888b   .g8 ',' 8g.   d888b              AHost: G%sB
-          :888888888Y'     'Y888888888:             AUser: G%rB
+          :888888888Y'     'Y888888888:             
           '! 8888888'       `8888888 !'
              '8Y  R`Y         Y'B  Y8'
 R              Y                   Y
@@ -77,11 +77,8 @@ R              Y                   Y
         .replace('X', '\x1b[0m')
         .replace('\n', '\r\n')
         % (
-            server,
             '%s:%d' % (socket.remote_addr, socket.remote_port),
-            callee,
-            '%s:%d' % (socket.local_addr, socket.local_port),
-            caller or '?'))
+            '%s:%d' % (socket.local_addr, socket.local_port)))
 
 
 @url(r'/(?:user/(.+))?/?(?:wd/(.+))?')
@@ -130,26 +127,12 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
         args = [shell]
 
-        if self.socket.local:
-            # All users are the same -> launch shell
-            if self.caller == self.callee and server == self.callee:
-                args.append('-i')
-                os.execvpe(shell, args, env)
-                # This process has been replaced
-                return
-
-            if server.root:
-                if self.callee != self.caller:
-                    # Force password prompt by dropping rights
-                    # to the daemon user
-                    os.setuid(daemon.uid)
-        else:
-            # We are not local so we should always get a password prompt
-            if server.root:
-                if self.callee == daemon:
-                    # No logging from daemon
-                    sys.exit(1)
-                os.setuid(daemon.uid)
+        # We are not local so we should always get a password prompt
+        if server.root:
+            if self.callee == daemon:
+                # No logging from daemon
+                sys.exit(1)
+            os.setuid(daemon.uid)
 
         args.append('-p')
         if tornado.options.options.shell:
@@ -203,12 +186,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     if field[0][0] == 'commonName':
                         self.user = self.callee = field[0][1]
 
-        if self.socket.local:
-            self.caller = utils.User(uid=self.socket.uid)
-        else:
-            # We don't know uid is on the other machine
-            pass
-	
         if self.user:
             try:
                 self.callee = utils.User(name=self.user)
@@ -219,8 +196,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         # If no user where given and we are local, keep the same user
         # as the one who opened the socket
         # ie: the one openning a terminal in borwser
-        if not self.callee and not self.user and self.socket.local:
-            self.callee = self.caller
         self.write_message(motd(self.socket, self.caller, self.callee))
         self.pty()
 

@@ -65,31 +65,6 @@ class User(object):
         return "%s [%r]" % (self.name, self.uid)
 
 
-def get_socket_line(port):
-    try:
-        with open('/proc/net/tcp') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == '0100007F:%X' % port:
-                # We got the socket
-                return line.split()
-    except:
-        log.error('getting socket inet4 line fail', exc_info=True)
-
-    try:
-        with open('/proc/net/tcp6') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == (
-                    '00000000000000000000000001000000:%X' % port):
-                # We got the socket
-                return line.split()
-    except:
-        log.error('getting socket inet6 line fail', exc_info=True)
-
-
 def get_env(inode):
     for pid in os.listdir("/proc/"):
         if not pid.isdigit():
@@ -122,13 +97,6 @@ class Socket(object):
         pn = socket.getpeername()
         self.remote_addr = pn[0]
         self.remote_port = pn[1]
-        line = get_socket_line(self.remote_port)
-        if line:
-            self.uid = int(line[7])
-            self.inode = line[9]
-        else:
-            self.uid = None
-            self.inode = None
 
         self.env = {}
         if self.local:
@@ -142,7 +110,7 @@ class Socket(object):
         return self.remote_addr in ['127.0.0.1', '::1']
 
     def __repr__(self):
-        return '<Socket L: %s:%d R: %s:%d Uid: %r Inode: %s %d>' % (
+        return '<Socket L: %s:%d R: %s:%d %d>' % (
             self.local_addr, self.local_port,
             self.remote_addr, self.remote_port,
-            self.uid, self.inode, len(self.env))
+            len(self.env))

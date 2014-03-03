@@ -1,0 +1,19 @@
+# vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+# certificates
+*.crt
+*.cert
+*.pem
+*.key
+*.csr
+*.p12
+
+# python compiled files
+*.pyc
+
