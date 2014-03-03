@@ -197,6 +197,7 @@ document.addEventListener 'keydown', (e) ->
         selection.select_line term.y - 1
         selection.apply()
         return cancel e
+    true
 
 document.addEventListener 'keyup', (e) ->
     return true if e.keyCode in [16..19]
@@ -211,6 +212,7 @@ document.addEventListener 'keyup', (e) ->
             selection.destroy()
             selection = null
             return true
+    true
 
 document.addEventListener 'dblclick', (e) ->
     return if e.ctrlKey or e.altkey

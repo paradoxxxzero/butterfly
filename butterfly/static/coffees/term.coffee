@@ -1144,7 +1144,6 @@ class Terminal
                     key = "\x1bOD" # SS3 as ^[O for 7-bit
                     #key = '\x8fD'; // SS3 as 0x8f for 8-bit
                     break
-                return true if ev.shiftKey
                 key = "\x1b[D"
 
             # right-arrow
@@ -1152,7 +1151,6 @@ class Terminal
                 if @applicationCursor
                     key = "\x1bOC"
                     break
-                return true if ev.shiftKey
                 key = "\x1b[C"
 
             # up-arrow
@@ -1163,8 +1161,6 @@ class Terminal
                 if ev.ctrlKey
                     @scrollDisp -1
                     return cancel(ev)
-                else if ev.shiftKey
-                    return true
                 else
                     key = "\x1b[A"
 
@@ -1176,8 +1172,6 @@ class Terminal
                 if ev.ctrlKey
                     @scrollDisp 1
                     return cancel(ev)
-                else if ev.shiftKey
-                    return true
                 else
                     key = "\x1b[B"
 
@@ -1313,7 +1307,8 @@ class Terminal
                 key = key.slice(0, -1) + "1;5" + key.slice(-1)
             else if ev.altKey
                 key = key.slice(0, -1) + "1;3" + key.slice(-1)
-            else key = key.slice(0, -1) + "1;4" + key.slice(-1) if ev.shiftKey
+            else if ev.shiftKey
+                key = key.slice(0, -1) + "1;4" + key.slice(-1)
 
         return true unless key
 
