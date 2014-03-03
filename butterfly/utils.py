@@ -19,10 +19,10 @@
 import os
 import pwd
 from logging import getLogger
-
+import subprocess
+import re
 
 log = getLogger('butterfly')
-
 
 class User(object):
     def __init__(self, uid=None, name=None):
@@ -62,53 +62,20 @@ class User(object):
         return "%s [%r]" % (self.name, self.uid)
 
 
-def get_socket_line(port):
-    try:
-        with open('/proc/net/tcp') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == '0100007F:%X' % port:
-                # We got the socket
-                return line.split()
-    except:
-        log.debug('getting socket inet4 line fail', exc_info=True)
-
-    try:
-        with open('/proc/net/tcp6') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == (
-                    '00000000000000000000000001000000:%X' % port):
-                # We got the socket
-                return line.split()
-    except:
-        log.debug('getting socket inet6 line fail', exc_info=True)
-
-
-def get_env(inode):
-    for pid in os.listdir("/proc/"):
-        if not pid.isdigit():
-            continue
-        for fd in os.listdir("/proc/%s/fd/" % pid):
-            lnk = "/proc/%s/fd/%s" % (pid, fd)
-            if not os.path.islink(lnk):
-                continue
-            if 'socket:[%s]' % inode == os.readlink(lnk):
-                with open('/proc/%s/status' % pid) as s:
-                    for line in s.readlines():
-                        if line.startswith('PPid:'):
-                            with open('/proc/%s/environ' %
-                                      line[len('PPid:'):].strip()) as e:
-                                keyvals = e.read().split('\x00')
-                                env = {}
-                                for keyval in keyvals:
-                                    if '=' in keyval:
-                                        key, val = keyval.split('=', 1)
-                                        env[key] = val
-                                return env
-
+def get_socket_line(addr, port):
+    # May want to make this into a dictionary in the future...
+    regex = "\w+\s+(?P<pid>\d+)\s+(?P<user>\w+).*\s" \
+            "(?P<laddr>.*?):(?P<lport>\d+)->(?P<raddr>.*?):(?P<rport>\d+)"
+    output = subprocess.check_output(['lsof', '-Pni'])
+    lines = output.split('\n')
+    for line in lines:
+        # Look for local address with peer port
+        match = re.findall(regex, line)
+        if len(match):
+            match = match[0]
+            if int(match[5]) == port:
+                return match
+    raise Exception("Couldn't find a match!")
 
 class Socket(object):
 
@@ -120,30 +87,19 @@ class Socket(object):
         self.remote_addr = pn[0]
         self.remote_port = pn[1]
         try:
-            line = get_socket_line(self.remote_port)
+            self.user = get_socket_line(self.remote_addr, self.remote_port)[1]
         except Exception:
-            line = None
+            self.user = None
 
-        if line:
-            self.uid = int(line[7])
-            self.inode = line[9]
-        else:
-            self.uid = None
-            self.inode = None
-
+        # su will handle setting up the user environment, so make this empty.
         self.env = {}
-        if self.local and self.inode:
-            try:
-                self.env = get_env(self.inode)
-            except Exception:
-                log.debug('Unable to get env', exc_info=True)
 
     @property
     def local(self):
         return self.remote_addr in ['127.0.0.1', '::1']
 
     def __repr__(self):
-        return '<Socket L: %s:%d R: %s:%d Uid: %r Inode: %s %d>' % (
+        return '<Socket L: %s:%d R: %s:%d User: %s>' % (
             self.local_addr, self.local_port,
             self.remote_addr, self.remote_port,
-            self.uid, self.inode, len(self.env))
+            self.user)
