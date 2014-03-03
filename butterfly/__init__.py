@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '1.2.6'
+__version__ = '1.2.7'
 
 
 import os
@@ -43,18 +43,11 @@ class Route(tornado.web.RequestHandler):
     def log(self):
         return log
 
-if hasattr(tornado.options.options, 'debug'):
-    opts = dict(
-        debug=tornado.options.options.debug,
-        cookie_secret=tornado.options.options.secret)
-else:
-    opts = {}
-
 
 application = tornado.web.Application(
     static_path=os.path.join(os.path.dirname(__file__), "static"),
     template_path=os.path.join(os.path.dirname(__file__), "templates"),
-    **opts
+    debug=tornado.options.options.debug
 )
 
 

@@ -17,6 +17,7 @@
 
 cols = rows = null
 quit = false
+open_ts = 0
 
 $ = document.querySelectorAll.bind(document)
 
@@ -38,6 +39,7 @@ ws = new WebSocket ws_url
 ws.addEventListener 'open', ->
     console.log "WebSocket open", arguments
     ws.send 'R' + term.cols + ',' + term.rows
+    open_ts = (new Date()).getTime()
 
 ws.addEventListener 'error', ->
     console.log "WebSocket error", arguments
@@ -49,9 +51,16 @@ ws.addEventListener 'message', (e) ->
 
 ws.addEventListener 'close', ->
     console.log "WebSocket closed", arguments
+    setTimeout ->
+        term.write 'Closed'
+        # Allow quick reload
+        term.skipNextKey = true
+        term.element.classList.add('skip')
+    , 1
     quit = true
-    open('','_self').close()
-
+    # Don't autoclose if websocket didn't last 1 minute
+    if (new Date()).getTime() - open_ts > 60 * 1000
+        open('','_self').close()
 
 term = new Terminal $('#wrapper')[0], send, ctl
 addEventListener 'beforeunload', ->

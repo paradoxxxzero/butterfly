@@ -75,7 +75,7 @@ def get_socket_line(port):
                 # We got the socket
                 return line.split()
     except:
-        log.error('getting socket inet4 line fail', exc_info=True)
+        log.debug('getting socket inet4 line fail', exc_info=True)
 
     try:
         with open('/proc/net/tcp6') as k:
@@ -87,7 +87,7 @@ def get_socket_line(port):
                 # We got the socket
                 return line.split()
     except:
-        log.error('getting socket inet6 line fail', exc_info=True)
+        log.debug('getting socket inet6 line fail', exc_info=True)
 
 
 def get_env(inode):
@@ -122,7 +122,11 @@ class Socket(object):
         pn = socket.getpeername()
         self.remote_addr = pn[0]
         self.remote_port = pn[1]
-        line = get_socket_line(self.remote_port)
+        try:
+            line = get_socket_line(self.remote_port)
+        except Exception:
+            line = None
+
         if line:
             self.uid = int(line[7])
             self.inode = line[9]
@@ -131,10 +135,10 @@ class Socket(object):
             self.inode = None
 
         self.env = {}
-        if self.local:
+        if self.local and self.inode:
             try:
                 self.env = get_env(self.inode)
-            except:
+            except Exception:
                 log.debug('Unable to get env', exc_info=True)
 
     @property
