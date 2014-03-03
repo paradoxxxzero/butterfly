@@ -26,15 +26,12 @@ log = getLogger('butterfly')
 
 class User(object):
     def __init__(self, uid=None, name=None):
-        if not uid and not name:
+        if uid is None and not name:
             uid = os.getuid()
         if uid is not None:
             self.pw = pwd.getpwuid(uid)
         else:
-            try:
-                self.pw = pwd.getpwnam(name)
-            except:
-                self.pw = pwd.getpwnam('daemon')
+            self.pw = pwd.getpwnam(name)
         if self.pw is None:
             raise LookupError('Unknown user')
 

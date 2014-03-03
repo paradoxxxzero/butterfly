@@ -196,7 +196,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             return
 
         self.socket = utils.Socket(self.ws_connection.stream.socket)
-        self.errors = 0
         self.set_nodelay(True)
         self.log.info('Websocket opened %r' % self.socket)
         self.path = path
@@ -209,7 +208,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     if field[0][0] == 'commonName':
                         self.user = self.callee = field[0][1]
 
-        if self.socket.local:
+        if self.socket.local and self.socket.uid is not None:
             self.caller = utils.User(uid=self.socket.uid)
         else:
             # We don't know uid is on the other machine
@@ -231,6 +230,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         if not hasattr(self, 'writer'):
+            self.on_close()
             self.close()
             return
         if message[0] == 'R':
@@ -245,25 +245,21 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def shell_handler(self, fd, events):
         if events & ioloop.READ:
-            self.errors = 0
             try:
                 read = self.reader.read()
             except IOError:
+                pass
+            else:
                 self.log.info('READ>%r' % read)
-                self.write_message('DIE')
-                return
-
-            self.log.info('READ>%r' % read)
-            self.write_message(read.decode('utf-8', 'replace'))
-
+                if self.ws_connection:
+                    self.write_message(read.decode('utf-8', 'replace'))
+                else:
+                    events = ioloop.ERROR
         if events & ioloop.ERROR:
-            self.errors += 1
-            if self.errors >= 10:
-                self.log.info(
-                    'Too many errors, the shell must have been closed')
-                # Terminated
-                self.on_close()
-                self.close()
+            self.log.info('Error on fd, closing')
+            # Terminated
+            self.on_close()
+            self.close()
 
     def on_close(self):
         if getattr(self, 'pid', 0) == 0:
