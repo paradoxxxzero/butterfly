@@ -108,7 +108,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 self.callee = utils.User(name=user)
             except:
-                self.callee = utils.User(name='daemon')
+                self.callee = utils.User(name='nobody')
 
         try:
             os.chdir(self.path or self.callee.dir)
@@ -153,7 +153,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         else:
             args = ['/bin/su']
 
-        # This would be better to run
         if sys.platform == 'linux':
             args.append('-p')
             if tornado.options.options.shell:
@@ -208,11 +207,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     if field[0][0] == 'commonName':
                         self.user = self.callee = field[0][1]
 
+        # If local we have the user connecting
         if self.socket.local and self.socket.user is not None:
-            self.caller = utils.User(name=self.socket.user)
-        else:
-            # We don't know uid is on the other machine
-            pass
+            self.caller = self.socket.user
 
         if self.user:
             try:

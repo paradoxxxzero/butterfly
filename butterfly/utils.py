@@ -24,6 +24,7 @@ import re
 
 log = getLogger('butterfly')
 
+
 class User(object):
     def __init__(self, uid=None, name=None):
         if uid is None and not name:
@@ -56,13 +57,59 @@ class User(object):
         return self.uid == 0
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.uid == other.uid
 
     def __repr__(self):
         return "%s [%r]" % (self.name, self.uid)
 
 
-def get_socket_line(addr, port):
+class Socket(object):
+
+    def __init__(self, socket):
+        sn = socket.getsockname()
+        self.local_addr = sn[0]
+        self.local_port = sn[1]
+        pn = socket.getpeername()
+        self.remote_addr = pn[0]
+        self.remote_port = pn[1]
+        self.user = None
+        self.env = {}
+
+        if not self.local:
+            return
+
+        # If there is procfs, get as much info as we can
+        if os.path.exists('/proc/net'):
+            try:
+                line = get_procfs_socket_line(self.remote_port)
+                self.user = User(uid=int(line[7]))
+                self.env = get_socket_env(line[9])
+            except Exception:
+                log.debug('procfs was no good, aight')
+
+        if self.user is None:
+            # Try with lsof
+            try:
+                self.user = User(name=get_lsof_socket_line(
+                    self.remote_addr, self.remote_port)[1])
+            except Exception:
+                log.debug('lsof was no good either')
+
+    @property
+    def local(self):
+        return self.remote_addr in ['127.0.0.1', '::1']
+
+    def __repr__(self):
+        return '<Socket L: %s:%d R: %s:%d User: %r>' % (
+            self.local_addr, self.local_port,
+            self.remote_addr, self.remote_port,
+            self.user)
+
+
+# Portable way to get the user, if lsof is installed
+def get_lsof_socket_line(addr, port):
     # May want to make this into a dictionary in the future...
     regex = "\w+\s+(?P<pid>\d+)\s+(?P<user>\w+).*\s" \
             "(?P<laddr>.*?):(?P<lport>\d+)->(?P<raddr>.*?):(?P<rport>\d+)"
@@ -77,29 +124,52 @@ def get_socket_line(addr, port):
                 return match
     raise Exception("Couldn't find a match!")
 
-class Socket(object):
 
-    def __init__(self, socket):
-        sn = socket.getsockname()
-        self.local_addr = sn[0]
-        self.local_port = sn[1]
-        pn = socket.getpeername()
-        self.remote_addr = pn[0]
-        self.remote_port = pn[1]
-        try:
-            self.user = get_socket_line(self.remote_addr, self.remote_port)[1]
-        except Exception:
-            self.user = None
+# Linux only socket line get
+def get_procfs_socket_line(port):
+    try:
+        with open('/proc/net/tcp') as k:
+            lines = k.readlines()
+        for line in lines:
+            # Look for local address with peer port
+            if line.split()[1] == '0100007F:%X' % port:
+                # We got the socket
+                return line.split()
+    except:
+        log.debug('getting socket inet4 line fail', exc_info=True)
 
-        # su will handle setting up the user environment, so make this empty.
-        self.env = {}
+    try:
+        with open('/proc/net/tcp6') as k:
+            lines = k.readlines()
+        for line in lines:
+            # Look for local address with peer port
+            if line.split()[1] == (
+                    '00000000000000000000000001000000:%X' % port):
+                # We got the socket
+                return line.split()
+    except:
+        log.debug('getting socket inet6 line fail', exc_info=True)
 
-    @property
-    def local(self):
-        return self.remote_addr in ['127.0.0.1', '::1']
 
-    def __repr__(self):
-        return '<Socket L: %s:%d R: %s:%d User: %s>' % (
-            self.local_addr, self.local_port,
-            self.remote_addr, self.remote_port,
-            self.user)
+# Linux only browser environment far fetch
+def get_socket_env(inode):
+    for pid in os.listdir("/proc/"):
+        if not pid.isdigit():
+            continue
+        for fd in os.listdir("/proc/%s/fd/" % pid):
+            lnk = "/proc/%s/fd/%s" % (pid, fd)
+            if not os.path.islink(lnk):
+                continue
+            if 'socket:[%s]' % inode == os.readlink(lnk):
+                with open('/proc/%s/status' % pid) as s:
+                    for line in s.readlines():
+                        if line.startswith('PPid:'):
+                            with open('/proc/%s/environ' %
+                                      line[len('PPid:'):].strip()) as e:
+                                keyvals = e.read().split('\x00')
+                                env = {}
+                                for keyval in keyvals:
+                                    if '=' in keyval:
+                                        key, val = keyval.split('=', 1)
+                                        env[key] = val
+                                return env
