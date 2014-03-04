@@ -162,7 +162,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         os.execvpe(args[0], args, env)
 
     def communicate(self):
-        self.log.debug('Adding handler')
+        self.log.info('Adding handler')
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
         def utf8_error(e):
@@ -261,25 +261,27 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         if getattr(self, 'pid', 0) == 0:
-            self.log.warning('pid is 0')
+            self.log.info('pid is 0')
             return
         try:
             self.writer.write(u('\x04'))
             self.writer.flush()
         except Exception:
-            self.log.warning('closing term fail', exc_info=True)
+            self.log.debug('closing term fail', exc_info=True)
+
         try:
             os.close(self.fd)
         except Exception:
-            self.log.warning('closing fd fail', exc_info=True)
+            self.log.debug('closing fd fail', exc_info=True)
+
         try:
             os.waitpid(self.pid, 0)
         except Exception:
-            self.log.warning('waitpid fail', exc_info=True)
+            self.log.debug('waitpid fail', exc_info=True)
 
         try:
             ioloop.remove_handler(self.fd)
         except Exception:
-            self.log.warning('handler removal fail', exc_info=True)
+            self.log.debug('handler removal fail', exc_info=True)
 
         self.log.info('Websocket closed')

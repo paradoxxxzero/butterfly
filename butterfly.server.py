@@ -23,6 +23,8 @@ import tornado.httpserver
 import ssl
 
 tornado.options.define("debug", default=False, help="Debug mode")
+tornado.options.define("more", default=False,
+                       help="Debug mode with more verbosity")
 tornado.options.define("host", default='127.0.0.1', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
@@ -36,11 +38,15 @@ tornado.options.parse_command_line()
 import logging
 for logger in ('tornado.access', 'tornado.application',
                'tornado.general', 'butterfly'):
-    logging.getLogger(logger).setLevel(
-        logging.DEBUG if tornado.options.options.debug else logging.WARNING)
+    level = logging.WARNING
+    if tornado.options.options.debug:
+        level = logging.INFO
+        if tornado.options.options.more:
+            level = logging.DEBUG
+    logging.getLogger(logger).setLevel(level)
 
 log = logging.getLogger('butterfly')
-log.debug('Starting server')
+log.info('Starting server')
 ioloop = tornado.ioloop.IOLoop.instance()
 
 
@@ -78,5 +84,5 @@ else:
              'butterfly/templates/']
     watch({'url': url}, files, unwatch_at_exit=True)
 
-log.debug('Starting loop')
+log.info('Starting loop')
 ioloop.start()
