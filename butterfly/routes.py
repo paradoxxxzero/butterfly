@@ -208,8 +208,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     if field[0][0] == 'commonName':
                         self.user = self.callee = field[0][1]
 
-        if self.socket.local and self.socket.uid is not None:
-            self.caller = utils.User(uid=self.socket.uid)
+        if self.socket.local and self.socket.user is not None:
+            self.caller = utils.User(name=self.socket.user)
         else:
             # We don't know uid is on the other machine
             pass
