@@ -60,7 +60,7 @@ B                   `         '
        888b  R'"B        ,',        R"'B  d888
       j888888bd8gf"'   ':'   `"?g8bd888888k
         R'Y'B   .8'     d' 'b     '8.   R'Y'X
-         R!B   .8' RdbB  d'; ;`b  RdbB '8.   R!
+         R!B   .8' RdbB  d'; ;`b  RdbB '8.   R!B
             d88  R`'B  8 ; ; 8  R`'B  88b             Rbutterfly Zv %sB
            d888b   .g8 ',' 8g.   d888b
           :888888888Y'     'Y888888888:           AConnecting to:B
@@ -245,13 +245,14 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             try:
                 read = self.reader.read()
             except IOError:
-                pass
+                read = ''
+
+            self.log.info('READ>%r' % read)
+            if len(read) != 0 and self.ws_connection:
+                self.write_message(read.decode('utf-8', 'replace'))
             else:
-                self.log.info('READ>%r' % read)
-                if self.ws_connection:
-                    self.write_message(read.decode('utf-8', 'replace'))
-                else:
-                    events = ioloop.ERROR
+                events = ioloop.ERROR
+
         if events & ioloop.ERROR:
             self.log.info('Error on fd, closing')
             # Terminated

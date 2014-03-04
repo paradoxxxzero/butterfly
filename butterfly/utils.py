@@ -87,7 +87,7 @@ class Socket(object):
                 self.user = User(uid=int(line[7]))
                 self.env = get_socket_env(line[9])
             except Exception:
-                log.debug('procfs was no good, aight')
+                log.debug('procfs was no good, aight', exc_info=True)
 
         if self.user is None:
             # Try with lsof
@@ -95,7 +95,7 @@ class Socket(object):
                 self.user = User(name=get_lsof_socket_line(
                     self.remote_addr, self.remote_port)[1])
             except Exception:
-                log.debug('lsof was no good either')
+                log.debug('lsof was no good', exc_info=True)
 
     @property
     def local(self):
