@@ -1297,7 +1297,7 @@ class Terminal
                     else
                          key = String.fromCharCode(29) if ev.keyCode is 221
 
-                else if ev.altKey
+                else if (ev.altKey and 'Mac' not in navigator.platform) or (ev.metaKey and 'Mac' in navigator.platform)
                     if ev.keyCode >= 65 and ev.keyCode <= 90
                         key = "\x1b" + String.fromCharCode(ev.keyCode + 32)
                     else if ev.keyCode is 192

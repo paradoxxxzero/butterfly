@@ -1193,7 +1193,7 @@ Terminal = (function() {
               key = String.fromCharCode(29);
             }
           }
-        } else if (ev.altKey) {
+        } else if ((ev.altKey && __indexOf.call(navigator.platform, 'Mac') < 0) || (ev.metaKey && __indexOf.call(navigator.platform, 'Mac') >= 0)) {
           if (ev.keyCode >= 65 && ev.keyCode <= 90) {
             key = "\x1b" + String.fromCharCode(ev.keyCode + 32);
           } else if (ev.keyCode === 192) {
