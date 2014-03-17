@@ -27,6 +27,7 @@ import tornado.process
 import tornado.ioloop
 import tornado.options
 import sys
+import signal
 from butterfly import url, Route, utils, __version__
 
 ioloop = tornado.ioloop.IOLoop.instance()
@@ -263,11 +264,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if getattr(self, 'pid', 0) == 0:
             self.log.info('pid is 0')
             return
-        try:
-            self.writer.write(u('\x04'))
-            self.writer.flush()
-        except Exception:
-            self.log.debug('closing term fail', exc_info=True)
 
         try:
             os.close(self.fd)
@@ -275,6 +271,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.log.debug('closing fd fail', exc_info=True)
 
         try:
+            os.kill(self.pid, signal.SIGKILL)
             os.waitpid(self.pid, 0)
         except Exception:
             self.log.debug('waitpid fail', exc_info=True)
