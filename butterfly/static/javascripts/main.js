@@ -2709,12 +2709,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     return virtual_input.focus();
   });
   addEventListener('touchstart', function(e) {
-    if (e.touches.length === 1) {
+    if (e.touches.length === 2) {
       return ctrl = true;
-    } else if (e.touches.length === 2) {
+    } else if (e.touches.length === 3) {
       ctrl = false;
       return alt = true;
-    } else if (e.touches.length === 3) {
+    } else if (e.touches.length === 4) {
       ctrl = true;
       return alt = true;
     }

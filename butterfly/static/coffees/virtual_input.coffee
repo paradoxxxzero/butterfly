@@ -38,12 +38,12 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test navigat
         virtual_input.focus()
 
     addEventListener 'touchstart', (e) ->
-        if e.touches.length == 1
+        if e.touches.length == 2
             ctrl = true
-        else if e.touches.length == 2
+        else if e.touches.length == 3
             ctrl = false
             alt = true
-        else if e.touches.length == 3
+        else if e.touches.length == 4
             ctrl = true
             alt = true
 
