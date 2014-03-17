@@ -1011,11 +1011,14 @@ Terminal = (function() {
   };
 
   Terminal.prototype.keyDown = function(ev) {
-    var id, key, t;
+    var id, key, t, _ref;
     if (ev.keyCode > 15 && ev.keyCode < 19) {
       return true;
     }
     if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
+      return true;
+    }
+    if ((ev.shiftKey && ev.ctrlKey) && ((_ref = ev.keyCode) === 67 || _ref === 86)) {
       return true;
     }
     if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
