@@ -33,6 +33,7 @@ if location.protocol == 'https:'
     ws_url = 'wss://'
 else
     ws_url = 'ws://'
+
 ws_url += document.location.host + '/ws' + location.pathname
 ws = new WebSocket ws_url
 

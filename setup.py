@@ -24,7 +24,7 @@ options = dict(
     platforms="Any",
     scripts=['butterfly.server.py'],
     packages=['butterfly'],
-    install_requires=["tornado>=3.2"],
+    install_requires=["tornado>=3.2", "pyOpenSSL"],
     package_data={
         'butterfly': [
             'static/fonts/*',
