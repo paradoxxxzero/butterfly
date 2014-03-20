@@ -22,6 +22,7 @@ import io
 import struct
 import fcntl
 import termios
+import tornado.web
 import tornado.websocket
 import tornado.process
 import tornado.ioloop
@@ -71,8 +72,9 @@ R              Y                   Y               AFrom:R
               !                   !                  G%sX
 
 '''
+        .replace('G', '\x1b[3%d;1m' % (
+            1 if tornado.options.options.unsecure else 2))
         .replace('B', '\x1b[34;1m')
-        .replace('G', '\x1b[32;1m')
         .replace('R', '\x1b[37;1m')
         .replace('Z', '\x1b[33;1m')
         .replace('A', '\x1b[37;0m')
@@ -86,6 +88,8 @@ R              Y                   Y               AFrom:R
 @url(r'/(?:user/(.+))?/?(?:wd/(.+))?')
 class Index(Route):
     def get(self, user, path):
+        if not tornado.options.options.unsecure and user:
+            raise tornado.web.HTTPError(400)
         return self.render('index.html')
 
 
@@ -104,12 +108,14 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.communicate()
 
     def shell(self):
-        if self.callee is None:
+        if self.callee is None and tornado.options.options.unsecure:
             user = input('login: ')
             try:
                 self.callee = utils.User(name=user)
             except:
                 self.callee = utils.User(name='nobody')
+
+        assert self.callee is not None
 
         try:
             os.chdir(self.path or self.callee.dir)
@@ -117,7 +123,11 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             pass
 
         env = os.environ
-        env.update(self.socket.env)
+        # If local and local user is the same as login user
+        # We set the env of the user from the browser
+        # Usefull when running as root
+        if self.caller == self.callee:
+            env.update(self.socket.env)
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "butterfly"
         env["HOME"] = self.callee.dir
@@ -127,23 +137,31 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
             os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
 
-        if self.socket.local:
-            # All users are the same -> launch shell
-            if self.caller == self.callee and server == self.callee:
-                args = [tornado.options.options.shell or self.callee.shell]
-                args.append('-i')
-                os.execvpe(args[0], args, env)
-                # This process has been replaced
-                return
+        if not tornado.options.options.unsecure or (
+                self.socket.local and
+                self.caller == self.callee and
+                server == self.callee):
+            # User has been auth with ssl or is the same user as server
+            try:
+                os.setuid(self.callee.uid)
+            except PermissionError:
+                print('The server must be run as root '
+                      'if you want to log as different user\n')
+                sys.exit(1)
+            args = [tornado.options.options.shell or self.callee.shell]
+            args.append('-i')
+            os.execvpe(args[0], args, env)
+            # This process has been replaced
 
-            if server.root:
+        # Unsecure connection with su
+        if server.root:
+            if self.socket.local:
                 if self.callee != self.caller:
                     # Force password prompt by dropping rights
                     # to the daemon user
                     os.setuid(daemon.uid)
-        else:
-            # We are not local so we should always get a password prompt
-            if server.root:
+            else:
+                # We are not local so we should always get a password prompt
                 if self.callee == daemon:
                     # No logging from daemon
                     sys.exit(1)
@@ -201,28 +219,33 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.path = path
         self.user = user.decode('utf-8') if user else None
         self.caller = self.callee = None
-        if not tornado.options.options.unsecure:
-            cert = self.request.get_ssl_certificate()
-            if cert is not None:
-                for field in cert['subject']:
-                    if field[0][0] == 'commonName':
-                        self.user = self.callee = field[0][1]
 
         # If local we have the user connecting
         if self.socket.local and self.socket.user is not None:
             self.caller = self.socket.user
 
-        if self.user:
+        if tornado.options.options.unsecure:
+            if self.user:
+                try:
+                    self.callee = utils.User(name=self.user)
+                except LookupError:
+                    self.callee = None
+
+            # If no user where given and we are local, keep the same user
+            # as the one who opened the socket
+            # ie: the one openning a terminal in borwser
+            if not self.callee and not self.user and self.socket.local:
+                self.callee = self.caller
+        else:
+            issuer, user = utils.parse_cert(self.request.get_ssl_certificate())
+            assert issuer == 'Butterfly CA', 'Invalid certificate issuer'
+            assert user, 'No user in certificate'
+            self.user = user
             try:
                 self.callee = utils.User(name=self.user)
             except LookupError:
-                self.callee = None
+                raise Exception('Invalid user in certificate')
 
-        # If no user where given and we are local, keep the same user
-        # as the one who opened the socket
-        # ie: the one openning a terminal in borwser
-        if not self.callee and not self.user and self.socket.local:
-            self.callee = self.caller
         self.write_message(motd(self.socket))
         self.pty()
 

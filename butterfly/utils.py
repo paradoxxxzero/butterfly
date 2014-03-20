@@ -25,6 +25,23 @@ import re
 log = getLogger('butterfly')
 
 
+def parse_cert(cert):
+    issuer = None
+    user = None
+
+    for elt in cert['issuer']:
+        issuer = dict(elt).get('commonName', None)
+        if issuer:
+            break
+
+    for elt in cert['subject']:
+        user = dict(elt).get('commonName', None)
+        if user:
+            break
+
+    return issuer, user
+
+
 class User(object):
     def __init__(self, uid=None, name=None):
         if uid is None and not name:

@@ -22,13 +22,11 @@ import tornado.ioloop
 import tornado.httpserver
 import uuid
 import ssl
+import getpass
 import os
+import stat
 import sys
 
-try:
-    input = raw_input
-except NameError:
-    pass
 
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("more", default=False,
@@ -60,18 +58,46 @@ for logger in ('tornado.access', 'tornado.application',
 log = logging.getLogger('butterfly')
 log.info('Starting server')
 ioloop = tornado.ioloop.IOLoop.instance()
-ca, ca_key = 'butterfly_ca.crt', 'butterfly_ca.key'
-cert, cert_key = 'butterfly.crt', 'butterfly.key'
+
+ssl_dir = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), 'ssl')
+
+if not os.path.exists(ssl_dir):
+    os.mkdir(ssl_dir)
+
+
+def to_abs(file):
+    return os.path.join(ssl_dir, file)
+
+ca, ca_key, cert, cert_key, pkcs12 = map(to_abs, [
+    'butterfly_ca.crt', 'butterfly_ca.key',
+    'butterfly.crt', 'butterfly.key',
+    '%s.p12'])
+
+
+def write(file, content):
+    with open(file, 'wb') as fd:
+        fd.write(content)
+    print('Written %s' % file)
+
+
+def read(file):
+    print('Reading %s' % file)
+    with open(file, 'rb') as fd:
+        return fd.read()
 
 
 from butterfly import application
 
 if tornado.options.options.generate_certs:
+    host = tornado.options.options.host
+    print('Generating certificates for %s (change it with --host)\n' % host)
+
     from OpenSSL import crypto
     ca_pk = crypto.PKey()
     ca_pk.generate_key(crypto.TYPE_RSA, 2048)
     ca_cert = crypto.X509()
-    ca_cert.get_subject().CN = 'butterfly ca'
+    ca_cert.get_subject().CN = 'Butterfly CA'
     ca_cert.set_serial_number(100)
     ca_cert.gmtime_adj_notBefore(0)  # From now
     ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
@@ -79,17 +105,14 @@ if tornado.options.options.generate_certs:
     ca_cert.set_pubkey(ca_pk)
     ca_cert.sign(ca_pk, 'sha1')
 
-    with open(ca, "wb") as cf:
-        cf.write(
-            crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
-    with open(ca_key, "wb") as cf:
-        cf.write(
-            crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_pk))
+    write(ca, crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
+    write(ca_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_pk))
+    os.chmod(ca_key, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
 
     server_pk = crypto.PKey()
     server_pk.generate_key(crypto.TYPE_RSA, 2048)
     server_cert = crypto.X509()
-    server_cert.get_subject().CN = tornado.options.options.host
+    server_cert.get_subject().CN = host
     server_cert.set_serial_number(200)
     server_cert.gmtime_adj_notBefore(0)  # From now
     server_cert.gmtime_adj_notAfter(315360000)  # to 10y
@@ -97,12 +120,12 @@ if tornado.options.options.generate_certs:
     server_cert.set_pubkey(server_pk)
     server_cert.sign(ca_pk, 'sha1')
 
-    with open(cert, "wb") as cf:
-        cf.write(crypto.dump_certificate(crypto.FILETYPE_PEM, server_cert))
+    write(cert, crypto.dump_certificate(crypto.FILETYPE_PEM, server_cert))
+    write(cert_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, server_pk))
+    os.chmod(cert_key, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
 
-    with open(cert_key, "wb") as cf:
-        cf.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, server_pk))
-    print('Done')
+    print('\nNow you can run --generate_user_pkcs=user '
+          'to generate user certificate.')
     sys.exit(0)
 
 
@@ -114,10 +137,8 @@ if tornado.options.options.generate_user_pkcs:
         sys.exit(1)
 
     user = tornado.options.options.generate_user_pkcs
-    with open(ca, 'rb') as cf:
-        ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, cf.read())
-    with open(ca_key, 'rb') as cf:
-        ca_pk = crypto.load_privatekey(crypto.FILETYPE_PEM, cf.read())
+    ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, read(ca))
+    ca_pk = crypto.load_privatekey(crypto.FILETYPE_PEM, read(ca_key))
 
     client_pk = crypto.PKey()
     client_pk.generate_key(crypto.TYPE_RSA, 2048)
@@ -138,23 +159,29 @@ if tornado.options.options.generate_user_pkcs:
     pfx.set_ca_certificates([ca_cert])
     pfx.set_friendlyname(('%s cert for butterfly' % user).encode('utf-8'))
 
-    with open('%s.p12' % user, "wb") as cf:
-        cf.write(pfx.export(b''))
-    print('%s.p12 written.' % user)
+    while True:
+        password = getpass.getpass('\nPKCS12 Password (can be blank): ')
+        password2 = getpass.getpass('Verify Password (can be blank): ')
+        if password == password2:
+            break
+        print('Passwords do not match.')
+
+    write(pkcs12 % user, pfx.export(password.encode('utf-8')))
+    os.chmod(pkcs12 % user, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
     sys.exit(0)
 
 
-if (tornado.options.options.unsecure or
-        tornado.options.options.host == '127.0.0.1'):
+if tornado.options.options.unsecure:
     ssl_opts = None
 else:
     if not all(map(os.path.exists,
                    [cert, cert_key, ca, ca_key])):
-            print("Unable to find butterfly certificate. "
-                  "Can't run butterfly without certificate. "
-                  "Either generate them or run as --unsecure "
-                  "(NOT RECOMMENDED)")
-            sys.exit(1)
+        print("Unable to find butterfly certificate. "
+              "Can't run butterfly without certificate. "
+              "Either generate them using --generate-certs "
+              "or run as --unsecure "
+              "(NOT RECOMMENDED)")
+        sys.exit(1)
 
     ssl_opts = {
         'certfile': cert,
