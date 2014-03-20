@@ -25,6 +25,7 @@ import ssl
 import getpass
 import os
 import stat
+import socket
 import sys
 
 
@@ -100,8 +101,8 @@ if tornado.options.options.generate_certs:
         ca_pk = crypto.PKey()
         ca_pk.generate_key(crypto.TYPE_RSA, 2048)
         ca_cert = crypto.X509()
-        ca_cert.get_subject().CN = 'Butterfly CA'
-        ca_cert.set_serial_number(100)
+        ca_cert.get_subject().CN = 'Butterfly CA on %s' % socket.gethostname()
+        ca_cert.set_serial_number(uuid.uuid4().int)
         ca_cert.gmtime_adj_notBefore(0)  # From now
         ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
         ca_cert.set_issuer(ca_cert.get_subject())  # Self signed
@@ -120,7 +121,7 @@ if tornado.options.options.generate_certs:
     server_pk.generate_key(crypto.TYPE_RSA, 2048)
     server_cert = crypto.X509()
     server_cert.get_subject().CN = host
-    server_cert.set_serial_number(200)
+    server_cert.set_serial_number(uuid.uuid4().int)
     server_cert.gmtime_adj_notBefore(0)  # From now
     server_cert.gmtime_adj_notAfter(315360000)  # to 10y
     server_cert.set_issuer(ca_cert.get_subject())  # Signed by ca

@@ -237,8 +237,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             if not self.callee and not self.user and self.socket.local:
                 self.callee = self.caller
         else:
-            issuer, user = utils.parse_cert(self.request.get_ssl_certificate())
-            assert issuer == 'Butterfly CA', 'Invalid certificate issuer'
+            user = utils.parse_cert(self.request.get_ssl_certificate())
             assert user, 'No user in certificate'
             self.user = user
             try:
