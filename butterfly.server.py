@@ -44,6 +44,8 @@ tornado.options.define("generate_certs", default=False,
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication")
 
+tornado.options.define("prompt_login", default=True, help="Whether to prompt login or not even for non local clients")
+
 tornado.options.parse_command_line()
 
 

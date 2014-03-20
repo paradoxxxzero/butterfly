@@ -104,6 +104,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.communicate()
 
     def shell(self):
+        if not tornado.options.options.prompt_login:
+            self.callee = utils.User(self.caller)
         if self.callee is None:
             user = input('login: ')
             try:
@@ -127,9 +129,12 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
             os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
 
-        if self.socket.local:
+        env.pop("VIRTUAL_ENV", None)    # If the server is running from virtualenv
+        env.pop("PS1", None)            # then remove the prefix (virtenv) and show the regular one [user@comp ~]
+
+        if self.socket.local or not tornado.options.options.prompt_login:
             # All users are the same -> launch shell
-            if self.caller == self.callee and server == self.callee:
+            if (self.caller == self.callee and server == self.callee) or not tornado.options.options.prompt_login:
                 args = [tornado.options.options.shell or self.callee.shell]
                 args.append('-i')
                 os.execvpe(args[0], args, env)
