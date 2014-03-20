@@ -57,13 +57,18 @@ for logger in ('tornado.access', 'tornado.application',
 
 log = logging.getLogger('butterfly')
 log.info('Starting server')
-ioloop = tornado.ioloop.IOLoop.instance()
 
-ssl_dir = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), 'ssl')
+host = tornado.options.options.host
+port = tornado.options.options.port
+
+if os.getuid() == 0:
+    ssl_dir = os.path.join(os.path.abspath(os.sep), 'etc', 'butterfly', 'ssl')
+else:
+    ssl_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), 'ssl')
 
 if not os.path.exists(ssl_dir):
-    os.mkdir(ssl_dir)
+    os.makedirs(ssl_dir)
 
 
 def to_abs(file):
@@ -71,14 +76,14 @@ def to_abs(file):
 
 ca, ca_key, cert, cert_key, pkcs12 = map(to_abs, [
     'butterfly_ca.crt', 'butterfly_ca.key',
-    'butterfly.crt', 'butterfly.key',
+    'butterfly_%s.crt', 'butterfly_%s.key',
     '%s.p12'])
 
 
 def write(file, content):
     with open(file, 'wb') as fd:
         fd.write(content)
-    print('Written %s' % file)
+    print('Writing %s' % file)
 
 
 def read(file):
@@ -86,28 +91,30 @@ def read(file):
     with open(file, 'rb') as fd:
         return fd.read()
 
-
-from butterfly import application
-
 if tornado.options.options.generate_certs:
-    host = tornado.options.options.host
+    from OpenSSL import crypto
     print('Generating certificates for %s (change it with --host)\n' % host)
 
-    from OpenSSL import crypto
-    ca_pk = crypto.PKey()
-    ca_pk.generate_key(crypto.TYPE_RSA, 2048)
-    ca_cert = crypto.X509()
-    ca_cert.get_subject().CN = 'Butterfly CA'
-    ca_cert.set_serial_number(100)
-    ca_cert.gmtime_adj_notBefore(0)  # From now
-    ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
-    ca_cert.set_issuer(ca_cert.get_subject())  # Self signed
-    ca_cert.set_pubkey(ca_pk)
-    ca_cert.sign(ca_pk, 'sha1')
+    if not os.path.exists(ca) and not os.path.exists(ca_key):
+        print('Root certificate not found, generating it')
+        ca_pk = crypto.PKey()
+        ca_pk.generate_key(crypto.TYPE_RSA, 2048)
+        ca_cert = crypto.X509()
+        ca_cert.get_subject().CN = 'Butterfly CA'
+        ca_cert.set_serial_number(100)
+        ca_cert.gmtime_adj_notBefore(0)  # From now
+        ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
+        ca_cert.set_issuer(ca_cert.get_subject())  # Self signed
+        ca_cert.set_pubkey(ca_pk)
+        ca_cert.sign(ca_pk, 'sha1')
 
-    write(ca, crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
-    write(ca_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_pk))
-    os.chmod(ca_key, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
+        write(ca, crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
+        write(ca_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_pk))
+        os.chmod(ca_key, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
+    else:
+        print('Root certificate found, using it')
+        ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, read(ca))
+        ca_pk = crypto.load_privatekey(crypto.FILETYPE_PEM, read(ca_key))
 
     server_pk = crypto.PKey()
     server_pk.generate_key(crypto.TYPE_RSA, 2048)
@@ -120,9 +127,11 @@ if tornado.options.options.generate_certs:
     server_cert.set_pubkey(server_pk)
     server_cert.sign(ca_pk, 'sha1')
 
-    write(cert, crypto.dump_certificate(crypto.FILETYPE_PEM, server_cert))
-    write(cert_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, server_pk))
-    os.chmod(cert_key, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
+    write(cert % host, crypto.dump_certificate(
+        crypto.FILETYPE_PEM, server_cert))
+    write(cert_key % host, crypto.dump_privatekey(
+        crypto.FILETYPE_PEM, server_pk))
+    os.chmod(cert_key % host, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
 
     print('\nNow you can run --generate_user_pkcs=user '
           'to generate user certificate.')
@@ -131,8 +140,7 @@ if tornado.options.options.generate_certs:
 
 if tornado.options.options.generate_user_pkcs:
     from OpenSSL import crypto
-    if not all(map(os.path.exists,
-                   [cert, cert_key, ca, ca_key])):
+    if not all(map(os.path.exists, [ca, ca_key])):
         print('Please generate certificates using --generate_certs before')
         sys.exit(1)
 
@@ -166,6 +174,7 @@ if tornado.options.options.generate_user_pkcs:
             break
         print('Passwords do not match.')
 
+    print('')
     write(pkcs12 % user, pfx.export(password.encode('utf-8')))
     os.chmod(pkcs12 % user, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
     sys.exit(0)
@@ -174,30 +183,30 @@ if tornado.options.options.generate_user_pkcs:
 if tornado.options.options.unsecure:
     ssl_opts = None
 else:
-    if not all(map(os.path.exists,
-                   [cert, cert_key, ca, ca_key])):
-        print("Unable to find butterfly certificate. "
-              "Can't run butterfly without certificate. "
-              "Either generate them using --generate-certs "
-              "or run as --unsecure "
-              "(NOT RECOMMENDED)")
+    if not all(map(os.path.exists, [cert % host, cert_key % host, ca])):
+        print("Unable to find butterfly certificate for host %s" % host)
+        print(cert % host)
+        print(cert_key % host)
+        print(ca)
+        print("Can't run butterfly without certificate.\n")
+        print("Either generate them using --generate-certs --host=host "
+              "or run as --unsecure (NOT RECOMMENDED)")
         sys.exit(1)
 
     ssl_opts = {
-        'certfile': cert,
-        'keyfile': cert_key,
+        'certfile': cert % host,
+        'keyfile': cert_key % host,
         'ca_certs': ca,
         'cert_reqs': ssl.CERT_REQUIRED
     }
 
+
+from butterfly import application
 http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_opts)
-http_server.listen(
-    tornado.options.options.port, address=tornado.options.options.host)
+http_server.listen(port, address=host)
 
 url = "http%s://%s:%d/*" % (
-    "s" if not tornado.options.options.unsecure else "",
-    tornado.options.options.host,
-    tornado.options.options.port)
+    "s" if not tornado.options.options.unsecure else "", host, port)
 
 # This is for debugging purpose
 try:
@@ -213,4 +222,6 @@ else:
     watch({'url': url}, files, unwatch_at_exit=True)
 
 log.info('Starting loop')
+
+ioloop = tornado.ioloop.IOLoop.instance()
 ioloop.start()
