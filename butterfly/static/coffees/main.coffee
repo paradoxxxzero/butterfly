@@ -17,7 +17,7 @@
 
 cols = rows = null
 quit = false
-open_ts = 0
+open_ts = (new Date()).getTime()
 
 $ = document.querySelectorAll.bind(document)
 

@@ -32,7 +32,7 @@ import sys
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("more", default=False,
                        help="Debug mode with more verbosity")
-tornado.options.define("host", default='127.0.0.1', help="Server host")
+tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
 tornado.options.define("unsecure", default=False,
@@ -81,6 +81,14 @@ ca, ca_key, cert, cert_key, pkcs12 = map(to_abs, [
     '%s.p12'])
 
 
+def fill_fields(subject):
+    subject.C = 'WW'
+    subject.O = 'Butterfly'
+    subject.OU = 'Butterfly Terminal'
+    subject.ST = 'World Wide'
+    subject.L = 'Terminal'
+
+
 def write(file, content):
     with open(file, 'wb') as fd:
         fd.write(content)
@@ -102,6 +110,7 @@ if tornado.options.options.generate_certs:
         ca_pk.generate_key(crypto.TYPE_RSA, 2048)
         ca_cert = crypto.X509()
         ca_cert.get_subject().CN = 'Butterfly CA on %s' % socket.gethostname()
+        fill_fields(ca_cert.get_subject())
         ca_cert.set_serial_number(uuid.uuid4().int)
         ca_cert.gmtime_adj_notBefore(0)  # From now
         ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
@@ -121,6 +130,7 @@ if tornado.options.options.generate_certs:
     server_pk.generate_key(crypto.TYPE_RSA, 2048)
     server_cert = crypto.X509()
     server_cert.get_subject().CN = host
+    fill_fields(server_cert.get_subject())
     server_cert.set_serial_number(uuid.uuid4().int)
     server_cert.gmtime_adj_notBefore(0)  # From now
     server_cert.gmtime_adj_notAfter(315360000)  # to 10y
@@ -134,7 +144,7 @@ if tornado.options.options.generate_certs:
         crypto.FILETYPE_PEM, server_pk))
     os.chmod(cert_key % host, stat.S_IRUSR | stat.S_IWUSR)  # 0o600 perms
 
-    print('\nNow you can run --generate_user_pkcs=user '
+    print('\nNow you can run --generate-user-pkcs=user '
           'to generate user certificate.')
     sys.exit(0)
 
@@ -142,7 +152,7 @@ if tornado.options.options.generate_certs:
 if tornado.options.options.generate_user_pkcs:
     from OpenSSL import crypto
     if not all(map(os.path.exists, [ca, ca_key])):
-        print('Please generate certificates using --generate_certs before')
+        print('Please generate certificates using --generate-certs before')
         sys.exit(1)
 
     user = tornado.options.options.generate_user_pkcs
@@ -154,6 +164,7 @@ if tornado.options.options.generate_user_pkcs:
 
     client_cert = crypto.X509()
     client_cert.get_subject().CN = user
+    fill_fields(client_cert.get_subject())
     client_cert.set_serial_number(uuid.uuid4().int)
     client_cert.gmtime_adj_notBefore(0)  # From now
     client_cert.gmtime_adj_notAfter(315360000)  # to 10y
