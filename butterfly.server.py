@@ -65,8 +65,7 @@ port = tornado.options.options.port
 if os.getuid() == 0:
     ssl_dir = os.path.join(os.path.abspath(os.sep), 'etc', 'butterfly', 'ssl')
 else:
-    ssl_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), 'ssl')
+    ssl_dir = os.path.join(os.path.expanduser('~'), '.butterfly', 'ssl')
 
 if not os.path.exists(ssl_dir):
     os.makedirs(ssl_dir)
@@ -202,7 +201,9 @@ else:
         print(ca)
         print("Can't run butterfly without certificate.\n")
         print("Either generate them using --generate-certs --host=host "
-              "or run as --unsecure (NOT RECOMMENDED)")
+              "or run as --unsecure (NOT RECOMMENDED)\n")
+        print("For more information go to http://paradoxxxzero.github.io/"
+              "2014/03/21/butterfly-with-ssl-auth.html\n")
         sys.exit(1)
 
     ssl_opts = {
