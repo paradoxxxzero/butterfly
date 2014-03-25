@@ -68,20 +68,21 @@ class Terminal
         @children = [div]
 
         @compute_char_size()
-        div.style.height = @char_size.height + 'px'
         term_size = @parent.getBoundingClientRect()
         @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
         @rows = Math.floor(term_size.height / @char_size.height)
+        @element.style['padding-bottom'] = "#{term_size.height % @char_size.height}px"
 
+        @html = {}
         i = @rows - 1
         while i--
             div = @document.createElement('div')
-            div.style.height = @char_size.height + 'px'
             div.className = 'line'
             @element.appendChild(div)
             @children.push(div)
 
-        @scrollback = 100000
+        # @scrollback = 100000
+        @missing_lines = 0
         @visualBell = 100
 
         @convertEol = false
@@ -92,7 +93,7 @@ class Terminal
         @reset_vars()
 
         # Draw screen
-        @refresh 0, @rows - 1
+        # @refresh 0, @rows - 1
 
         @focus()
 
@@ -112,18 +113,16 @@ class Terminal
                 if sel.startOffset is sel.endOffset
                     getSelection().removeAllRanges()
 
-        @initmouse()
+        # @initmouse()
 
     reset_vars: ->
-        @ybase = 0
-        @ydisp = 0
+        # @ybase = 0
+        # @ydisp = 0
         @x = 0
         @y = 0
         @cursorHidden = false
         @state = State.normal
         @queue = ''
-        @scrollTop = 0
-        @scrollBottom = @rows - 1
 
         # modes
         @applicationKeypad = false
@@ -144,9 +143,9 @@ class Terminal
         @params = []
         @currentParam = 0
         @prefix = ""
-        @lines = []
+        @screen = []
         i = @rows
-        @lines.push @blankLine() while i--
+        @screen.push @blank_line() while i--
         @setupStops()
         @skipNextKey = null
 
@@ -370,34 +369,35 @@ class Terminal
                 sendButton ev
             else
                 return if @applicationKeypad
-                @scrollDisp if ev.deltaY > 0 then 5 else -5
+                return true
             cancel ev
 
 
     refresh: (start, end) ->
-        if end - start >= @rows / 3
+        if end - start >= 3
             parent = @element.parentNode
             parent?.removeChild @element
 
-        width = @cols
-        y = start
+        @missing_lines = Math.min(@missing_lines, @rows - 1)
 
-        if end >= @lines.length
-            end = @lines.length - 1
+        if @missing_lines
+            for i in [1..@missing_lines]
+                @new_line()
+            @missing_lines = 0
 
-        while y <= end
-            row = y + @ydisp
-            line = @lines[row]
+        end = Math.min(end, @screen.length - 1)
+
+        for j in [start..end]
+            line = @screen[j]
             out = ""
 
-            if y is @y and (@ydisp is @ybase or @selectMode) and not @cursorHidden
+            if j is @y and not @cursorHidden
                 x = @x
             else
                 x = -Infinity
 
             attr = @defAttr
-            i = 0
-            while i < width
+            for i in [0..@cols - 1]
                 data = line[i][0]
                 ch = line[i][1]
                 if data isnt attr
@@ -448,12 +448,14 @@ class Terminal
                                 out += ch
                 out += "</span>" if i is x
                 attr = data
-                i++
             out += "</span>" if attr isnt @defAttr
-            @children[y].innerHTML = out
-            y++
+            @children[j].innerHTML = out
 
         parent?.appendChild @element
+        for l, html of @html
+            @element.insertBefore(html, @children[l])
+        @html = {}
+        @parent.scrollTop = @parent.scrollHeight
 
 
     _cursorBlink: ->
@@ -485,53 +487,30 @@ class Terminal
 
 
     scroll: ->
-        if ++@ybase is @scrollback
-          @ybase = @ybase / 2 | 0
-          @lines = @lines.slice(-(@ybase + @rows) + 1)
+        @screen.shift()
+        @screen.push @blank_line()
+        @refreshStart = Math.max(@refreshStart - 1, 0)
+        @missing_lines++
 
-        @ydisp = @ybase
+    scroll_display: (disp) ->
+        @parent.scrollTop += disp * @char_size.height
 
-        # last line
-        row = @ybase + @rows - 1
+    new_line: ->
+        div = @document.createElement('div')
+        div.className = 'line'
+        @element.appendChild(div)
+        @children.shift()
+        @children.push(div)
 
-        # subtract the bottom scroll region
-        row -= @rows - 1 - @scrollBottom
-        if row is @lines.length
-          # potential optimization:
-          # pushing is faster than splicing
-          # when they amount to the same
-          # behavior.
-          @lines.push @blankLine()
-        else
-          # add our new line
-          @lines.splice row, 0, @blankLine()
-
-        if @scrollTop isnt 0
-          if @ybase isnt 0
-            @ybase--
-            @ydisp = @ybase
-          @lines.splice @ybase + @scrollTop, 1
-
-        @updateRange @scrollTop
-        @updateRange @scrollBottom
-
-    scrollDisp: (disp) ->
-        @ydisp += disp
-        if @ydisp > @ybase
-            @ydisp = @ybase
-
-        else
-            @ydisp = 0  if @ydisp < 0
-
-        @refresh 0, @rows - 1
+    next_line: ->
+        @y++
+        if @y >= @rows
+            @y--
+            @scroll()
 
     write: (data) ->
         @refreshStart = @y
         @refreshEnd = @y
-
-        if @ybase isnt @ydisp
-          @ydisp = @ybase
-          @maxRange()
 
         i = 0
         l = data.length
@@ -548,11 +527,7 @@ class Terminal
                         # '\n', '\v', '\f'
                         when "\n", "\x0b", "\x0c"
                             @x = 0 if @convertEol
-
-                            @y++
-                            if @y > @scrollBottom
-                                @y--
-                                @scroll()
+                            @next_line()
 
                         # '\r'
                         when "\r"
@@ -584,20 +559,16 @@ class Terminal
                                 ch = @charset[ch] if @charset?[ch]
                                 if @x >= @cols
                                     @x = 0
-                                    @y++
-                                    if @y > @scrollBottom
-                                        @y--
-                                        @scroll()
-                                @lines[@y + @ybase][@x] = [@curAttr, ch]
+                                    @next_line()
+                                @screen[@y][@x] = [@curAttr, ch]
                                 @x++
                                 @updateRange @y
                                 if "\uff00" < ch < "\uffef"
-                                    j = @y + @ybase
                                     if @cols < 2 or @x >= @cols
-                                        @lines[j][@x - 1] = [@curAttr, " "]
+                                        @screen[@y][@x - 1] = [@curAttr, " "]
                                         break
 
-                                    @lines[j][@x] = [@curAttr, " "]
+                                    @screen[@y][@x] = [@curAttr, " "]
                                     @x++
 
                 when State.escaped
@@ -786,22 +757,14 @@ class Terminal
                                     @handleTitle @title
 
                             # Disabling this for now as we need a good script striper to avoid malicious script injection
-                            # when 99
-                            #     # Custom escape to produce raw html
-                            #     html = "<div class=\"inline-html\">" + @params[1] + "</div>"
-                            #     @lines[@y + @ybase][@x] = [
-                            #         @curAttr
-                            #         html
-                            #     ]
-                            #     line = 0
-
-                            #     while line < @get_html_height_in_lines(html) - 1
-                            #         @y++
-                            #         if @y > @scrollBottom
-                            #             @y--
-                            #             @scroll()
-                            #         line++
-                            #     @updateRange @y
+                            when 99
+                                # Custom escape to produce raw html
+                                html = document.createElement('div')
+                                html.innerHTML = @params[1]
+                                @next_line()
+                                @html[@y] = html
+                                @updateRange @y
+                                @next_line()
 
                         # reset colors
                         @params = []
@@ -991,6 +954,7 @@ class Terminal
                         # CSI Ps ; Ps ; Ps ; Ps ; Ps T
                         # CSI > Ps; Ps T
                         when "T"
+                            ""
                             @scrollDown @params if @params.length < 2 and not @prefix
 
                         # CSI Ps Z
@@ -1086,6 +1050,7 @@ class Terminal
                         i++ if ch is "\x1b"
                         @state = State.normal
             i++
+ 
         @updateRange @y
         @refresh @refreshStart, @refreshEnd
 
@@ -1162,7 +1127,7 @@ class Terminal
                     key = "\x1bOA"
                     break
                 if ev.ctrlKey
-                    @scrollDisp -1
+                    @scroll_display -1
                     return cancel(ev)
                 else
                     key = "\x1b[A"
@@ -1173,7 +1138,7 @@ class Terminal
                     key = "\x1bOB"
                     break
                 if ev.ctrlKey
-                    @scrollDisp 1
+                    @scroll_display 1
                     return cancel(ev)
                 else
                     key = "\x1b[B"
@@ -1203,7 +1168,7 @@ class Terminal
             # page up
             when 33
                 if ev.shiftKey
-                    @scrollDisp -(@rows - 1)
+                    @scroll_display -(@rows - 1)
                     return cancel(ev)
                 else
                     key = "\x1b[5~"
@@ -1211,7 +1176,7 @@ class Terminal
             # page down
             when 34
                 if ev.shiftKey
-                    @scrollDisp @rows - 1
+                    @scroll_display @rows - 1
                     return cancel(ev)
                 else
                     key = "\x1b[6~"
@@ -1319,10 +1284,6 @@ class Terminal
             @leavePrefix()
             return cancel(ev)
 
-        if @selectMode
-            @keySelect ev, key
-            return cancel(ev)
-
         @showCursor()
         @handler(key)
         cancel ev
@@ -1381,6 +1342,8 @@ class Terminal
         term_size = @parent.getBoundingClientRect()
         @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
         @rows = Math.floor(term_size.height / @char_size.height)
+        @element.style['padding-bottom'] = "#{term_size.height % @char_size.height}px"
+
         if old_cols == @cols and old_rows == @rows
             return
 
@@ -1390,13 +1353,13 @@ class Terminal
         if old_cols < @cols
             # does xterm use the default attr?
             ch = [@defAttr, " "]
-            i = @lines.length
+            i = @screen.length
             while i--
-                @lines[i].push ch while @lines[i].length < @cols
+                @screen[i].push ch while @screen[i].length < @cols
         else if old_cols > @cols
-            i = @lines.length
+            i = @screen.length
             while i--
-                @lines[i].pop() while @lines[i].length > @cols
+                @screen[i].pop() while @screen[i].length > @cols
 
         @setupStops old_cols
 
@@ -1405,27 +1368,23 @@ class Terminal
         if j < @rows
             el = @element
             while j++ < @rows
-                @lines.push @blankLine() if @lines.length < @rows + @ybase
+                @screen.push @blank_line() if @screen.length < @rows + @ybase
                 if @children.length < @rows
                     line = @document.createElement("div")
                     line.className = 'line'
-                    line.style.height = @char_size.height + 'px'
                     el.appendChild line
                     @children.push line
         else if j > @rows
             while j-- > @rows
-                @lines.pop() if @lines.length > @rows + @ybase
+                @screen.pop() if @screen.length > @rows + @ybase
                 if @children.length > @rows
                     el = @children.pop()
-                    continue unless el
-                    el.parentNode.removeChild el
+                    el?.parentNode.removeChild el
 
         # make sure the cursor stays on screen
         @y = @rows - 1 if @y >= @rows
         @x = @cols - 1 if @x >= @cols
 
-        @scrollTop = 0
-        @scrollBottom = @rows - 1
 
         @refresh 0, @rows - 1
 
@@ -1468,7 +1427,7 @@ class Terminal
         if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
     eraseRight: (x, y) ->
-        line = @lines[@ybase + y]
+        line = @screen[y]
         # xterm
         ch = [@eraseAttr(), " "]
 
@@ -1478,7 +1437,7 @@ class Terminal
         @updateRange y
 
     eraseLeft: (x, y) ->
-        line = @lines[@ybase + y]
+        line = @screen[y]
         # xterm
         ch = [@eraseAttr(), " "]
         x++
@@ -1488,7 +1447,7 @@ class Terminal
     eraseLine: (y) ->
         @eraseRight 0, y
 
-    blankLine: (cur) ->
+    blank_line: (cur) ->
         attr = (if cur then @eraseAttr() else @defAttr)
         ch = [attr, " "]
         line = []
@@ -1514,28 +1473,26 @@ class Terminal
 
     # ESC D Index (IND is 0x84).
     index: ->
-        @y++
-        if @y > @scrollBottom
-            @y--
-            @scroll()
+        @next_line()
         @state = State.normal
 
     # ESC M Reverse Index (RI is 0x8d).
     reverseIndex: ->
-        @y--
-        if @y < @scrollTop
-            @y++
+        console.log('TODO: Reverse index')
+        # @y--
+        # if @y < @scrollTop
+        #     @y++
 
-            # possibly move the code below to term.reverseScroll();
-            # test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
-            # blankLine(true) is xterm/linux behavior
-            @lines.splice @y + @ybase, 0, @blankLine(true)
-            j = @rows - 1 - @scrollBottom
-            @lines.splice @rows - 1 + @ybase - j + 1, 1
+        #     # possibly move the code below to term.reverseScroll();
+        #     # test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
+        #     # blank_line(true) is xterm/linux behavior
+        #     @screen.splice @y, 0, @blank_line(true)
+        #     j = @rows - 1 - @scrollBottom
+        #     @screen.splice @rows - 1 - j + 1, 1
 
-            # @maxRange();
-            @updateRange @scrollTop
-            @updateRange @scrollBottom
+        #     # @maxRange();
+        #     @updateRange @scrollTop
+        #     @updateRange @scrollBottom
         @state = State.normal
 
 
@@ -1864,13 +1821,13 @@ class Terminal
     insertChars: (params) ->
         param = params[0]
         param = 1 if param < 1
-        row = @y + @ybase
+        row = @y
         j = @x
         # xterm
         ch = [@eraseAttr(), " "]
         while param-- and j < @cols
-            @lines[row].splice j++, 0, ch
-            @lines[row].pop()
+            @screen[row].splice j++, 0, ch
+            @screen[row].pop()
 
 
     # CSI Ps E
@@ -1904,20 +1861,19 @@ class Terminal
 
     # CSI Ps L
     # Insert Ps Line(s) (default = 1) (IL).
+    # test: echo -e '\e[44m\e[1L\e[0m'
     insertLines: (params) ->
         param = params[0]
         param = 1 if param < 1
-        row = @y + @ybase
-        j = @rows - 1 - @scrollBottom
-        j = @rows - 1 + @ybase - j + 1
+
         while param--
-            # test: echo -e '\e[44m\e[1L\e[0m'
-            # blankLine(true) - xterm/linux behavior
-            @lines.splice row, 0, @blankLine(true)
-            @lines.splice j, 1
+            @screen.splice @y, 0, @blank_line(true)
+            @screen.pop()
+
+            # blank_line(true) - xterm/linux behavior
 
         @updateRange @y
-        @updateRange @scrollBottom
+        @updateRange @screen.length - 1
 
 
     # CSI Ps M
@@ -1925,17 +1881,15 @@ class Terminal
     deleteLines: (params) ->
         param = params[0]
         param = 1 if param < 1
-        row = @y + @ybase
-        j = @rows - 1 - @scrollBottom
-        j = @rows - 1 + @ybase - j
+
         while param--
             # test: echo -e '\e[44m\e[1M\e[0m'
-            # blankLine(true) - xterm/linux behavior
-            @lines.splice j + 1, 0, @blankLine(true)
-            @lines.splice row, 1
+            # blank_line(true) - xterm/linux behavior
+            @screen.push @blank_line(true)
+            @screen.splice @y, 1
 
         @updateRange @y
-        @updateRange @scrollBottom
+        @updateRange @screen.length - 1
 
 
     # CSI Ps P
@@ -1943,12 +1897,12 @@ class Terminal
     deleteChars: (params) ->
         param = params[0]
         param = 1 if param < 1
-        row = @y + @ybase
+        row = @y
         # xterm
         ch = [@eraseAttr(), " "]
         while param--
-            @lines[row].splice @x, 1
-            @lines[row].push ch
+            @screen[row].splice @x, 1
+            @screen[row].push ch
 
 
     # CSI Ps X
@@ -1956,11 +1910,11 @@ class Terminal
     eraseChars: (params) ->
         param = params[0]
         param = 1 if param < 1
-        row = @y + @ybase
+        row = @y
         j = @x
         # xterm
         ch = [@eraseAttr(), " "]
-        @lines[row][j++] = ch while param-- and j < @cols
+        @screen[row][j++] = ch while param-- and j < @cols
 
 
     # CSI Pm `    Character Position Absolute
@@ -2399,24 +2353,24 @@ class Terminal
 
     # CSI Ps S    Scroll up Ps lines (default = 1) (SU).
     scrollUp: (params) ->
-        param = params[0] or 1
-        while param--
-            @lines.splice @ybase + @scrollTop, 1
-            @lines.splice @ybase + @scrollBottom, 0, @blankLine()
+        # param = params[0] or 1
+        # while param--
+        #     @lines.splice @ybase + @scrollTop, 1
+        #     @lines.splice @ybase + @scrollBottom, 0, @blank_line()
 
-        @updateRange @scrollTop
-        @updateRange @scrollBottom
+        # @updateRange @scrollTop
+        # @updateRange @scrollBottom
 
 
     # CSI Ps T    Scroll down Ps lines (default = 1) (SD).
     scrollDown: (params) ->
-        param = params[0] or 1
-        while param--
-            @lines.splice @ybase + @scrollBottom, 1
-            @lines.splice @ybase + @scrollTop, 0, @blankLine()
+        # param = params[0] or 1
+        # while param--
+        #     @lines.splice @ybase + @scrollBottom, 1
+        #     @lines.splice @ybase + @scrollTop, 0, @blank_line()
 
-        @updateRange @scrollTop
-        @updateRange @scrollBottom
+        # @updateRange @scrollTop
+        # @updateRange @scrollBottom
 
 
     # CSI Ps ; Ps ; Ps ; Ps ; Ps T

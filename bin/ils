@@ -13,18 +13,19 @@ out = ''
 for f in os.listdir(os.getcwd()):
     mime = mimetypes.guess_type(f)[0]
     if 'image' in (mime or ''):
-        try:
-            im = Image.open(f)
-            im.thumbnail((100, 100), Image.ANTIALIAS)
-            buf = io.BytesIO()
-            im.save(buf, im.format)
-            buf.seek(0)
-            out += '<img src="data:%s;base64,%s" alt="%s" />' % (
+        # try:
+        with open(f, 'rb') as buf:
+            # im = Image.open(f)
+            # im.thumbnail((100, 100), Image.ANTIALIAS)
+            # buf = io.BytesIO()
+            # im.save(buf, im.format)
+            # buf.seek(0)
+            out += '<img width="200" height="100" src="data:%s;base64,%s" alt="%s" />' % (
                 mime,
                 base64.b64encode(buf.read()).decode('ascii'),
                 f)
-        except Exception:
-            pass
+        # except Exception:
+            # pass
 
 print(out)
 
