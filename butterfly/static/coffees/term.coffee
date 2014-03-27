@@ -81,7 +81,7 @@ class Terminal
             @element.appendChild(div)
             @children.push(div)
 
-        # @scrollback = 100000
+        @scrollback = 5000
         @missing_lines = 0
         @visualBell = 100
 
@@ -91,9 +91,6 @@ class Terminal
         @cursorState = 0
         @last_cc = 0
         @reset_vars()
-
-        # Draw screen
-        # @refresh 0, @rows - 1
 
         @focus()
 
@@ -378,7 +375,7 @@ class Terminal
             parent = @element.parentNode
             parent?.removeChild @element
 
-        @missing_lines = Math.min(@missing_lines, @rows - 1)
+        # @missing_lines = Math.min(@missing_lines, @rows - 1)
 
         if @missing_lines
             for i in [1..@missing_lines]
@@ -491,6 +488,8 @@ class Terminal
         @screen.push @blank_line()
         @refreshStart = Math.max(@refreshStart - 1, 0)
         @missing_lines++
+        if @missing_lines >= @rows
+            @refresh 0, @rows - 1
 
     scroll_display: (disp) ->
         @parent.scrollTop += disp * @char_size.height
@@ -499,6 +498,9 @@ class Terminal
         div = @document.createElement('div')
         div.className = 'line'
         @element.appendChild(div)
+        if @element.childElementCount > @scrollback
+            @element.children[0].remove()
+
         @children.shift()
         @children.push(div)
 
@@ -1050,7 +1052,7 @@ class Terminal
                         i++ if ch is "\x1b"
                         @state = State.normal
             i++
- 
+
         @updateRange @y
         @refresh @refreshStart, @refreshEnd
 

@@ -57,6 +57,7 @@ Terminal = (function() {
       this.element.appendChild(div);
       this.children.push(div);
     }
+    this.scrollback = 5000;
     this.missing_lines = 0;
     this.visualBell = 100;
     this.convertEol = false;
@@ -362,7 +363,6 @@ Terminal = (function() {
         parent.removeChild(this.element);
       }
     }
-    this.missing_lines = Math.min(this.missing_lines, this.rows - 1);
     if (this.missing_lines) {
       for (i = _i = 1, _ref = this.missing_lines; 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
         this.new_line();
@@ -511,7 +511,10 @@ Terminal = (function() {
     this.screen.shift();
     this.screen.push(this.blank_line());
     this.refreshStart = Math.max(this.refreshStart - 1, 0);
-    return this.missing_lines++;
+    this.missing_lines++;
+    if (this.missing_lines >= this.rows) {
+      return this.refresh(0, this.rows - 1);
+    }
   };
 
   Terminal.prototype.scroll_display = function(disp) {
@@ -523,6 +526,9 @@ Terminal = (function() {
     div = this.document.createElement('div');
     div.className = 'line';
     this.element.appendChild(div);
+    if (this.element.childElementCount > this.scrollback) {
+      this.element.children[0].remove();
+    }
     this.children.shift();
     return this.children.push(div);
   };
