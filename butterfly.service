@@ -1,9 +1,9 @@
 [Unit]
 Description=Butterfly Terminal Server
-After=syslog.target
+After=network.target
 
 [Service]
-ExecStart=/usr/bin/butterfly.server.py
+ExecStart=/usr/bin/butterfly.server.py 
 Restart=on-abort
 
 [Install]
