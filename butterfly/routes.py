@@ -133,7 +133,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         env.pop("PS1", None)            # then remove the prefix (virtenv) and show the regular one [user@comp ~]
 
         if tornado.options.options.load_script:
-            args = [tornado.options.options.load_script]
+            args = tornado.options.options.load_script.split(" ")
         elif tornado.options.options.shell:
             args = [tornado.options.options.shell]
         else:
