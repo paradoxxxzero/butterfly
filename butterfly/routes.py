@@ -132,11 +132,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         env.pop("VIRTUAL_ENV", None)    # If the server is running from virtualenv
         env.pop("PS1", None)            # then remove the prefix (virtenv) and show the regular one [user@comp ~]
 
+        if tornado.options.options.load_script:
+            args = [tornado.options.options.load_script]
+        elif tornado.options.options.shell:
+            args = [tornado.options.options.shell]
+        else:
+            args = [self.callee.shell, "-i"]
+
         if self.socket.local or not tornado.options.options.prompt_login:
             # All users are the same -> launch shell
             if (self.caller == self.callee and server == self.callee) or not tornado.options.options.prompt_login:
-                args = [tornado.options.options.shell or self.callee.shell]
-                args.append('-i')
                 os.execvpe(args[0], args, env)
                 # This process has been replaced
                 return
@@ -161,7 +166,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
         if sys.platform == 'linux':
             args.append('-p')
-            if tornado.options.options.shell:
+            if tornado.options.options.load_script:
+                args.append('-c')
+                args.append(tornado.options.options.load_script)
+            elif tornado.options.options.shell:
                 args.append('-s')
                 args.append(tornado.options.options.shell)
         args.append(self.callee.name)

@@ -35,7 +35,7 @@ tornado.options.define("more", default=False,
                        help="Debug mode with more verbosity")
 tornado.options.define("host", default='127.0.0.1', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
-tornado.options.define("shell", help="Shell to execute at login")
+tornado.options.define("shell", help="Shell to execute at login. Will be ignored if load_script option is defined.")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
 
@@ -45,6 +45,8 @@ tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication")
 
 tornado.options.define("prompt_login", default=True, help="Whether to prompt login or not even for non local clients")
+
+tornado.options.define("load_script", help="Start script if provided. If shell option is defined it will be ignored.")
 
 tornado.options.parse_command_line()
 
