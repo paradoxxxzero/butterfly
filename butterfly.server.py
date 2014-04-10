@@ -48,6 +48,8 @@ tornado.options.define("prompt_login", default=True, help="Whether to prompt log
 
 tornado.options.define("load_script", help="Start script if provided. If shell option is defined it will be ignored.")
 
+tornado.options.define("wd", help="Default working directory. If /wd/ appears in the url, this option will be ignored.")
+
 tornado.options.parse_command_line()
 
 

@@ -114,7 +114,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 self.callee = utils.User(name='nobody')
 
         try:
-            os.chdir(self.path or self.callee.dir)
+            os.chdir(tornado.options.options.wd or self.path or self.callee.dir)
         except:
             pass
 
