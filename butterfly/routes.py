@@ -108,12 +108,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.communicate()
 
     def shell(self):
-        if self.callee is None and tornado.options.options.unsecure:
+        if self.callee is None and (tornado.options.options.unsecure and tornado.options.options.login):
+            # If callee is now known and we have unsecure connection
             user = input('login: ')
             try:
                 self.callee = utils.User(name=user)
             except:
                 self.callee = utils.User(name='nobody')
+        else:
+            # if login is not required, we will use the same user as butterfly is executed
+            self.callee = utils.User()
 
         assert self.callee is not None
 
@@ -140,8 +144,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if not tornado.options.options.unsecure or (
                 self.socket.local and
                 self.caller == self.callee and
-                server == self.callee):
-            # User has been auth with ssl or is the same user as server
+                server == self.callee) or not tornado.options.options.login:
+            # User has been auth with ssl or is the same user as server or login is explicitly turned off
             try:
                 os.setuid(self.callee.uid)
             except PermissionError:
