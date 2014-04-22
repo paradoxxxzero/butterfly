@@ -99,10 +99,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     def pty(self):
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
-            try:
-                os.closerange(3, 256)
-            except:
-                pass
             self.shell()
         else:
             self.communicate()
@@ -143,6 +139,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 server == self.callee):
             # User has been auth with ssl or is the same user as server
             try:
+                os.initgroups(self.callee.name, self.callee.gid)
+                os.setgid(self.callee.gid)
                 os.setuid(self.callee.uid)
             except PermissionError:
                 print('The server must be run as root '
@@ -181,7 +179,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         os.execvpe(args[0], args, env)
 
     def communicate(self):
-        self.log.info('Adding handler')
+        self.log.info('PTY forked : %s (%s)' % (
+            os.ttyname(self.fd), os.ctermid()))
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
         def utf8_error(e):

@@ -3,7 +3,7 @@ Description=Butterfly Terminal Server
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/butterfly.server.py 
+ExecStart=/usr/bin/butterfly.server.py
 Restart=on-abort
 
 [Install]

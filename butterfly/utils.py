@@ -52,6 +52,10 @@ class User(object):
         return self.pw.pw_uid
 
     @property
+    def gid(self):
+        return self.pw.pw_gid
+
+    @property
     def name(self):
         return self.pw.pw_name
 
