@@ -142,7 +142,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 os.initgroups(self.callee.name, self.callee.gid)
                 os.setgid(self.callee.gid)
                 os.setuid(self.callee.uid)
-            except PermissionError:
+            except:
                 print('The server must be run as root '
                       'if you want to log as different user\n')
                 sys.exit(1)
