@@ -179,8 +179,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         os.execvpe(args[0], args, env)
 
     def communicate(self):
-        self.log.info('PTY forked : %s (%s)' % (
-            os.ttyname(self.fd), os.ctermid()))
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
         def utf8_error(e):
