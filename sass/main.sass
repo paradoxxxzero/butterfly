@@ -1,29 +1,29 @@
-/* *-* coding: utf-8 *-*
-/* This file is part of butterfly
-/*
-/* butterfly Copyright (C) 2014  Florian Mounier
-/* This program is free software: you can redistribute it and/or modify
-/* it under the terms of the GNU General Public License as published by
-/* the Free Software Foundation, either version 3 of the License, or
-/* (at your option) any later version.
-/*
-/* This program is distributed in the hope that it will be useful,
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/* GNU General Public License for more details.
-/*
-/* You should have received a copy of the GNU General Public License
-/* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
 
-@import compass/css3
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
 
-+font-face("SourceCodePro", font-files("SourceCodePro-ExtraLight.otf"), "", 100, normal)
-+font-face("SourceCodePro", font-files("SourceCodePro-Light.otf"), "", 300, normal)
-+font-face("SourceCodePro", font-files("SourceCodePro-Regular.otf"), "", 400, normal)
-+font-face("SourceCodePro", font-files("SourceCodePro-Medium.otf"), "", 500, normal)
-+font-face("SourceCodePro", font-files("SourceCodePro-Semibold.otf"), "", 600, normal)
-+font-face("SourceCodePro", font-files("SourceCodePro-Bold.otf"), "", 700, normal)
-+font-face("SourceCodePro", font-files("SourceCodePro-Black.otf"), "", 900, normal)
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
+$weights: (ExtraLight 100) (Light 300) (Regular 400) (Medium 500) (Semibold 600) (Bold 700) (Black 900)
+
+@each $weight in $weights
+  $weight_name: nth($weight, 1)
+
+  @font-face
+    font-family: "SourceCodePro"
+    src: url("fonts/SourceCodePro-#{$weight_name}.otf") format("woff")
+    font-weight: nth($weight, 2)
 
 $bg: #110f13
 $fg: #f4ead5
@@ -50,16 +50,19 @@ html, body
   background-color: $bg
   color: $fg
   text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
-  +transition(200ms)
+  transition: 200ms
 
   &.bell
-    +filter(blur(2px))
+    -webkit-filter: blur(2px)
 
   &.skip
-    +filter(sepia(1))
+    -webkit-filter: sepia(1)
 
   &.selection
-    +filter(saturate(2))
+    -webkit-filter: unquote("saturate(2)")
+
+  &.dead
+    -webkit-filter: unquote("grayscale(1)")
 
 .line
   overflow: visible
@@ -69,12 +72,12 @@ html, body
 
 
 .focus .cursor
-  +transition(300ms)
+  transition: 300ms
 
 .cursor.reverse-video
   box-shadow: 0 0 10px $fg
 
-/* Terminal styles
+/* Terminal styles */
 .bold
   font-weight: bold
 
@@ -138,6 +141,6 @@ $st: 00, 95, 135, 175, 215, 255
   +termcolor($i + 232, rgb($l, $l, $l))
 
 
-/* ??
+/* ?? */
 +termcolor(256, $bg)
 +termcolor(257, $fg)

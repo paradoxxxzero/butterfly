@@ -10,12 +10,12 @@
     <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
 
     <title>Butterfly</title>
-    <link href="{{ static_url('stylesheets/main.css') }}" rel="stylesheet">
+    <link href="{{ static_url('main.css') }}" rel="stylesheet">
   </head>
 
   <body spellcheck="false">
     <main id="wrapper"> </main>
-    <script src="{{ static_url('javascripts/main.%sjs' % (
+    <script src="{{ static_url('main.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
   </body>
 </html>

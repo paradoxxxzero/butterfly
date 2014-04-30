@@ -68,9 +68,9 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-coffeelint'
   grunt.loadNpmTasks 'grunt-sass'
   grunt.loadNpmTasks 'grunt-sass-to-scss'
-  grunt.loadNpmTasks 'grunt-bower-task'
 
-  grunt.registerTask 'dev', ['coffeelint', 'coffee', 'watch']
+  grunt.registerTask 'dev', [
+    'coffeelint', 'coffee', 'sass_to_scss', 'sass', 'watch']
   grunt.registerTask 'css', ['sass_to_scss', 'sass']
   grunt.registerTask 'default', [
     'coffeelint', 'coffee',

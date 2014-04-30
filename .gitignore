@@ -2,3 +2,6 @@
 *.key
 *.p12
 node_modules/
+*.src.coffee
+*.map
+sass/scss
