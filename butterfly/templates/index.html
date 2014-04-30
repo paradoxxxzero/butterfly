@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% from tornado.options import options %}
 <html>
   <head>
     <meta charset="utf-8">
@@ -14,6 +15,7 @@
 
   <body spellcheck="false">
     <main id="wrapper"> </main>
-    <script src="{{ static_url('javascripts/main.js') }}"></script>
+    <script src="{{ static_url('javascripts/main.%sjs' % (
+                 '' if options.unminified else 'min.')) }}"></script>
   </body>
 </html>

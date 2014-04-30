@@ -138,14 +138,17 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 self.caller == self.callee and
                 server == self.callee):
             # User has been auth with ssl or is the same user as server
-            try:
-                os.initgroups(self.callee.name, self.callee.gid)
-                os.setgid(self.callee.gid)
-                os.setuid(self.callee.uid)
-            except:
-                print('The server must be run as root '
-                      'if you want to log as different user\n')
-                sys.exit(1)
+            if not tornado.options.options.unsecure:
+                # User is authed by ssl, setting groups
+                try:
+                    os.initgroups(self.callee.name, self.callee.gid)
+                    os.setgid(self.callee.gid)
+                    os.setuid(self.callee.uid)
+                except:
+                    print('The server must be run as root '
+                          'if you want to log as different user\n')
+                    sys.exit(1)
+
             args = [tornado.options.options.shell or self.callee.shell]
             args.append('-i')
             os.execvpe(args[0], args, env)
@@ -200,9 +203,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
-        if self.request.headers['Origin'] != 'http%s://%s' % (
-                "s" if not tornado.options.options.unsecure else "",
-                self.request.headers['Host']):
+        if self.request.headers['Origin'] not in (
+                'http://%s' % self.request.headers['Host'],
+                'https://%s' % self.request.headers['Host']):
             self.log.warning(
                 'Unauthorized connection attempt: from : %s to: %s' % (
                     self.request.headers['Origin'],

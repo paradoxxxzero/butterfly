@@ -43,6 +43,9 @@ tornado.options.define("generate_certs", default=False,
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication")
 
+tornado.options.define("unminified", default=False,
+                       help="Use the unminified js (for development only)")
+
 tornado.options.parse_command_line()
 
 

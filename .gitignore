@@ -1,3 +1,4 @@
 *.crt
 *.key
 *.p12
+node_modules/
