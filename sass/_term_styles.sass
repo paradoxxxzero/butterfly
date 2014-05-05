@@ -15,11 +15,26 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-@import 'font'
-@import 'layout'
-@import 'fx'
-@import 'colors'
-@import '16_colors'
-@import '256_colors'
-@import 'cursor'
-@import 'term_styles'
+
+$fg: #fff !default
+$bg: #000 !default
+
+.bold
+  font-weight: bold
+
+.underline
+  text-decoration: underline
+
+.blink
+  text-decoration: blink
+
+.invisible
+  visibility: hidden
+
+.reverse-video
+  color: $bg
+  background-color: $fg
+
+.blur .cursor.reverse-video
+  background: none
+

@@ -1,0 +1,10 @@
+$weights: (ExtraLight 100) (Light 300) (Regular 400) (Medium 500) (Semibold 600) (Bold 700) (Black 900);
+@each $weight in $weights{
+  $weight_name: nth($weight, 1);
+  @font-face{
+    font-family: "SourceCodePro";
+    src: url("/static/fonts/SourceCodePro-#{$weight_name}.otf") format("woff");
+    font-weight: nth($weight, 2);}}
+body{
+  font-family: "SourceCodePro";
+  line-height: 1.2;}

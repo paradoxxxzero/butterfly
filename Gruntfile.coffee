@@ -19,13 +19,13 @@ module.exports = (grunt) ->
         expand: true
         cwd: 'sass/'
         src: '*.sass'
-        dest: 'sass/scss/'
+        dest: 'butterfly/scss/'
         ext: '.scss'
 
     sass:
       butterfly:
         expand: true
-        cwd: 'sass/scss'
+        cwd: 'butterfly/scss'
         src: '*.scss'
         dest: 'butterfly/static/'
         ext: '.css'
@@ -75,4 +75,4 @@ module.exports = (grunt) ->
   grunt.registerTask 'default', [
     'coffeelint', 'coffee',
     'sass_to_scss', 'sass',
-    'uglify', 'cssmin']
+    'uglify']

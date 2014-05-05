@@ -1,56 +1,58 @@
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-ExtraLight.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-ExtraLight.otf") format("woff");
   font-weight: 100; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-Light.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-Light.otf") format("woff");
   font-weight: 300; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-Regular.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-Regular.otf") format("woff");
   font-weight: 400; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-Medium.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-Medium.otf") format("woff");
   font-weight: 500; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-Semibold.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-Semibold.otf") format("woff");
   font-weight: 600; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-Bold.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-Bold.otf") format("woff");
   font-weight: 700; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("fonts/SourceCodePro-Black.otf") format("woff");
+  src: url("/static/fonts/SourceCodePro-Black.otf") format("woff");
   font-weight: 900; }
+
+body {
+  font-family: "SourceCodePro";
+  line-height: 1.2; }
 
 html, body {
   height: 100%;
-  font-family: "SourceCodePro";
   margin: 0;
   padding: 0;
   line-height: 1.2; }
 
 #wrapper {
   height: 100%;
-  background-color: #110f13;
   overflow: hidden;
   white-space: nowrap; }
 
 .terminal {
-  outline: none;
-  background-color: #110f13;
-  color: #f4ead5;
-  text-shadow: 0 0 6px rgba(244, 234, 213, 0.5);
+  outline: none; }
+
+.terminal {
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   transition: 200ms; }
   .terminal.bell {
     -webkit-filter: blur(2px); }
@@ -75,35 +77,12 @@ html, body {
       opacity: 0.2;
       font-weight: 900; }
 
-.line {
-  overflow: visible; }
-  .line .inline-html {
-    white-space: normal; }
+#wrapper {
+  background-color: #110f13; }
 
-.focus .cursor {
-  transition: 300ms; }
-
-.cursor.reverse-video {
-  box-shadow: 0 0 10px #f4ead5; }
-
-.bold {
-  font-weight: bold; }
-
-.underline {
-  text-decoration: underline; }
-
-.blink {
-  text-decoration: blink; }
-
-.invisible {
-  visibility: hidden; }
-
-.reverse-video {
-  color: #110f13;
-  background-color: #f4ead5; }
-
-.blur .cursor.reverse-video {
-  background: none; }
+.terminal {
+  background-color: #110f13;
+  color: #f4ead5; }
 
 .bg-color-0 {
   background-color: #2e3436; }
@@ -2942,3 +2921,28 @@ html, body {
   text-shadow: 0 0 6px rgba(244, 234, 213, 0.5); }
   .fg-color-257.reverse-video {
     background-color: #f4ead5 !important; }
+
+.focus .cursor {
+  transition: 300ms; }
+
+.cursor.reverse-video {
+  box-shadow: 0 0 0.5 #f4ead5; }
+
+.bold {
+  font-weight: bold; }
+
+.underline {
+  text-decoration: underline; }
+
+.blink {
+  text-decoration: blink; }
+
+.invisible {
+  visibility: hidden; }
+
+.reverse-video {
+  color: #110f13;
+  background-color: #f4ead5; }
+
+.blur .cursor.reverse-video {
+  background: none; }

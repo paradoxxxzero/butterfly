@@ -27,10 +27,11 @@ options = dict(
     install_requires=["tornado>=3.2", "pyOpenSSL"],
     package_data={
         'butterfly': [
+            'scss/*.scss',
             'static/fonts/*',
             'static/images/favicon.png',
-            'static/stylesheets/main.css',
-            'static/javascripts/main.js',
+            'static/main.css',
+            'static/main.min.js',
             'templates/index.html'
         ]
     },

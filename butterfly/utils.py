@@ -25,6 +25,44 @@ import re
 log = getLogger('butterfly')
 
 
+def get_style():
+    style = None
+    for ext in ['css', 'scss', 'sass']:
+        for fn in [
+                '/etc/butterfly/style',
+                os.path.expanduser('~/.butterfly/style')]:
+            if os.path.exists('%s.%s' % (fn, ext)):
+                style = '%s.%s' % (fn, ext)
+
+    if style is None:
+        return
+
+    if style.endswith('.sass'):
+        log.error('SASS syntax is not yet supported (see: '
+                  'https://github.com/hcatlin/libsass/issues/16'
+                  ') please use SCSS')
+        return
+
+    if style.endswith('.scss'):
+        scss_path = os.path.join(
+            os.path.dirname(__file__), 'scss')
+        try:
+            import sass
+        except:
+            log.error('You must install libsass to use sass '
+                      '(pip install libsass)')
+            return
+
+        try:
+            return sass.compile(filename=style, include_paths=[scss_path])
+        except sass.CompileError:
+            log.error('Unable to compile style.scss', exc_info=True)
+            return
+
+    with open(style) as s:
+        return s.read()
+
+
 def parse_cert(cert):
     user = None
 

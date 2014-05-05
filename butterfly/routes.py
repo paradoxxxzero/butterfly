@@ -93,6 +93,30 @@ class Index(Route):
         return self.render('index.html')
 
 
+@url(r'/style.css')
+class Style(Route):
+
+    def get(self):
+        default_style = os.path.join(
+            os.path.dirname(__file__), 'static', 'main.css')
+
+        css = utils.get_style()
+
+        self.set_header("Content-Type", "text/css")
+
+        if css:
+            self.write(css)
+        else:
+            with open(default_style) as s:
+                while True:
+                    data = s.read(16384)
+                    if data:
+                        self.write(data)
+                    else:
+                        break
+        self.finish()
+
+
 @url(r'/ws(?:/user/([^/]+))?/?(?:/wd/(.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 

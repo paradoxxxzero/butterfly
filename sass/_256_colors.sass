@@ -15,11 +15,22 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-@import 'font'
-@import 'layout'
-@import 'fx'
-@import 'colors'
-@import '16_colors'
-@import '256_colors'
-@import 'cursor'
-@import 'term_styles'
+$fg: #fff !default
+$bg: #000 !default
+
+/* Here are the 240 xterm colors */
+/* See http://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg */
+$st: 00, 95, 135, 175, 215, 255
+
+@for $i from 0 through 215
+  $r: nth($st, 1 + floor(($i / 36) % 6))
+  $g: nth($st, 1 + floor(($i / 6) % 6))
+  $b: nth($st, 1 + $i % 6)
+  +termcolor($i + 16, rgb($r, $g, $b))
+
+@for $i from 0 through 23
+  $l: 8 + $i * 10
+  +termcolor($i + 232, rgb($l, $l, $l))
+
++termcolor(256, $bg)
++termcolor(257, $fg)
