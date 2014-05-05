@@ -137,7 +137,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 self.callee = utils.User(name=user)
             except:
                 self.callee = utils.User(name='nobody')
-        else:
+        elif (tornado.options.options.unsecure and not
+              tornado.options.options.login):
             # if login is not required, we will use the same user as
             # butterfly is executed
             self.callee = utils.User()
@@ -171,7 +172,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         ) or not tornado.options.options.login:
             # User has been auth with ssl or is the same user as server
             # or login is explicitly turned off
-            if not tornado.options.options.unsecure:
+            if (
+                    not tornado.options.options.unsecure and
+                    tornado.options.options.login):
                 # User is authed by ssl, setting groups
                 try:
                     os.initgroups(self.callee.name, self.callee.gid)
