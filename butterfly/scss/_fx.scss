@@ -1,6 +1,6 @@
 $fg: #fff !default;
-$shadow: 6px;
-$shadow-alpha: .5;
+$shadow: 6px !default;
+$shadow-alpha: .5 !default;
 .terminal{
   text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha);
   transition: 200ms;

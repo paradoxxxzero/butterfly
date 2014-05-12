@@ -308,7 +308,7 @@
       })(this);
       addEventListener("mousedown", (function(_this) {
         return function(ev) {
-          var up;
+          var sm, up;
           if (!_this.mouseEvents) {
             return;
           }
@@ -320,14 +320,15 @@
             });
             return cancel(ev);
           }
+          sm = sendMove.bind(_this);
           if (_this.normalMouse) {
-            addEventListener("mousemove", sendMove.bind(_this));
+            addEventListener("mousemove", sm);
           }
           if (!_this.x10Mouse) {
             addEventListener("mouseup", up = function(ev) {
               sendButton(ev);
               if (_this.normalMouse) {
-                removeEventListener("mousemove", sendMove);
+                removeEventListener("mousemove", sm);
               }
               removeEventListener("mouseup", up);
               return cancel(ev);

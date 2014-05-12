@@ -359,13 +359,14 @@ class Terminal
 
         return cancel(ev)
 
-      addEventListener "mousemove", sendMove.bind(this) if @normalMouse
+      sm = sendMove.bind(this)
+      addEventListener "mousemove", sm if @normalMouse
 
       # x10 compatibility mode can't send button releases
       unless @x10Mouse
         addEventListener "mouseup", up = (ev) =>
           sendButton ev
-          removeEventListener "mousemove", sendMove if @normalMouse
+          removeEventListener "mousemove", sm if @normalMouse
           removeEventListener "mouseup", up
           cancel ev
       cancel ev
