@@ -307,21 +307,28 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 read = ''
 
             self.log.info('READ>%r' % read)
-            if len(read) != 0 and self.ws_connection:
+            if read and len(read) != 0 and self.ws_connection:
                 self.write_message(read.decode('utf-8', 'replace'))
             else:
                 events = ioloop.ERROR
 
         if events & ioloop.ERROR:
-            self.log.info('Error on fd, closing')
+            self.log.info('Error on fd %d, closing' % fd)
             # Terminated
             self.on_close()
             self.close()
 
     def on_close(self):
+        self.log.info('Closing fd %d' % self.fd)
+
         if getattr(self, 'pid', 0) == 0:
             self.log.info('pid is 0')
             return
+
+        try:
+            ioloop.remove_handler(self.fd)
+        except Exception:
+            self.log.error('handler removal fail', exc_info=True)
 
         try:
             os.close(self.fd)
@@ -333,10 +340,5 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             os.waitpid(self.pid, 0)
         except Exception:
             self.log.debug('waitpid fail', exc_info=True)
-
-        try:
-            ioloop.remove_handler(self.fd)
-        except Exception:
-            self.log.debug('handler removal fail', exc_info=True)
 
         self.log.info('Websocket closed')
