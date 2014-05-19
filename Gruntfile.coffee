@@ -47,7 +47,9 @@ module.exports = (grunt) ->
       butterfly:
         'coffees/*.coffee'
 
-     watch:
+    watch:
+      options:
+        livereload: true
       coffee:
         files: [
           'coffees/*.coffee'

@@ -85,6 +85,7 @@
         });
       }
       this.initmouse();
+      setTimeout(this.resize.bind(this), 100);
     }
 
     Terminal.prototype.reset_vars = function() {
@@ -1307,6 +1308,7 @@
       var ch, el, i, j, line, old_cols, old_rows, term_size;
       old_cols = this.cols;
       old_rows = this.rows;
+      this.compute_char_size();
       term_size = this.parent.getBoundingClientRect();
       this.cols = Math.floor(term_size.width / this.char_size.width) - 1;
       this.rows = Math.floor(term_size.height / this.char_size.height);
@@ -2881,6 +2883,8 @@
     term.write(rnd);
     return console.log("" + n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
   };
+
+  window.butterfly = term;
 
 }).call(this);
 

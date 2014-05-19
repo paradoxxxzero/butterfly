@@ -87,3 +87,6 @@ cbench = (n=100000000) ->
   t0 = (new Date()).getTime()
   term.write rnd
   console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
+
+
+window.butterfly = term

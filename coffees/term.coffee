@@ -114,6 +114,8 @@ class Terminal
 
     @initmouse()
 
+    setTimeout(@resize.bind(@), 100)
+
   reset_vars: ->
     @ybase = 0
     @ydisp = 0
@@ -1393,6 +1395,7 @@ class Terminal
   resize: ->
     old_cols = @cols
     old_rows = @rows
+    @compute_char_size()
     term_size = @parent.getBoundingClientRect()
     @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
     @rows = Math.floor(term_size.height / @char_size.height)
