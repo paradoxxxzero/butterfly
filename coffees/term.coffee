@@ -70,7 +70,7 @@ class Terminal
     @compute_char_size()
     div.style.height = @char_size.height + 'px'
     term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
+    @cols = Math.floor(term_size.width / @char_size.width)
     @rows = Math.floor(term_size.height / @char_size.height)
 
     i = @rows - 1
@@ -1397,7 +1397,7 @@ class Terminal
     old_rows = @rows
     @compute_char_size()
     term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
+    @cols = Math.floor(term_size.width / @char_size.width)
     @rows = Math.floor(term_size.height / @char_size.height)
     if old_cols == @cols and old_rows == @rows
       return

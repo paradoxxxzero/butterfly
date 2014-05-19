@@ -47,7 +47,7 @@
       this.compute_char_size();
       div.style.height = this.char_size.height + 'px';
       term_size = this.parent.getBoundingClientRect();
-      this.cols = Math.floor(term_size.width / this.char_size.width) - 1;
+      this.cols = Math.floor(term_size.width / this.char_size.width);
       this.rows = Math.floor(term_size.height / this.char_size.height);
       i = this.rows - 1;
       while (i--) {
@@ -1310,7 +1310,7 @@
       old_rows = this.rows;
       this.compute_char_size();
       term_size = this.parent.getBoundingClientRect();
-      this.cols = Math.floor(term_size.width / this.char_size.width) - 1;
+      this.cols = Math.floor(term_size.width / this.char_size.width);
       this.rows = Math.floor(term_size.height / this.char_size.height);
       if (old_cols === this.cols && old_rows === this.rows) {
         return;
