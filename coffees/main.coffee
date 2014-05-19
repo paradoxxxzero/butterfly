@@ -56,7 +56,7 @@ ws.addEventListener 'close', ->
     term.write 'Closed'
     # Allow quick reload
     term.skipNextKey = true
-    term.element.classList.add('skip')
+    term.element.classList.add('dead')
   , 1
   quit = true
   # Don't autoclose if websocket didn't last 1 minute
@@ -87,3 +87,6 @@ cbench = (n=100000000) ->
   t0 = (new Date()).getTime()
   term.write rnd
   console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
+
+
+window.butterfly = term

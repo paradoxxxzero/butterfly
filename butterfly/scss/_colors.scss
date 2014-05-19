@@ -1,0 +1,20 @@
+$shadow: 0 !default;
+$shadow-alpha: 0 !default;
+$bg: #110f13;
+$fg: #f4ead5;
+#wrapper{
+  background-color: $bg;}
+.terminal{
+  background-color: $bg;
+  color: $fg;}
+@mixin termcolor($i, $color){
+  .bg-color-#{$i}{
+    background-color: $color;
+    &.reverse-video{
+      color: $color !important;}}
+  .fg-color-#{$i}{
+    color: $color;
+    &.reverse-video{
+      background-color: $color !important;}
+    @if $shadow != 0{
+      text-shadow: 0 0 $shadow rgba($color, $shadow-alpha);}}}

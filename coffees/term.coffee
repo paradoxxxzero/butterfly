@@ -69,9 +69,10 @@ class Terminal
 
     @compute_char_size()
     term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
+    @cols = Math.floor(term_size.width / @char_size.width)
     @rows = Math.floor(term_size.height / @char_size.height)
-    @element.style['padding-bottom'] = "#{term_size.height % @char_size.height}px"
+    @element.style['padding-bottom'] = "#{
+      term_size.height % @char_size.height}px"
 
     @html = {}
     i = @rows - 1
@@ -105,12 +106,14 @@ class Terminal
     # Horrible Firefox paste workaround
     if typeof InstallTrigger isnt "undefined"
       @element.contentEditable = 'true'
-      @element.addEventListener "mouseup", =>
+      @element.addEventListener "mouseup", ->
         sel = getSelection().getRangeAt(0)
         if sel.startOffset is sel.endOffset
           getSelection().removeAllRanges()
 
     # @initmouse()
+
+    setTimeout(@resize.bind(@), 100)
 
   reset_vars: ->
     # @ybase = 0
@@ -192,7 +195,7 @@ class Terminal
     # mouseup, mousedown, mousewheel
     # left click: ^[[M 3<^[[M#3<
     # mousewheel up: ^[[M`3>
-    sendButton = (ev) =>
+    sendButton = (ev) ->
       # get the xterm-style button
       button = getButton(ev)
 
@@ -211,7 +214,7 @@ class Terminal
 
     # motion example of a left click:
     # ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
-    sendMove = (ev) =>
+    sendMove = (ev) ->
       button = pressed
       pos = getCoords(ev)
       return unless pos
@@ -257,7 +260,11 @@ class Terminal
       if @sgrMouse
         pos.x -= 32
         pos.y -= 32
-        @send "\x1b[<" + (if (button & 3) is 3 then button & ~3 else button) + ";" + pos.x + ";" + pos.y + (if (button & 3) is 3 then "m" else "M")
+        @send "\x1b[<" + (
+          if (button & 3) is 3 then button & ~3 else button
+        ) + ";" + pos.x + ";" + pos.y + (
+          if (button & 3) is 3 then "m" else "M"
+        )
         return
 
       data = []
@@ -276,7 +283,8 @@ class Terminal
       # 1, and 2 - with 64 added
       switch ev.type
         when "mousedown"
-          button = if ev.button? then +ev.button else (if ev.which? then ev.which - 1 else null)
+          button = if ev.button? then +ev.button else (
+            if ev.which? then ev.which - 1 else null)
         when "mouseup"
           button = 3
         when "wheel"
@@ -294,7 +302,8 @@ class Terminal
         # ctrl only
         mod &= ctrl
       else
-         mod = 0 unless @normalMouse
+        unless @normalMouse
+          mod = 0
 
       # increment to SP
       (32 + (mod << 2)) + button
@@ -349,13 +358,14 @@ class Terminal
 
         return cancel(ev)
 
-      addEventListener "mousemove", sendMove.bind(this) if @normalMouse
+      sm = sendMove.bind(this)
+      addEventListener "mousemove", sm if @normalMouse
 
       # x10 compatibility mode can't send button releases
       unless @x10Mouse
         addEventListener "mouseup", up = (ev) =>
           sendButton ev
-          removeEventListener "mousemove", sendMove if @normalMouse
+          removeEventListener "mousemove", sm if @normalMouse
           removeEventListener "mouseup", up
           cancel ev
       cancel ev
@@ -424,7 +434,9 @@ class Terminal
             out += "class=\""
             out += classes.join(" ")
             out += "\">"
-        out += "<span class=\"" + (if @cursorState then "reverse-video " else "") + "cursor\">" if i is x
+        out += "<span class=\"" + (
+          if @cursorState then "reverse-video " else ""
+        ) + "cursor\">" if i is x
 
         # This is a temporary dirty hack for raw html insertion
         if ch.length > 1
@@ -758,7 +770,6 @@ class Terminal
                   @title = @params[1] + " - ƸӜƷ butterfly"
                   @handleTitle @title
 
-              # Disabling this for now as we need a good script striper to avoid malicious script injection
               when 99
                 # Custom escape to produce raw html
                 html = document.createElement('div')
@@ -1065,7 +1076,8 @@ class Terminal
     # Don't handle modifiers alone
     return true if ev.keyCode > 15 and ev.keyCode < 19
 
-    # Handle shift insert and ctrl insert copy/paste usefull for typematrix keyboard
+    # Handle shift insert and ctrl insert
+    # copy/paste usefull for typematrix keyboard
     return true if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
 
     # Let the ctrl+shift+c, ctrl+shift+v go through to handle native copy paste
@@ -1240,7 +1252,8 @@ class Terminal
               if (t - @last_cc) < 75
                 id = (setTimeout ->) - 6  # Let the end write
                 @write '\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n'
-                (clearTimeout id if id not in [@t_bell, @t_queue, @t_blink]) while id--
+                (clearTimeout id if id not in [
+                  @t_bell, @t_queue, @t_blink]) while id--
               @last_cc = t
             key = String.fromCharCode(ev.keyCode - 64)
           else if ev.keyCode is 32
@@ -1262,15 +1275,18 @@ class Terminal
 
           # ^] - group sep
           else
-             key = String.fromCharCode(29) if ev.keyCode is 221
+            if ev.keyCode is 221
+              key = String.fromCharCode(29)
 
-        else if (ev.altKey and 'Mac' not in navigator.platform) or (ev.metaKey and 'Mac' in navigator.platform)
+        else if (ev.altKey and 'Mac' not in navigator.platform) or
+           (ev.metaKey and 'Mac' in navigator.platform)
           if ev.keyCode >= 65 and ev.keyCode <= 90
             key = "\x1b" + String.fromCharCode(ev.keyCode + 32)
           else if ev.keyCode is 192
             key = "\x1b`"
           else
-            key = "\x1b" + (ev.keyCode - 48) if ev.keyCode >= 48 and ev.keyCode <= 57
+            if ev.keyCode >= 48 and ev.keyCode <= 57
+              key = "\x1b" + (ev.keyCode - 48)
 
     if ev.keyCode >= 37 and ev.keyCode <= 40
       if ev.ctrlKey
@@ -1341,10 +1357,12 @@ class Terminal
   resize: ->
     old_cols = @cols
     old_rows = @rows
+    @compute_char_size()
     term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width) - 1 # ?
+    @cols = Math.floor(term_size.width / @char_size.width)
     @rows = Math.floor(term_size.height / @char_size.height)
-    @element.style['padding-bottom'] = "#{term_size.height % @char_size.height}px"
+    @element.style['padding-bottom'] = "#{
+      term_size.height % @char_size.height}px"
 
     if old_cols == @cols and old_rows == @rows
       return
@@ -1555,12 +1573,12 @@ class Terminal
     if row < 0
       row = 0
     else
-       row = @rows - 1 if row >= @rows
+      row = @rows - 1 if row >= @rows
 
     if col < 0
       col = 0
     else
-       col = @cols - 1 if col >= @cols
+      col = @cols - 1 if col >= @cols
 
     @x = col
     @y = row
@@ -1752,7 +1770,9 @@ class Terminal
         if params[i + 1] is 2
           # fg color 2^24
           i += 2
-          fg = "#" + params[i] & 0xff + params[i + 1] & 0xff + params[i + 2] & 0xff
+          fg = "#" + params[i] & 0xff +
+            params[i + 1] & 0xff +
+            params[i + 2] & 0xff
           i += 2
         else if params[i + 1] is 5
           # fg color 256
@@ -1762,7 +1782,9 @@ class Terminal
         if params[i + 1] is 2
           # bg color 2^24
           i += 2
-          bg = "#" + params[i] & 0xff + params[i + 1] & 0xff + params[i + 2] & 0xff
+          bg = "#" + params[i] & 0xff +
+            params[i + 1] & 0xff +
+            params[i + 2] & 0xff
           i += 2
         else if params[i + 1] is 5
           # bg color 256
@@ -2793,7 +2815,7 @@ class Terminal
   #     Valid values for the first (and any additional parameters)
   #     are:
   #         Ps = 0    -> only respond to explicit host requests (DECRQLP).
-  #                                (This is default).    It also cancels any filter
+  #                        (This is default).    It also cancels any filter
   #     rectangle.
   #         Ps = 1    -> report button down transitions.
   #         Ps = 2    -> do not report button down transitions.

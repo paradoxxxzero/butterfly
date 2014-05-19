@@ -93,27 +93,55 @@ class Index(Route):
         return self.render('index.html')
 
 
+@url(r'/style.css')
+class Style(Route):
+
+    def get(self):
+        default_style = os.path.join(
+            os.path.dirname(__file__), 'static', 'main.css')
+
+        css = utils.get_style()
+
+        self.set_header("Content-Type", "text/css")
+
+        if css:
+            self.write(css)
+        else:
+            with open(default_style) as s:
+                while True:
+                    data = s.read(16384)
+                    if data:
+                        self.write(data)
+                    else:
+                        break
+        self.finish()
+
+
 @url(r'/ws(?:/user/([^/]+))?/?(?:/wd/(.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def pty(self):
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
-            try:
-                os.closerange(3, 256)
-            except:
-                pass
             self.shell()
         else:
             self.communicate()
 
     def shell(self):
-        if self.callee is None and tornado.options.options.unsecure:
+        if self.callee is None and (
+                tornado.options.options.unsecure and
+                tornado.options.options.login):
+            # If callee is now known and we have unsecure connection
             user = input('login: ')
             try:
                 self.callee = utils.User(name=user)
             except:
                 self.callee = utils.User(name='nobody')
+        elif (tornado.options.options.unsecure and not
+              tornado.options.options.login):
+            # if login is not required, we will use the same user as
+            # butterfly is executed
+            self.callee = utils.User()
 
         assert self.callee is not None
 
@@ -140,14 +168,23 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if not tornado.options.options.unsecure or (
                 self.socket.local and
                 self.caller == self.callee and
-                server == self.callee):
+                server == self.callee
+        ) or not tornado.options.options.login:
             # User has been auth with ssl or is the same user as server
-            try:
-                os.setuid(self.callee.uid)
-            except PermissionError:
-                print('The server must be run as root '
-                      'if you want to log as different user\n')
-                sys.exit(1)
+            # or login is explicitly turned off
+            if (
+                    not tornado.options.options.unsecure and
+                    tornado.options.options.login):
+                # User is authed by ssl, setting groups
+                try:
+                    os.initgroups(self.callee.name, self.callee.gid)
+                    os.setgid(self.callee.gid)
+                    os.setuid(self.callee.uid)
+                except:
+                    print('The server must be run as root '
+                          'if you want to log as different user\n')
+                    sys.exit(1)
+
             args = [tornado.options.options.shell or self.callee.shell]
             args.append('-i')
             os.execvpe(args[0], args, env)
@@ -181,7 +218,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         os.execvpe(args[0], args, env)
 
     def communicate(self):
-        self.log.info('Adding handler')
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
 
         def utf8_error(e):
@@ -203,9 +239,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
-        if self.request.headers['Origin'] != 'http%s://%s' % (
-                "s" if not tornado.options.options.unsecure else "",
-                self.request.headers['Host']):
+        if self.request.headers['Origin'] not in (
+                'http://%s' % self.request.headers['Host'],
+                'https://%s' % self.request.headers['Host']):
             self.log.warning(
                 'Unauthorized connection attempt: from : %s to: %s' % (
                     self.request.headers['Origin'],
@@ -271,21 +307,28 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 read = ''
 
             self.log.info('READ>%r' % read)
-            if len(read) != 0 and self.ws_connection:
+            if read and len(read) != 0 and self.ws_connection:
                 self.write_message(read.decode('utf-8', 'replace'))
             else:
                 events = ioloop.ERROR
 
         if events & ioloop.ERROR:
-            self.log.info('Error on fd, closing')
+            self.log.info('Error on fd %d, closing' % fd)
             # Terminated
             self.on_close()
             self.close()
 
     def on_close(self):
+        self.log.info('Closing fd %d' % self.fd)
+
         if getattr(self, 'pid', 0) == 0:
             self.log.info('pid is 0')
             return
+
+        try:
+            ioloop.remove_handler(self.fd)
+        except Exception:
+            self.log.error('handler removal fail', exc_info=True)
 
         try:
             os.close(self.fd)
@@ -297,10 +340,5 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             os.waitpid(self.pid, 0)
         except Exception:
             self.log.debug('waitpid fail', exc_info=True)
-
-        try:
-            ioloop.remove_handler(self.fd)
-        except Exception:
-            self.log.debug('handler removal fail', exc_info=True)
 
         self.log.info('Websocket closed')

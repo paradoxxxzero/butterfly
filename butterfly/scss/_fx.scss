@@ -1,0 +1,28 @@
+$fg: #fff !default;
+$shadow: 6px !default;
+$shadow-alpha: .5 !default;
+.terminal{
+  text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha);
+  transition: 200ms;
+  &.bell{
+    -webkit-filter: blur(2px);}
+  &.skip{
+    -webkit-filter: sepia(1);}
+  &.selection{
+    -webkit-filter: unquote("saturate(2)");}
+  &.dead{
+    -webkit-filter: unquote("grayscale(1)");
+    &:after{
+      content: "CLOSED";
+      font-size: 15em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-45deg);
+      opacity: .2;
+      font-weight: 900;}}}

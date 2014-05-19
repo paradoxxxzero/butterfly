@@ -37,11 +37,16 @@ tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("login", default=True,
+                       help="Use login screen at start")
 
 tornado.options.define("generate_certs", default=False,
                        help="Generate butterfly certificates")
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication")
+
+tornado.options.define("unminified", default=False,
+                       help="Use the unminified js (for development only)")
 
 tornado.options.parse_command_line()
 

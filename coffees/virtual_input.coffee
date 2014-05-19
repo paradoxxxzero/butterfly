@@ -16,7 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test navigator.userAgent
+if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+.test navigator.userAgent
   ctrl = false
   alt = false
   first = true
@@ -48,8 +49,8 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test navigat
       alt = true
 
   virtual_input.addEventListener 'keydown', (e) ->
-     term.keyDown(e)
-     return true
+    term.keyDown(e)
+    return true
 
   virtual_input.addEventListener 'input', (e) ->
     len = @value.length

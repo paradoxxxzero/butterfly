@@ -16,15 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 selection = null
 
-# get_line_range = (y) ->
-#     first_node = term.children[y].firstChild
-#     last_node = term.children[y].lastChild
-
-#     range = document.createRange()
-#     range.setStart first_node, 0
-#     range.setEnd last_node, last_node.length
-#     range
-
 previous_leaf = (node) ->
   previous = node.previousSibling
   if not previous
@@ -119,13 +110,23 @@ class Selection
     @start = @walk line_start, /\S/
     @end = @walk line_end, /\S/, true
 
+  collapsed: (start, end) ->
+    fake_range = document.createRange()
+    fake_range.setStart(start.node, start.offset)
+    fake_range.setEnd(end.node, end.offset)
+    fake_range.collapsed
+
   shrink_right: ->
     node = @walk @end, /\s/, true
-    @end = @walk node, /\S/, true
+    end = @walk node, /\S/, true
+    if not @collapsed(@start, end)
+      @end = end
 
   shrink_left: ->
     node = @walk @start, /\s/
-    @start = @walk node, /\S/
+    start = @walk node, /\S/
+    if not @collapsed(start, @end)
+      @start = start
 
   expand_right: ->
     node = @walk @end, /\S/
@@ -136,7 +137,11 @@ class Selection
     @start = @walk node, /\s/, true
 
   walk: (needle, til, backward=false) ->
-    node = if needle.node.firstChild then needle.node.firstChild else needle.node
+    if needle.node.firstChild
+      node = needle.node.firstChild
+    else
+      node = needle.node
+
     text = node.textContent
     i = needle.offset
     if backward
@@ -163,7 +168,8 @@ document.addEventListener 'keydown', (e) ->
   return true if e.keyCode in [16..19]
 
   # Paste natural selection too if shiftkey
-  if e.shiftKey and e.keyCode is 13 and not selection and not getSelection().isCollapsed
+  if e.shiftKey and e.keyCode is 13 and
+      not selection and not getSelection().isCollapsed
     term.handler getSelection().toString()
     getSelection().removeAllRanges()
     return cancel e

@@ -1,0 +1,6 @@
+$fg: #fff !default;
+$shadow-alpha: 0 !default;
+.focus .cursor{
+  transition: 300ms;}
+.cursor.reverse-video{
+  box-shadow: 0 0 $shadow-alpha $fg;}
