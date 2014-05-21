@@ -5,7 +5,8 @@ html, body{
   line-height: 1.2;}
 #wrapper{
   height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   white-space: nowrap;}
 .terminal{
   outline: none;}
