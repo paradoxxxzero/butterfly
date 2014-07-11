@@ -120,6 +120,8 @@ class Style(Route):
 @url(r'/ws(?:/user/([^/]+))?/?(?:/wd/(.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
+    terminals = set()
+
     def pty(self):
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
@@ -281,6 +283,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             except LookupError:
                 raise Exception('Invalid user in certificate')
 
+        TermWebSocket.terminals.add(self)
+
         self.write_message(motd(self.socket))
         self.pty()
 
@@ -341,4 +345,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         except Exception:
             self.log.debug('waitpid fail', exc_info=True)
 
+        TermWebSocket.terminals.remove(self)
         self.log.info('Websocket closed')
+
+        if self.application.systemd and not len(TermWebSocket.terminals):
+            self.log.info('No more terminals, exiting...')
+            sys.exit(0)

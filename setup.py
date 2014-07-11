@@ -24,7 +24,7 @@ options = dict(
     platforms="Any",
     scripts=['butterfly.server.py'],
     packages=['butterfly'],
-    install_requires=["tornado>=3.2", "pyOpenSSL"],
+    install_requires=["tornado>=3.2", "pyOpenSSL", 'tornado_systemd'],
     package_data={
         'butterfly': [
             'scss/*.scss',

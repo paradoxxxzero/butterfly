@@ -20,6 +20,7 @@
 import tornado.options
 import tornado.ioloop
 import tornado.httpserver
+import tornado_systemd
 import uuid
 import ssl
 import getpass
@@ -220,9 +221,9 @@ else:
 
 
 from butterfly import application
-http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_opts)
-http_server.listen(port, address=host)
 
+http_server = tornado_systemd.SystemdHTTPServer(application, ssl_options=ssl_opts)
+http_server.listen(port, address=host)
 url = "http%s://%s:%d/*" % (
     "s" if not tornado.options.options.unsecure else "", host, port)
 
