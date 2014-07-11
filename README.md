@@ -19,6 +19,17 @@ The js part is heavily based on [term.js](https://github.com/chjj/term.js/) whic
 
 Then open [localhost:57575](http://localhost:57575) in your favorite browser and done.
 
+## Run it with systemd (linux)
+
+Systemd provides a way to automatically activate daemons when needed (socket activation):
+
+```bash
+    $ cd /etc/systemd/system
+    # curl -O https://raw.githubusercontent.com/paradoxxxzero/butterfly/master/butterfly.service
+    # curl -O https://raw.githubusercontent.com/paradoxxxzero/butterfly/master/butterfly.socket
+    # systemctl enable butterfly.socket
+    # systemctl start butterfly.socket
+```
 
 ## Contribute
 
