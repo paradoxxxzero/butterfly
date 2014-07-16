@@ -176,7 +176,11 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             # or login is explicitly turned off
             if (
                     not tornado.options.options.unsecure and
-                    tornado.options.options.login):
+                    tornado.options.options.login and not (
+                        self.socket.local and
+                        self.caller == self.callee and
+                        server == self.callee
+                    )):
                 # User is authed by ssl, setting groups
                 try:
                     os.initgroups(self.callee.name, self.callee.gid)
@@ -241,6 +245,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
+        self.fd = None
         if self.request.headers['Origin'] not in (
                 'http://%s' % self.request.headers['Host'],
                 'https://%s' % self.request.headers['Host']):
@@ -275,7 +280,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             if not self.callee and not self.user and self.socket.local:
                 self.callee = self.caller
         else:
-            user = utils.parse_cert(self.request.get_ssl_certificate())
+            user = utils.parse_cert(self.stream.socket.getpeercert())
             assert user, 'No user in certificate'
             self.user = user
             try:
@@ -323,7 +328,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.close()
 
     def on_close(self):
-        self.log.info('Closing fd %d' % self.fd)
+        if self.fd is not None:
+            self.log.info('Closing fd %d' % self.fd)
 
         if getattr(self, 'pid', 0) == 0:
             self.log.info('pid is 0')
