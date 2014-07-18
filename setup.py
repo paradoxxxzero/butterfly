@@ -31,7 +31,7 @@ options = dict(
             'static/fonts/*',
             'static/images/favicon.png',
             'static/main.css',
-            'static/main.min.js',
+            'static/*.min.js',
             'templates/index.html'
         ]
     },
