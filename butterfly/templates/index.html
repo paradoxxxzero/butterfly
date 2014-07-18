@@ -17,5 +17,7 @@
     <main id="wrapper"> </main>
     <script src="{{ static_url('main.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('ext.%sjs' % (
+                 '' if options.unminified else 'min.')) }}"></script>
   </body>
 </html>

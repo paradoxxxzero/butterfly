@@ -1,3 +1,29 @@
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 @font-face {
   font-family: "SourceCodePro";
   src: url("/static/fonts/SourceCodePro-ExtraLight.otf") format("woff");
@@ -37,6 +63,19 @@ body {
   font-family: "SourceCodePro";
   line-height: 1.2; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 html, body {
   height: 100%;
   margin: 0;
@@ -51,17 +90,37 @@ html, body {
 .terminal {
   outline: none; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .terminal {
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   transition: 200ms; }
   .terminal.bell {
-    -webkit-filter: blur(2px); }
+    -webkit-filter: blur(2px);
+    filter: blur(2px); }
   .terminal.skip {
-    -webkit-filter: sepia(1); }
+    -webkit-filter: sepia(1);
+    filter: sepia(1); }
   .terminal.selection {
-    -webkit-filter: saturate(2); }
+    -webkit-filter: saturate(2);
+    filter: saturate(2); }
+  .terminal.alarm {
+    -webkit-filter: hue-rotate(150deg);
+    filter: hue-rotate(150deg); }
   .terminal.dead {
-    -webkit-filter: grayscale(1); }
+    -webkit-filter: grayscale(1);
+    filter: grayscale(1); }
     .terminal.dead:after {
       content: "CLOSED";
       font-size: 15em;
@@ -77,6 +136,19 @@ html, body {
       opacity: 0.2;
       font-weight: 900; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #wrapper {
   background-color: #110f13; }
 
@@ -84,6 +156,20 @@ html, body {
   background-color: #110f13;
   color: #f4ead5; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Here are the 16 "normal" colors for theming */
 .bg-color-0 {
   background-color: #2e3436; }
   .bg-color-0.reverse-video {
@@ -260,6 +346,21 @@ html, body {
   .fg-color-15.reverse-video {
     background-color: #eeeeec !important; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Here are the 240 xterm colors */
+/* See http://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg */
 .bg-color-16 {
   background-color: black; }
   .bg-color-16.reverse-video {
@@ -2922,12 +3023,38 @@ html, body {
   .fg-color-257.reverse-video {
     background-color: #f4ead5 !important; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .focus .cursor {
   transition: 300ms; }
 
 .cursor.reverse-video {
   box-shadow: 0 0 0.5 #f4ead5; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .bold {
   font-weight: bold; }
 

@@ -58,6 +58,7 @@ class Terminal
     @element.className = 'terminal focus'
     @element.style.outline = 'none'
     @element.setAttribute 'tabindex', 0
+    @element.setAttribute 'spellcheck', 'false'
 
     @parent.appendChild(@element)
 
@@ -3011,3 +3012,5 @@ class Terminal
     Swedish: null # (H or (7
     Swiss: null # (=
     ISOLatin: null # /A
+
+window.Terminal = Terminal

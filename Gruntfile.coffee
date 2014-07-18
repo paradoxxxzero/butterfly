@@ -12,11 +12,15 @@ module.exports = (grunt) ->
       butterfly:
         files:
           'butterfly/static/main.min.js': 'butterfly/static/main.js'
+          'butterfly/static/ext.min.js': 'butterfly/static/ext.js'
 
     sass:
+      options:
+        includePaths: ['butterfly/sass/']
+
       butterfly:
         expand: true
-        cwd: 'butterfly/sass'
+        cwd: 'butterfly/sass/'
         src: '*.sass'
         dest: 'butterfly/static/'
         ext: '.css'
@@ -27,12 +31,8 @@ module.exports = (grunt) ->
 
       butterfly:
         files:
-          'butterfly/static/main.js': [
-            'coffees/term.coffee'
-            'coffees/selection.coffee'
-            'coffees/virtual_input.coffee'
-            'coffees/main.coffee'
-          ]
+          'butterfly/static/main.js': 'coffees/*.coffee'
+          'butterfly/static/ext.js':  'coffees/ext/*.coffee'
 
     coffeelint:
       butterfly:
@@ -43,6 +43,7 @@ module.exports = (grunt) ->
         livereload: true
       coffee:
         files: [
+          'coffees/ext/*.coffee'
           'coffees/*.coffee'
           'Gruntfile.coffee'
         ]

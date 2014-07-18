@@ -25,15 +25,23 @@ $shadow-alpha: .5 !default
 
   &.bell
     -webkit-filter: blur(2px)
+    filter: blur(2px)
 
   &.skip
     -webkit-filter: sepia(1)
+    filter: sepia(1)
 
   &.selection
     -webkit-filter: unquote("saturate(2)")
+    filter: unquote("saturate(2)")
+
+  &.alarm
+    -webkit-filter: hue-rotate(150deg)
+    filter: hue-rotate(150deg)
 
   &.dead
     -webkit-filter: unquote("grayscale(1)")
+    filter: unquote("grayscale(1)")
 
     &:after
       content: "CLOSED"

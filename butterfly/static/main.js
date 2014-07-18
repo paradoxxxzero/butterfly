@@ -1,7 +1,97 @@
 (function() {
-  var $, Selection, State, Terminal, alt, bench, cancel, cbench, cols, ctl, ctrl, first, next_leaf, open_ts, previous_leaf, quit, rows, s, selection, send, term, virtual_input, ws, ws_url,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    __slice = [].slice;
+  var $, State, Terminal, cancel, cols, open_ts, quit, rows, s,
+    __slice = [].slice,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  cols = rows = null;
+
+  quit = false;
+
+  open_ts = (new Date()).getTime();
+
+  $ = document.querySelectorAll.bind(document);
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var bench, cbench, ctl, send, term, ws, ws_url;
+    send = function(data) {
+      return ws.send('S' + data);
+    };
+    ctl = function() {
+      var args, params, type;
+      type = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      params = args.join(',');
+      if (type === 'Resize') {
+        return ws.send('R' + params);
+      }
+    };
+    if (location.protocol === 'https:') {
+      ws_url = 'wss://';
+    } else {
+      ws_url = 'ws://';
+    }
+    ws_url += document.location.host + '/ws' + location.pathname;
+    ws = new WebSocket(ws_url);
+    ws.addEventListener('open', function() {
+      console.log("WebSocket open", arguments);
+      ws.send('R' + term.cols + ',' + term.rows);
+      return open_ts = (new Date()).getTime();
+    });
+    ws.addEventListener('error', function() {
+      return console.log("WebSocket error", arguments);
+    });
+    ws.addEventListener('message', function(e) {
+      return setTimeout(function() {
+        return term.write(e.data);
+      }, 1);
+    });
+    ws.addEventListener('close', function() {
+      console.log("WebSocket closed", arguments);
+      setTimeout(function() {
+        term.write('Closed');
+        term.skipNextKey = true;
+        return term.element.classList.add('dead');
+      }, 1);
+      quit = true;
+      if ((new Date()).getTime() - open_ts > 60 * 1000) {
+        return open('', '_self').close();
+      }
+    });
+    term = new Terminal($('#wrapper')[0], send, ctl);
+    addEventListener('beforeunload', function() {
+      if (!quit) {
+        return 'This will exit the terminal session';
+      }
+    });
+    bench = function(n) {
+      var rnd, t0;
+      if (n == null) {
+        n = 100000000;
+      }
+      rnd = '';
+      while (rnd.length < n) {
+        rnd += Math.random().toString(36).substring(2);
+      }
+      t0 = (new Date()).getTime();
+      term.write(rnd);
+      return console.log("" + n + " chars in " + ((new Date()).getTime() - t0) + " ms");
+    };
+    cbench = function(n) {
+      var rnd, t0;
+      if (n == null) {
+        n = 100000000;
+      }
+      rnd = '';
+      while (rnd.length < n) {
+        rnd += "\x1b[" + (30 + parseInt(Math.random() * 20)) + "m";
+        rnd += Math.random().toString(36).substring(2);
+      }
+      t0 = (new Date()).getTime();
+      term.write(rnd);
+      return console.log("" + n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
+    };
+    term.ws = ws;
+    return window.butterfly = term;
+  });
 
   cancel = function(ev) {
     if (ev.preventDefault) {
@@ -39,6 +129,7 @@
       this.element.className = 'terminal focus';
       this.element.style.outline = 'none';
       this.element.setAttribute('tabindex', 0);
+      this.element.setAttribute('spellcheck', 'false');
       this.parent.appendChild(this.element);
       div = this.document.createElement('div');
       div.className = 'line';
@@ -2405,486 +2496,7 @@
 
   })();
 
-  selection = null;
-
-  previous_leaf = function(node) {
-    var previous;
-    previous = node.previousSibling;
-    if (!previous) {
-      previous = node.parentNode.previousSibling;
-    }
-    if (!previous) {
-      previous = node.parentNode.parentNode.previousSibling;
-    }
-    while (previous.lastChild) {
-      previous = previous.lastChild;
-    }
-    return previous;
-  };
-
-  next_leaf = function(node) {
-    var next;
-    next = node.nextSibling;
-    if (!next) {
-      next = node.parentNode.nextSibling;
-    }
-    if (!next) {
-      next = node.parentNode.parentNode.nextSibling;
-    }
-    while (next.firstChild) {
-      next = next.firstChild;
-    }
-    return next;
-  };
-
-  Selection = (function() {
-    function Selection() {
-      term.element.classList.add('selection');
-      this.selection = getSelection();
-    }
-
-    Selection.prototype.reset = function() {
-      var fake_range, _ref, _results;
-      this.selection = getSelection();
-      fake_range = document.createRange();
-      fake_range.setStart(this.selection.anchorNode, this.selection.anchorOffset);
-      fake_range.setEnd(this.selection.focusNode, this.selection.focusOffset);
-      this.start = {
-        node: this.selection.anchorNode,
-        offset: this.selection.anchorOffset
-      };
-      this.end = {
-        node: this.selection.focusNode,
-        offset: this.selection.focusOffset
-      };
-      if (fake_range.collapsed) {
-        _ref = [this.end, this.start], this.start = _ref[0], this.end = _ref[1];
-      }
-      this.start_line = this.start.node;
-      while (!this.start_line.classList || __indexOf.call(this.start_line.classList, 'line') < 0) {
-        this.start_line = this.start_line.parentNode;
-      }
-      this.end_line = this.end.node;
-      _results = [];
-      while (!this.end_line.classList || __indexOf.call(this.end_line.classList, 'line') < 0) {
-        _results.push(this.end_line = this.end_line.parentNode);
-      }
-      return _results;
-    };
-
-    Selection.prototype.clear = function() {
-      return this.selection.removeAllRanges();
-    };
-
-    Selection.prototype.destroy = function() {
-      term.element.classList.remove('selection');
-      return this.clear();
-    };
-
-    Selection.prototype.text = function() {
-      return this.selection.toString();
-    };
-
-    Selection.prototype.up = function() {
-      return this.go(-1);
-    };
-
-    Selection.prototype.down = function() {
-      return this.go(+1);
-    };
-
-    Selection.prototype.go = function(n) {
-      var index;
-      index = term.children.indexOf(this.start_line) + n;
-      if (!((0 <= index && index < term.children.length))) {
-        return;
-      }
-      while (!term.children[index].textContent.match(/\S/)) {
-        index += n;
-        if (!((0 <= index && index < term.children.length))) {
-          return;
-        }
-      }
-      return this.select_line(index);
-    };
-
-    Selection.prototype.apply = function() {
-      var range;
-      this.clear();
-      range = document.createRange();
-      range.setStart(this.start.node, this.start.offset);
-      range.setEnd(this.end.node, this.end.offset);
-      return this.selection.addRange(range);
-    };
-
-    Selection.prototype.select_line = function(index) {
-      var line, line_end, line_start;
-      line = term.children[index];
-      line_start = {
-        node: line.firstChild,
-        offset: 0
-      };
-      line_end = {
-        node: line.lastChild,
-        offset: line.lastChild.textContent.length
-      };
-      this.start = this.walk(line_start, /\S/);
-      return this.end = this.walk(line_end, /\S/, true);
-    };
-
-    Selection.prototype.collapsed = function(start, end) {
-      var fake_range;
-      fake_range = document.createRange();
-      fake_range.setStart(start.node, start.offset);
-      fake_range.setEnd(end.node, end.offset);
-      return fake_range.collapsed;
-    };
-
-    Selection.prototype.shrink_right = function() {
-      var end, node;
-      node = this.walk(this.end, /\s/, true);
-      end = this.walk(node, /\S/, true);
-      if (!this.collapsed(this.start, end)) {
-        return this.end = end;
-      }
-    };
-
-    Selection.prototype.shrink_left = function() {
-      var node, start;
-      node = this.walk(this.start, /\s/);
-      start = this.walk(node, /\S/);
-      if (!this.collapsed(start, this.end)) {
-        return this.start = start;
-      }
-    };
-
-    Selection.prototype.expand_right = function() {
-      var node;
-      node = this.walk(this.end, /\S/);
-      return this.end = this.walk(node, /\s/);
-    };
-
-    Selection.prototype.expand_left = function() {
-      var node;
-      node = this.walk(this.start, /\S/, true);
-      return this.start = this.walk(node, /\s/, true);
-    };
-
-    Selection.prototype.walk = function(needle, til, backward) {
-      var i, node, text;
-      if (backward == null) {
-        backward = false;
-      }
-      if (needle.node.firstChild) {
-        node = needle.node.firstChild;
-      } else {
-        node = needle.node;
-      }
-      text = node.textContent;
-      i = needle.offset;
-      if (backward) {
-        while (node) {
-          while (i > 0) {
-            if (text[--i].match(til)) {
-              return {
-                node: node,
-                offset: i + 1
-              };
-            }
-          }
-          node = previous_leaf(node);
-          text = node.textContent;
-          i = text.length;
-        }
-      } else {
-        while (node) {
-          while (i < text.length) {
-            if (text[i++].match(til)) {
-              return {
-                node: node,
-                offset: i - 1
-              };
-            }
-          }
-          node = next_leaf(node);
-          text = node.textContent;
-          i = 0;
-        }
-      }
-      return needle;
-    };
-
-    return Selection;
-
-  })();
-
-  document.addEventListener('keydown', function(e) {
-    var _ref, _ref1;
-    if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
-      return true;
-    }
-    if (e.shiftKey && e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
-      term.handler(getSelection().toString());
-      getSelection().removeAllRanges();
-      return cancel(e);
-    }
-    if (selection) {
-      selection.reset();
-      if (!e.ctrlKey && e.shiftKey && (37 <= (_ref1 = e.keyCode) && _ref1 <= 40)) {
-        return true;
-      }
-      if (e.shiftKey && e.ctrlKey) {
-        if (e.keyCode === 38) {
-          selection.up();
-        } else if (e.keyCode === 40) {
-          selection.down();
-        }
-      } else if (e.keyCode === 39) {
-        selection.shrink_left();
-      } else if (e.keyCode === 38) {
-        selection.expand_left();
-      } else if (e.keyCode === 37) {
-        selection.shrink_right();
-      } else if (e.keyCode === 40) {
-        selection.expand_right();
-      } else {
-        return cancel(e);
-      }
-      if (selection != null) {
-        selection.apply();
-      }
-      return cancel(e);
-    }
-    if (!selection && e.ctrlKey && e.shiftKey && e.keyCode === 38) {
-      selection = new Selection();
-      selection.select_line(term.y - 1);
-      selection.apply();
-      return cancel(e);
-    }
-    return true;
-  });
-
-  document.addEventListener('keyup', function(e) {
-    var _ref, _ref1;
-    if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
-      return true;
-    }
-    if (selection) {
-      if (e.keyCode === 13) {
-        term.handler(selection.text());
-        selection.destroy();
-        selection = null;
-        return cancel(e);
-      }
-      if (_ref1 = e.keyCode, __indexOf.call([37, 38, 39, 40], _ref1) < 0) {
-        selection.destroy();
-        selection = null;
-        return true;
-      }
-    }
-    return true;
-  });
-
-  document.addEventListener('dblclick', function(e) {
-    var anchorNode, anchorOffset, new_range, range, sel;
-    if (e.ctrlKey || e.altkey) {
-      return;
-    }
-    sel = getSelection();
-    if (sel.isCollapsed || sel.toString().match(/\s/)) {
-      return;
-    }
-    range = document.createRange();
-    range.setStart(sel.anchorNode, sel.anchorOffset);
-    range.setEnd(sel.focusNode, sel.focusOffset);
-    if (range.collapsed) {
-      sel.removeAllRanges();
-      new_range = document.createRange();
-      new_range.setStart(sel.focusNode, sel.focusOffset);
-      new_range.setEnd(sel.anchorNode, sel.anchorOffset);
-      sel.addRange(new_range);
-    }
-    range.detach();
-    while (!(sel.toString().match(/\s/) || !sel.toString())) {
-      sel.modify('extend', 'forward', 'character');
-    }
-    sel.modify('extend', 'backward', 'character');
-    anchorNode = sel.anchorNode;
-    anchorOffset = sel.anchorOffset;
-    sel.collapseToEnd();
-    sel.extend(anchorNode, anchorOffset);
-    while (!(sel.toString().match(/\s/) || !sel.toString())) {
-      sel.modify('extend', 'backward', 'character');
-    }
-    return sel.modify('extend', 'forward', 'character');
-  });
-
-  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-    ctrl = false;
-    alt = false;
-    first = true;
-    virtual_input = document.createElement('input');
-    virtual_input.type = 'password';
-    virtual_input.style.position = 'fixed';
-    virtual_input.style.top = 0;
-    virtual_input.style.left = 0;
-    virtual_input.style.border = 'none';
-    virtual_input.style.outline = 'none';
-    virtual_input.style.opacity = 0;
-    virtual_input.value = '0';
-    document.body.appendChild(virtual_input);
-    virtual_input.addEventListener('blur', function() {
-      return setTimeout(((function(_this) {
-        return function() {
-          return _this.focus();
-        };
-      })(this)), 10);
-    });
-    addEventListener('click', function() {
-      return virtual_input.focus();
-    });
-    addEventListener('touchstart', function(e) {
-      if (e.touches.length === 2) {
-        return ctrl = true;
-      } else if (e.touches.length === 3) {
-        ctrl = false;
-        return alt = true;
-      } else if (e.touches.length === 4) {
-        ctrl = true;
-        return alt = true;
-      }
-    });
-    virtual_input.addEventListener('keydown', function(e) {
-      term.keyDown(e);
-      return true;
-    });
-    virtual_input.addEventListener('input', function(e) {
-      var len;
-      len = this.value.length;
-      if (len === 0) {
-        e.keyCode = 8;
-        term.keyDown(e);
-        this.value = '0';
-        return true;
-      }
-      e.keyCode = this.value.charAt(1).charCodeAt(0);
-      if ((ctrl || alt) && !first) {
-        e.keyCode = this.value.charAt(1).charCodeAt(0);
-        e.ctrlKey = ctrl;
-        e.altKey = alt;
-        if (e.keyCode >= 97 && e.keyCode <= 122) {
-          e.keyCode -= 32;
-        }
-        term.keyDown(e);
-        this.value = '0';
-        ctrl = alt = false;
-        return true;
-      }
-      term.keyPress(e);
-      first = false;
-      this.value = '0';
-      return true;
-    });
-  }
-
-  cols = rows = null;
-
-  quit = false;
-
-  open_ts = (new Date()).getTime();
-
-  $ = document.querySelectorAll.bind(document);
-
-  send = function(data) {
-    return ws.send('S' + data);
-  };
-
-  ctl = function() {
-    var args, params, type;
-    type = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-    params = args.join(',');
-    if (type === 'Resize') {
-      return ws.send('R' + params);
-    }
-  };
-
-  if (location.protocol === 'https:') {
-    ws_url = 'wss://';
-  } else {
-    ws_url = 'ws://';
-  }
-
-  ws_url += document.location.host + '/ws' + location.pathname;
-
-  ws = new WebSocket(ws_url);
-
-  ws.addEventListener('open', function() {
-    console.log("WebSocket open", arguments);
-    ws.send('R' + term.cols + ',' + term.rows);
-    return open_ts = (new Date()).getTime();
-  });
-
-  ws.addEventListener('error', function() {
-    return console.log("WebSocket error", arguments);
-  });
-
-  ws.addEventListener('message', function(e) {
-    return setTimeout(function() {
-      return term.write(e.data);
-    }, 1);
-  });
-
-  ws.addEventListener('close', function() {
-    console.log("WebSocket closed", arguments);
-    setTimeout(function() {
-      term.write('Closed');
-      term.skipNextKey = true;
-      return term.element.classList.add('dead');
-    }, 1);
-    quit = true;
-    if ((new Date()).getTime() - open_ts > 60 * 1000) {
-      return open('', '_self').close();
-    }
-  });
-
-  term = new Terminal($('#wrapper')[0], send, ctl);
-
-  addEventListener('beforeunload', function() {
-    if (!quit) {
-      return 'This will exit the terminal session';
-    }
-  });
-
-  bench = function(n) {
-    var rnd, t0;
-    if (n == null) {
-      n = 100000000;
-    }
-    rnd = '';
-    while (rnd.length < n) {
-      rnd += Math.random().toString(36).substring(2);
-    }
-    t0 = (new Date()).getTime();
-    term.write(rnd);
-    return console.log("" + n + " chars in " + ((new Date()).getTime() - t0) + " ms");
-  };
-
-  cbench = function(n) {
-    var rnd, t0;
-    if (n == null) {
-      n = 100000000;
-    }
-    rnd = '';
-    while (rnd.length < n) {
-      rnd += "\x1b[" + (30 + parseInt(Math.random() * 20)) + "m";
-      rnd += Math.random().toString(36).substring(2);
-    }
-    t0 = (new Date()).getTime();
-    term.write(rnd);
-    return console.log("" + n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
-  };
-
-  window.butterfly = term;
+  window.Terminal = Terminal;
 
 }).call(this);
 

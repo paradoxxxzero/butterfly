@@ -49,7 +49,7 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
       alt = true
 
   virtual_input.addEventListener 'keydown', (e) ->
-    term.keyDown(e)
+    butterfly.keyDown(e)
     return true
 
   virtual_input.addEventListener 'input', (e) ->
@@ -57,7 +57,7 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
 
     if len == 0
       e.keyCode = 8
-      term.keyDown e
+      butterfly.keyDown e
       @value = '0'
       return true
 
@@ -69,12 +69,12 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
       e.altKey = alt
       if e.keyCode >= 97 && e.keyCode <= 122
         e.keyCode -= 32
-      term.keyDown e
+      butterfly.keyDown e
       @value = '0'
       ctrl = alt = false
       return true
 
-    term.keyPress e
+    butterfly.keyPress e
     first = false
     @value = '0'
     true
