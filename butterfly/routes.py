@@ -127,7 +127,13 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if self.pid == 0:
             self.shell()
         else:
+            signal.signal(signal.SIGALRM, self.kill_inactive)
+            signal.alarm(tornado.options.options.timeout)
             self.communicate()
+
+    def kill_inactive(self, signum, frame):
+        self.on_close()
+        self.close()
 
     def shell(self):
         if self.callee is None and (
@@ -304,6 +310,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
             self.log.info('SIZE (%d, %d)' % (cols, rows))
         elif message[0] == 'S':
+            # Schedule for next timeout when user inputs
+            signal.alarm(tornado.options.options.timeout)
             self.log.info('WRIT<%r' % message)
             self.writer.write(message[1:])
             self.writer.flush()

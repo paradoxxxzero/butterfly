@@ -38,6 +38,9 @@ tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("timeout", default=300,
+                       help="number of seconds for an idle seession "
+                            "before it been killed")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
 
