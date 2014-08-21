@@ -228,6 +228,10 @@ http_server.listen(port, address=host)
 url = "http%s://%s:%d/*" % (
     "s" if not tornado.options.options.unsecure else "", host, port)
 
+if http_server.systemd:
+    os.environ.pop('LISTEN_PID')
+    os.environ.pop('LISTEN_FDS')
+
 # This is for debugging purpose
 try:
     from wsreload.client import sporadic_reload, watch
