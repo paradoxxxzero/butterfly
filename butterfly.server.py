@@ -36,6 +36,7 @@ tornado.options.define("more", default=False,
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
+tornado.options.define("cmd", help="Command to run instead of shell")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
 tornado.options.define("login", default=True,
