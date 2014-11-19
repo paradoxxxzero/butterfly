@@ -40,12 +40,12 @@ tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
-
+tornado.options.define("ssl_version", default='SSLv23',
+                       help="SSL protocol version")
 tornado.options.define("generate_certs", default=False,
                        help="Generate butterfly certificates")
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication")
-
 tornado.options.define("unminified", default=False,
                        help="Use the unminified js (for development only)")
 
@@ -212,11 +212,17 @@ else:
               "2014/03/21/butterfly-with-ssl-auth.html\n")
         sys.exit(1)
 
+    if not hasattr(
+            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version):
+        print("Unknown SSL protocol %s" % tornado.options.options.ssl_version)
+        sys.exit(1)
     ssl_opts = {
         'certfile': cert % host,
         'keyfile': cert_key % host,
         'ca_certs': ca,
-        'cert_reqs': ssl.CERT_REQUIRED
+        'cert_reqs': ssl.CERT_REQUIRED,
+        'ssl_version': getattr(
+            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version)
     }
 
 
