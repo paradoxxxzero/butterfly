@@ -191,12 +191,12 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                           'if you want to log as different user\n')
                     sys.exit(1)
 
-            args = [
-                tornado.options.options.cmd
-                or tornado.options.options.shell or self.callee.shell
-            ]
-            if not tornado.options.options.cmd:
+            if tornado.options.options.cmd:
+                args = tornado.options.options.cmd.split(' ')
+            else:
+                args = [tornado.options.options.shell or self.callee.shell]
                 args.append('-i')
+
             os.execvpe(args[0], args, env)
             # This process has been replaced
 
