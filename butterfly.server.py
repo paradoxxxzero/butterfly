@@ -41,7 +41,7 @@ tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
-tornado.options.define("ssl_version", default='SSLv23',
+tornado.options.define("ssl_version", default=None,
                        help="SSL protocol version")
 tornado.options.define("generate_certs", default=False,
                        help="Generate butterfly certificates")
@@ -213,19 +213,21 @@ else:
               "2014/03/21/butterfly-with-ssl-auth.html\n")
         sys.exit(1)
 
-    if not hasattr(
-            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version):
-        print("Unknown SSL protocol %s" % tornado.options.options.ssl_version)
-        sys.exit(1)
     ssl_opts = {
         'certfile': cert % host,
         'keyfile': cert_key % host,
         'ca_certs': ca,
-        'cert_reqs': ssl.CERT_REQUIRED,
-        'ssl_version': getattr(
-            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version)
+        'cert_reqs': ssl.CERT_REQUIRED
     }
-
+    if tornado.options.options.ssl_version is not None:
+        if not hasattr(
+                ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version):
+            print(
+                "Unknown SSL protocol %s" %
+                tornado.options.options.ssl_version)
+            sys.exit(1)
+        ssl_opts['ssl_version'] = getattr(
+            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version)
 
 from butterfly import application
 
