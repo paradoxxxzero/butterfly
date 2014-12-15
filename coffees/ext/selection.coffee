@@ -78,7 +78,7 @@ class Selection
     @clear()
 
   text: ->
-    @selection.toString()
+    @selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/, ' ')
 
   up: ->
     @go -1

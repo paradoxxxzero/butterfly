@@ -135,7 +135,7 @@
     };
 
     Selection.prototype.text = function() {
-      return this.selection.toString();
+      return this.selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/, ' ');
     };
 
     Selection.prototype.up = function() {

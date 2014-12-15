@@ -526,7 +526,9 @@
                 out += "&gt;";
                 break;
               default:
-                if (ch <= " ") {
+                if (ch === " ") {
+                  out += '<span class="nbsp">\u2007</span>';
+                } else if (ch <= " ") {
                   out += "&nbsp;";
                 } else {
                   if (("\uff00" < ch && ch < "\uffef")) {

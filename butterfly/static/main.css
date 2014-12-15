@@ -186,10 +186,10 @@ html, body {
   .bg-color-1.reverse-video {
     color: #cc0000 !important; }
 
-.fg-color-1 {
+.fg-color-1, .nbsp {
   color: #cc0000;
   text-shadow: 0 0 6px rgba(204, 0, 0, 0.5); }
-  .fg-color-1.reverse-video {
+  .fg-color-1.reverse-video, .reverse-video.nbsp {
     background-color: #cc0000 !important; }
 
 .bg-color-2 {
@@ -3058,7 +3058,7 @@ html, body {
 .bold {
   font-weight: bold; }
 
-.underline {
+.underline, .nbsp {
   text-decoration: underline; }
 
 .blink {
@@ -3073,3 +3073,4 @@ html, body {
 
 .blur .cursor.reverse-video {
   background: none; }
+

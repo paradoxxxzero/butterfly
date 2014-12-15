@@ -453,7 +453,9 @@ class Terminal
             when ">"
               out += "&gt;"
             else
-              if ch <= " "
+              if ch == " "
+                out += '<span class="nbsp">\u2007</span>'
+              else if ch <= " "
                 out += "&nbsp;"
               else
                 i++ if "\uff00" < ch < "\uffef"
