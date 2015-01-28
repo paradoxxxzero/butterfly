@@ -1376,14 +1376,17 @@
       return this.queue += data;
     };
 
-    Terminal.prototype.bell = function() {
+    Terminal.prototype.bell = function(cls) {
+      if (cls == null) {
+        cls = "bell";
+      }
       if (!this.visualBell) {
         return;
       }
-      this.element.classList.add("bell");
+      this.element.classList.add(cls);
       return this.t_bell = setTimeout(((function(_this) {
         return function() {
-          return _this.element.classList.remove("bell");
+          return _this.element.classList.remove(cls);
         };
       })(this)), this.visualBell);
     };

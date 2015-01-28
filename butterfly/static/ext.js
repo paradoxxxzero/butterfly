@@ -49,6 +49,7 @@
 
   document.addEventListener('copy', copy = function(e) {
     var data, end, line, sel, _i, _len, _ref;
+    butterfly.bell("copied");
     e.clipboardData.clearData();
     sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
     data = '';
@@ -61,7 +62,7 @@
       } else {
         end = '\n';
       }
-      data += line.trim() + end;
+      data += line.replace(/\s*$/, '') + end;
     }
     e.clipboardData.setData('text/plain', data);
     return e.preventDefault();
@@ -69,6 +70,7 @@
 
   document.addEventListener('paste', function(e) {
     var data;
+    butterfly.bell("pasted");
     data = e.clipboardData.getData('text/plain');
     data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r');
     butterfly.send(data);

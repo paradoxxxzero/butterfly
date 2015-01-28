@@ -1381,11 +1381,11 @@ class Terminal
 
     @queue += data
 
-  bell: ->
+  bell: (cls="bell")->
     return unless @visualBell
-    @element.classList.add "bell"
+    @element.classList.add cls
     @t_bell = setTimeout (=>
-      @element.classList.remove "bell"
+      @element.classList.remove cls
     ), @visualBell
 
   resize: ->

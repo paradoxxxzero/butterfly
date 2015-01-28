@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 document.addEventListener 'copy', copy = (e) ->
+  butterfly.bell "copied"
   e.clipboardData.clearData()
   sel = getSelection().toString().replace(
     /\u00A0/g, ' ').replace(/\u2007/g, ' ')
@@ -27,12 +28,13 @@ document.addEventListener 'copy', copy = (e) ->
       line = line.slice(0, -1)
     else
       end = '\n'
-    data += line.trim() + end
+    data += line.replace(/\s*$/, '') + end
 
   e.clipboardData.setData 'text/plain', data
   e.preventDefault()
 
 document.addEventListener 'paste', (e) ->
+  butterfly.bell "pasted"
   data = e.clipboardData.getData 'text/plain'
   data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r')
   butterfly.send data
