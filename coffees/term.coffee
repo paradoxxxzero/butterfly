@@ -102,7 +102,6 @@ class Terminal
     addEventListener 'keypress', @keyPress.bind(@)
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
-    addEventListener 'paste', @paste.bind(@)
     addEventListener 'resize', @resize.bind(@)
 
     # Horrible Firefox paste workaround
@@ -177,13 +176,6 @@ class Terminal
     @send('\x1b[O') if @sendFocus
     @element.classList.add('blur')
     @element.classList.remove('focus')
-
-  paste: (ev) ->
-    if ev.clipboardData
-      @send ev.clipboardData.getData('text/plain')
-    else if @context.clipboardData
-      @send @context.clipboardData.getData('Text')
-    cancel(ev)
 
   # XTerm mouse events
   # http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
@@ -389,7 +381,7 @@ class Terminal
       parent = @element.parentNode
       parent?.removeChild @element
 
-    width = @cols
+    width = @cols + 1
     y = start
 
     if end >= @lines.length
@@ -407,7 +399,7 @@ class Terminal
 
       attr = @defAttr
       i = 0
-      while i < width
+      while i < line.length
         data = line[i][0]
         ch = line[i][1]
         if data isnt attr
@@ -597,6 +589,7 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
+                  @lines[@y + @ybase][@x] = [@curAttr, '\u23CE']
                   @x = 0
                   @y++
                   if @y > @scrollBottom
@@ -1514,7 +1507,7 @@ class Terminal
     ch = [attr, " "]
     line = []
     i = 0
-    while i < @cols
+    while i < @cols + 1
       line[i] = ch
       i++
     line

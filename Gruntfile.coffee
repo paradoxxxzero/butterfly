@@ -51,7 +51,7 @@ module.exports = (grunt) ->
 
       sass:
         files: [
-          'sass/*.sass'
+          'butterfly/sass/*.sass'
         ]
         tasks: ['sass']
 

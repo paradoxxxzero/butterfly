@@ -78,7 +78,7 @@ class Selection
     @clear()
 
   text: ->
-    @selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/, ' ')
+    @selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ')
 
   up: ->
     @go -1
@@ -176,7 +176,7 @@ document.addEventListener 'keydown', (e) ->
   # Paste natural selection too if shiftkey
   if e.shiftKey and e.keyCode is 13 and
       not selection and not getSelection().isCollapsed
-    butterfly.handler getSelection().toString()
+    butterfly.send getSelection().toString()
     getSelection().removeAllRanges()
     return cancel e
 
@@ -216,7 +216,7 @@ document.addEventListener 'keyup', (e) ->
 
   if selection
     if e.keyCode == 13
-      butterfly.handler selection.text()
+      butterfly.send selection.text()
       selection.destroy()
       selection = null
       return cancel e

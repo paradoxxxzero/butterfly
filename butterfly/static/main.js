@@ -163,7 +163,6 @@
       addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));
-      addEventListener('paste', this.paste.bind(this));
       addEventListener('resize', this.resize.bind(this));
       if (typeof InstallTrigger !== "undefined") {
         this.element.contentEditable = 'true';
@@ -246,15 +245,6 @@
       }
       this.element.classList.add('blur');
       return this.element.classList.remove('focus');
-    };
-
-    Terminal.prototype.paste = function(ev) {
-      if (ev.clipboardData) {
-        this.send(ev.clipboardData.getData('text/plain'));
-      } else if (this.context.clipboardData) {
-        this.send(this.context.clipboardData.getData('Text'));
-      }
-      return cancel(ev);
     };
 
     Terminal.prototype.initmouse = function() {
@@ -455,7 +445,7 @@
           parent.removeChild(this.element);
         }
       }
-      width = this.cols;
+      width = this.cols + 1;
       y = start;
       if (end >= this.lines.length) {
         end = this.lines.length - 1;
@@ -471,7 +461,7 @@
         }
         attr = this.defAttr;
         i = 0;
-        while (i < width) {
+        while (i < line.length) {
           data = line[i][0];
           ch = line[i][1];
           if (data !== attr) {
@@ -687,6 +677,7 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
+                    this.lines[this.y + this.ybase][this.x] = [this.curAttr, '\u23CE'];
                     this.x = 0;
                     this.y++;
                     if (this.y > this.scrollBottom) {
@@ -1567,7 +1558,7 @@
       ch = [attr, " "];
       line = [];
       i = 0;
-      while (i < this.cols) {
+      while (i < this.cols + 1) {
         line[i] = ch;
         i++;
       }

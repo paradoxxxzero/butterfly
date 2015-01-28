@@ -136,6 +136,158 @@ html, body {
       opacity: 0.2;
       font-weight: 900; }
 
+/* @keyframes flicker */
+/*   $steps: 20 */
+/*   @for $i from 0 through $steps */
+/*     # {percentage($i * 1 / $steps)} */
+/*       opacity: random() */
+@keyframes flicker {
+  0% {
+    opacity: 0.22849; }
+
+  5% {
+    opacity: 0.90105; }
+
+  10% {
+    opacity: 0.36825; }
+
+  15.0% {
+    opacity: 0.44997; }
+
+  20% {
+    opacity: 0.08073; }
+
+  25% {
+    opacity: 0.96555; }
+
+  30.0% {
+    opacity: 0.37597; }
+
+  35% {
+    opacity: 0.64167; }
+
+  40% {
+    opacity: 0.09629; }
+
+  45% {
+    opacity: 0.5588; }
+
+  50% {
+    opacity: 0.76785; }
+
+  55.0% {
+    opacity: 0.67573; }
+
+  60.0% {
+    opacity: 0.14266; }
+
+  65% {
+    opacity: 0.42935; }
+
+  70% {
+    opacity: 0.50035; }
+
+  75% {
+    opacity: 0.41609; }
+
+  80% {
+    opacity: 0.3419; }
+
+  85.0% {
+    opacity: 0.42412; }
+
+  90% {
+    opacity: 0.71636; }
+
+  95% {
+    opacity: 0.54473; }
+
+  100% {
+    opacity: 0.52471; } }
+
+.terminal {
+  background: #110f13;
+  /* animation: turn-on 1s linear */
+  /* animation-fill-mode: forwards */ }
+  .terminal::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(17, 15, 19, 0.1);
+    opacity: 0;
+    z-index: 2;
+    pointer-events: none;
+    animation: flicker 0.15s infinite; }
+  .terminal::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(17, 15, 19, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none; }
+  .terminal.dead {
+    animation: turn-off 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+    animation-fill-mode: forwards; }
+
+@keyframes turn-on {
+  0% {
+    transform: scale(1, 0.8) translate3d(0, 0, 0);
+    -webkit-filter: brightness(30);
+    filter: brightness(30);
+    opacity: 1; }
+
+  3.5% {
+    transform: scale(1, 0.8) translate3d(0, 100%, 0); }
+
+  3.6% {
+    transform: scale(1, 0.8) translate3d(0, -100%, 0);
+    opacity: 1; }
+
+  9% {
+    transform: scale(1.3, 0.6) translate3d(0, 100%, 0);
+    -webkit-filter: brightness(30);
+    filter: brightness(30);
+    opacity: 0; }
+
+  11% {
+    transform: scale(1, 1) translate3d(0, 0, 0);
+    -webkit-filter: contrast(0) brightness(0);
+    filter: contrast(0) brightness(0);
+    opacity: 0; }
+
+  100% {
+    transform: scale(1, 1) translate3d(0, 0, 0);
+    -webkit-filter: contrast(1) brightness(1.2) saturate(1.3);
+    filter: contrast(1) brightness(1.2) saturate(1.3);
+    opacity: 1; } }
+
+@keyframes turn-off {
+  0% {
+    transform: scale(1, 1.3) translate3d(0, 0, 0);
+    -webkit-filter: brightness(1);
+    filter: brightness(1);
+    opacity: 1; }
+
+  60% {
+    transform: scale(1.3, 0.001) translate3d(0, 0, 0);
+    -webkit-filter: brightness(10);
+    filter: brightness(10); }
+
+  100% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: scale(0, 0.0001) translate3d(0, 0, 0);
+    -webkit-filter: brightness(50);
+    filter: brightness(50); } }
+
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
 /* butterfly Copyright (C) 2014  Florian Mounier */
@@ -2870,15 +3022,15 @@ html, body {
     background-color: #767676 !important; }
 
 .bg-color-244 {
-  background-color: grey; }
+  background-color: gray; }
   .bg-color-244.reverse-video {
-    color: grey !important; }
+    color: gray !important; }
 
 .fg-color-244 {
-  color: grey;
+  color: gray;
   text-shadow: 0 0 6px rgba(128, 128, 128, 0.5); }
   .fg-color-244.reverse-video {
-    background-color: grey !important; }
+    background-color: gray !important; }
 
 .bg-color-245 {
   background-color: #8a8a8a; }

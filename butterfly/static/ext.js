@@ -1,5 +1,5 @@
 (function() {
-  var Selection, alt, cancel, ctrl, first, next_leaf, previous_leaf, selection, set_alarm, virtual_input,
+  var Selection, alt, cancel, copy, ctrl, first, next_leaf, previous_leaf, selection, set_alarm, virtual_input,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   set_alarm = function(notification) {
@@ -45,6 +45,34 @@
       set_alarm(Notification.permission === 'granted');
     }
     return cancel(e);
+  });
+
+  document.addEventListener('copy', copy = function(e) {
+    var data, end, line, sel, _i, _len, _ref;
+    e.clipboardData.clearData();
+    sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
+    data = '';
+    _ref = sel.split('\n');
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      line = _ref[_i];
+      if (line.slice(-1) === '\u23CE') {
+        end = '';
+        line = line.slice(0, -1);
+      } else {
+        end = '\n';
+      }
+      data += line.trim() + end;
+    }
+    e.clipboardData.setData('text/plain', data);
+    return e.preventDefault();
+  });
+
+  document.addEventListener('paste', function(e) {
+    var data;
+    data = e.clipboardData.getData('text/plain');
+    data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r');
+    butterfly.send(data);
+    return e.preventDefault();
   });
 
   selection = null;
@@ -135,7 +163,7 @@
     };
 
     Selection.prototype.text = function() {
-      return this.selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/, ' ');
+      return this.selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
     };
 
     Selection.prototype.up = function() {
@@ -277,7 +305,7 @@
       return true;
     }
     if (e.shiftKey && e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
-      butterfly.handler(getSelection().toString());
+      butterfly.send(getSelection().toString());
       getSelection().removeAllRanges();
       return cancel(e);
     }
@@ -324,7 +352,7 @@
     }
     if (selection) {
       if (e.keyCode === 13) {
-        butterfly.handler(selection.text());
+        butterfly.send(selection.text());
         selection.destroy();
         selection = null;
         return cancel(e);
