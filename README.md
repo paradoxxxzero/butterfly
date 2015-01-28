@@ -67,3 +67,16 @@ Run `python dev.py --debug --port=12345` and you are set (yes you can launch it 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
+
+## Docker Usage
+There is a docker repository created for this project that is set to automatically rebuild when there is a push
+into this repository: https://registry.hub.docker.com/u/garland/butterfly/
+
+### Starting
+
+        docker run \
+        --env PASSWORD=password \
+        --env PORT=57575 \
+        -p 57575:57575 \
+        -d garland/butterfly
+
