@@ -30,7 +30,7 @@ document.addEventListener 'copy', copy = (e) ->
       end = '\n'
     data += line.replace(/\s*$/, '') + end
 
-  e.clipboardData.setData 'text/plain', data
+  e.clipboardData.setData 'text/plain', data.slice(0, -1)
   e.preventDefault()
 
 document.addEventListener 'paste', (e) ->
