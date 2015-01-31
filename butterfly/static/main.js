@@ -1345,7 +1345,7 @@
         this.skipNextKey = null;
         return true;
       }
-      cancel(ev);
+      //cancel(ev);
       if (ev.charCode) {
         key = ev.charCode;
       } else if (ev.which == null) {

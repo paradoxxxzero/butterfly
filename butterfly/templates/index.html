@@ -11,13 +11,76 @@
 
     <title>Butterfly</title>
     <link href="/style.css" rel="stylesheet">
+    <style type="text/css">
+    .hidden {
+      position: absolute;
+      bottom:   0;
+      left:   0;
+      width:    10px;
+      height:   10px;
+      display:  block;
+      font-size:  1;
+      z-index:  -1;
+      color:    transparent;
+      background: transparent;
+      overflow: hidden;
+      border:   none;
+      padding:  0;
+      resize:   none;
+      outline:  none;
+      -webkit-user-select: text;
+      user-select: text; /* Because for user-select:none, Safari won't allow input */
+    }
+    </style>
   </head>
 
   <body spellcheck="false">
     <main id="wrapper"> </main>
+    <input id="hidden-input" class="hidden" type="text" value=""/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="{{ static_url('main.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
     <script src="{{ static_url('ext.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
+    <script type="text/javascript">
+    var hiddenInput = $("#hidden-input");
+    var userInput = ""; 
+    var hiddenInputListener = function(text) {};
+
+    var focusHiddenArea = function() {
+        // In order to ensure that the browser will fire clipboard events, we always need to have something selected
+        hiddenInput.val(' ');
+        hiddenInput.focus().select();
+    };
+
+    // We need the hidden input to constantly be selected in case there is a copy or paste event. It also recieves and dispatches input events
+    hiddenInput.on('input', function(e) {
+        var value = hiddenInput.val();
+        userInput += value;
+        hiddenInputListener(userInput);
+        
+        // There is a bug (sometimes) with Safari and the input area can't be updated during
+        // the input event, so we update the input area after the event is done being processed
+        if (isSafari) {
+            hiddenInput.focus();
+            setTimeout(focusHiddenArea, 0);        
+        } else {
+            focusHiddenArea();
+        }
+    });
+    // Set clipboard event listeners on the document. 
+    ['cut', 'copy', 'paste'].forEach(function(event) {
+        $(document).bind('paste', function() {
+            console.log('paste behaviour detected!')
+        }); 
+        document.addEventListener(event, function(e) {
+            console.log(event);
+            focusHiddenArea();
+            e.preventDefault();
+        });
+    });
+    $(document).mouseup(focusHiddenArea);
+    </script>
   </body>
 </html>
+
