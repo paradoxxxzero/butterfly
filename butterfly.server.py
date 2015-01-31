@@ -40,6 +40,8 @@ tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("motd", default="butterfly/templates/motd.html",
+                       help="motd to use")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
 tornado.options.define("ssl_version", default=None,
