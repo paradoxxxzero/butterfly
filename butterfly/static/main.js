@@ -1116,6 +1116,7 @@
         return true;
       }
       if ((ev.shiftKey && ev.ctrlKey) && ((_ref = ev.keyCode) === 67 || _ref === 86)) {
+        console.log('pasting')
         return true;
       }
       if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
@@ -1345,8 +1346,8 @@
         this.skipNextKey = null;
         return true;
       }
-      //cancel(ev);
       if (ev.charCode) {
+        console.log(ev.charCode)
         key = ev.charCode;
       } else if (ev.which == null) {
         key = ev.keyCode;
