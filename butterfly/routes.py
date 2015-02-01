@@ -60,7 +60,7 @@ def motd(socket):
         motd = motd % (__version__,socket.local_addr,socket.remote_addr)
     except TypeError:
         pass
-    motd.replace('\n', '\r\n')
+    motd = motd.replace('\n', '\r\n')
     return motd
 
 
