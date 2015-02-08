@@ -1115,7 +1115,7 @@ class Terminal
 
     # Let the ctrl+c, ctrl+v go through to handle native copy paste
     # disregarding verbatim
-    return true if (ev.ctrlKey) and ev.keyCode in [67, 86]
+    return true if (ev.ctrlKey) and ev.keyCode in [86]
 
     # Alt-z works as an escape to relay the following keys to the browser.
     # usefull to trigger browser shortcuts, i.e.: Alt+Z F5 to reload

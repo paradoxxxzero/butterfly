@@ -1118,7 +1118,7 @@
       if ((ev.shiftKey && ev.ctrlKey) && ((_ref = ev.keyCode) === 67 || _ref === 86)) {
         return true;
       }
-      if (ev.ctrlKey && ((_ref1 = ev.keyCode) === 67 || _ref1 === 86)) {
+      if (ev.ctrlKey && ((_ref1 = ev.keyCode) === 86)) {
         return true;
       }
       if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
