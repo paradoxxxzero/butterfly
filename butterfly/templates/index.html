@@ -10,6 +10,7 @@
     <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
 
     <title>Butterfly</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link href="/style.css" rel="stylesheet">
     <style>
         @media only screen
@@ -20,6 +21,15 @@
                 font-size: 2vw;
             }
         }
+            .keyboard{
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                z-index: 999;
+                color: darkgray;
+                font-size: 10vw;
+                display: block;
+            }
     </style>
 </head>
 
@@ -28,164 +38,10 @@
     <div id="ie-clipboard-contenteditable" class="hidden" contenteditable="true"></div>
     <input id="hidden-input" class="hidden" type="text" value="" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src="{{ static_url('main.%sjs' % (
-                 '' if options.unminified else 'min.')) }}"></script>
-    <script src="{{ static_url('ext.%sjs' % (
-                 '' if options.unminified else 'min.')) }}"></script>
-    <script type="text/javascript">
-        var isSafari = navigator.appVersion.search('Safari') != -1 && navigator.appVersion.search('Chrome') == -1 && navigator.appVersion.search('CrMo') == -1 && navigator.appVersion.search('CriOS') == -1;
-        var isIe = (navigator.userAgent.toLowerCase().indexOf("msie") != -1 || navigator.userAgent.toLowerCase().indexOf("trident") != -1);
-
-        var ieClipboardDiv = $('#ie-clipboard-contenteditable');
-        var hiddenInput = $("#hidden-input");
-
-        var userInput = "";
-        var hiddenInputListener = function(text) {};
-
-        var focusHiddenArea = function() {
-            // In order to ensure that the browser will fire clipboard events, we always need to have something selected
-            hiddenInput.val(' ');
-            hiddenInput.focus().select();
-        };
-
-        // Focuses an element to be ready for copy/paste (used exclusively for IE)
-        var focusIeClipboardDiv = function() {
-            ieClipboardDiv.focus();
-            var range = document.createRange();
-            range.selectNodeContents((ieClipboardDiv.get(0)));
-            var selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-        };
-
-        // For IE, we can get/set Text or URL just as we normally would, but to get HTML, we need to let the browser perform the copy or paste
-        // in a contenteditable div.
-        var ieClipboardEvent = function(clipboardEvent) {
-            var clipboardData = window.clipboardData;
-            if (clipboardEvent == 'cut' || clipboardEvent == 'copy') {
-                clipboardData.setData('Text', textToCopy);
-                ieClipboardDiv.html(htmlToCopy);
-                focusIeClipboardDiv();
-                setTimeout(function() {
-                    focusHiddenArea();
-                    ieClipboardDiv.empty();
-                }, 0);
-            }
-            if (clipboardEvent == 'paste') {
-                var clipboardText = clipboardData.getData('Text');
-                ieClipboardDiv.empty();
-                setTimeout(function() {
-                    console.log('Clipboard Plain Text: ' + clipboardText);
-                    console.log('Clipboard HTML: ' + ieClipboardDiv.html());
-                    ieClipboardDiv.empty();
-                    focusHiddenArea();
-                }, 0);
-            }
-        };
-
-        // For every broswer except IE, we can easily get and set data on the clipboard
-        var standardClipboardEvent = function(clipboardEvent, event) {
-            var clipboardData = event.clipboardData;
-            if (clipboardEvent == 'cut' || clipboardEvent == 'copy') {
-                var data, end, line, sel, _i, _len, _ref;
-                butterfly.bell("copied");
-                event.clipboardData.clearData();
-                sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
-                data = '';
-                _ref = sel.split('\n');
-                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                    line = _ref[_i];
-                    if (line.slice(-1) === '\u23CE') {
-                        end = '';
-                        line = line.slice(0, -1);
-                    } else {
-                        end = '\n';
-                    }
-                    data += line.replace(/\s*$/, '') + end;
-                }
-                event.clipboardData.setData('text/plain', data.slice(0, -1));
-                return event.preventDefault();
-            }
-            if (clipboardEvent == 'paste') {
-                var data;
-                butterfly.bell("pasted");
-                data = clipboardData.getData('text/plain');
-                console.log('Clipboard Plain Text: ' + data);
-                data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r');
-                butterfly.send(data);
-                return event.preventDefault();
-            }
-        };
-
-        // For IE, the broswer will only paste HTML if a contenteditable div is selected before paste. Luckily, the browser fires
-        // a before paste event which lets us switch the focuse to the appropraite element
-        if (isIe) {
-            document.addEventListener('beforepaste', function() {
-                if (hiddenInput.is(':focus')) {
-                    focusIeClipboardDiv();
-                }
-            }, true);
-        }
-
-        // We need the hidden input to constantly be selected in case there is a copy or paste event. It also receives and dispatches input events
-        hiddenInput.on('input', function(e) {
-            var value = hiddenInput.val();
-            userInput += value;
-            hiddenInputListener(userInput);
-
-            // There is a bug (sometimes) with Safari and the input area can't be updated during
-            // the input event, so we update the input area after the event is done being processed
-            if (isSafari) {
-                hiddenInput.focus();
-                setTimeout(focusHiddenArea, 0);
-            } else {
-                focusHiddenArea();
-            }
-        });
-
-        // Set clipboard event listeners on the document.
-        ['cut', 'copy', 'paste'].forEach(function(event) {
-            document.addEventListener(event, function(e) {
-                console.log(event);
-                if (isIe) {
-                    ieClipboardEvent(event);
-                } else {
-                    standardClipboardEvent(event, e);
-                    focusHiddenArea();
-                    e.preventDefault();
-                }
-            });
-        });
-
-        // Keep the hidden text area selected
-        $(document).mouseup(focusHiddenArea);
-        $(document).ready(function() {
-            $("#hidden-input").click(function(e) {
-                $(this).focus();
-            });
-
-            $('body').click(function(e) {
-                $("#hidden-input").trigger('click');
-            });
-        });
-        var button = document.querySelector('body');
-        var input = document.querySelector('#hidden-input');
-        var focus = function(e) {
-            e.stopPropagation();
-            e.preventDefault();
-            var clone = input.cloneNode(true);
-            var parent = input.parentElement;
-            parent.appendChild(clone);
-            parent.replaceChild(clone, input);
-            input = clone;
-            window.setTimeout(function() {
-                input.value = input.value || "";
-                input.focus();
-            }, 0);
-        };
-        button.addEventListener('mousedown', focus);
-        button.addEventListener('touchstart', focus);
-    </script>
+    <script src="{{ static_url('main.%sjs' % ( '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('ext.%sjs' % ( '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('front.%sjs' % ( '' if options.unminified else 'min.')) }}"></script>
+    <i class="fa fa-keyboard-o keyboard"></i>
 </body>
 
 </html>
