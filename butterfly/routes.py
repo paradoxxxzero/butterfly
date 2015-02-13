@@ -50,39 +50,19 @@ def u(s):
 
 
 def motd(socket):
-    return (
-'''
-B                   `         '
-   ;,,,             `       '             ,,,;
-   `Y888888bo.       :     :       .od888888Y'
-     8888888888b.     :   :     .d8888888888
-     88888Y'  `Y8b.   `   '   .d8Y'  `Y88888
-    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k
-      `888  RY88YB    `b ( ) d'    RY88YB  888'
-       888b  R'"B        ,',        R"'B  d888
-      j888888bd8gf"'   ':'   `"?g8bd888888k
-        R'Y'B   .8'     d' 'b     '8.   R'Y'X
-         R!B   .8' RdbB  d'; ;`b  RdbB '8.   R!B
-            d88  R`'B  8 ; ; 8  R`'B  88b             Rbutterfly Zv %sB
-           d888b   .g8 ',' 8g.   d888b
-          :888888888Y'     'Y888888888:           AConnecting to:B
-          '! 8888888'       `8888888 !'              G%sB
-             '8Y  R`Y         Y'B  Y8'
-R              Y                   Y               AFrom:R
-              !                   !                  G%sX
-
-'''
-        .replace('G', '\x1b[3%d;1m' % (
-            1 if tornado.options.options.unsecure else 2))
-        .replace('B', '\x1b[34;1m')
-        .replace('R', '\x1b[37;1m')
-        .replace('Z', '\x1b[33;1m')
-        .replace('A', '\x1b[37;0m')
-        .replace('X', '\x1b[0m')
-        .replace('\n', '\r\n')
-        % (__version__,
-           '%s:%d' % (socket.local_addr, socket.local_port),
-           '%s:%d' % (socket.remote_addr, socket.remote_port)))
+    motd = file(tornado.options.options.motd).read()
+    if tornado.options.options.unsecure:
+        try:
+            motd = file(tornado.options.options.motd + ".unsecure").read()
+        except:
+            pass
+    return motd % (dict(
+        version=__version__,
+        local_addr=socket.local_addr,
+        local_port=socket.local_port,
+        remote_addr=socket.remote_addr,
+        remote_port=socket.remote_port,
+    ))
 
 
 @url(r'/(?:user/(.+))?/?(?:wd/(.+))?')
