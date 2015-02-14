@@ -1,23 +1,47 @@
-<!DOCTYPE html>
-{% from tornado.options import options %}
+<!DOCTYPE html> {% from tornado.options import options %}
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Butterfly - A web terminal based on websocket and tornado">
     <meta name="author" content="Mounier Florian">
     <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
 
     <title>Butterfly</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link href="/style.css" rel="stylesheet">
-  </head>
+    <style>
+        @media only screen
+        and (min-device-width : 320px)
+        and (max-device-width : 480px) {
+        /* Styles */
+            body{
+                font-size: 2vw;
+            }
+        }
+            .keyboard{
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                z-index: 999;
+                color: darkgray;
+                font-size: 10vw;
+                display: block;
+            }
+    </style>
+</head>
 
-  <body spellcheck="false">
+<body spellcheck="false">
     <main id="wrapper"> </main>
-    <script src="{{ static_url('main.%sjs' % (
-                 '' if options.unminified else 'min.')) }}"></script>
-    <script src="{{ static_url('ext.%sjs' % (
-                 '' if options.unminified else 'min.')) }}"></script>
-  </body>
+    <div id="ie-clipboard-contenteditable" class="hidden" contenteditable="true"></div>
+    <input id="hidden-input" class="hidden" type="text" value="" autocapitalize="off" autocorrect="off" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="{{ static_url('main.%sjs' % ( '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('ext.%sjs' % ( '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('front.%sjs' % ( '' if options.unminified else 'min.')) }}"></script>
+    <i class="fa fa-keyboard-o keyboard"></i>
+</body>
+
 </html>

@@ -1108,7 +1108,7 @@
     };
 
     Terminal.prototype.keyDown = function(ev) {
-      var id, key, t, _ref;
+      var id, key, t, _ref, _ref1;
       if (ev.keyCode > 15 && ev.keyCode < 19) {
         return true;
       }
@@ -1116,6 +1116,9 @@
         return true;
       }
       if ((ev.shiftKey && ev.ctrlKey) && ((_ref = ev.keyCode) === 67 || _ref === 86)) {
+        return true;
+      }
+      if (ev.ctrlKey && ((_ref1 = ev.keyCode) === 86)) {
         return true;
       }
       if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
@@ -1345,7 +1348,6 @@
         this.skipNextKey = null;
         return true;
       }
-      cancel(ev);
       if (ev.charCode) {
         key = ev.charCode;
       } else if (ev.which == null) {
