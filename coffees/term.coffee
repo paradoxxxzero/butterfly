@@ -794,22 +794,25 @@ class Terminal
 
               # Disabling this for now as we need a good script
               #  striper to avoid malicious script injection
-              # when 99
-              #     # Custom escape to produce raw html
-              #     html = "<div class=\"inline-html\">" + @params[1] + "</div>"
-              #     @lines[@y + @ybase][@x] = [
-              #         @curAttr
-              #         html
-              #     ]
-              #     line = 0
+              #when 99
+              #  # Custom escape to produce raw html
+              #  # Prevent collapsing margin between parent and child elements with `overflow:auto`
+              #  # http://stackoverflow.com/questions/19718634/how-to-disable-margin-collapsing
+              #  html = "<div style=\"overflow: auto;\" " +
+              #         "class=\"inline-html\">" + @params[1] + "</div>"
+              #  @lines[@y + @ybase][@x] = [
+              #    @curAttr
+              #    html
+              #  ]
+              #  line = 0
 
-              #     while line < @get_html_height_in_lines(html) - 1
-              #         @y++
-              #         if @y > @scrollBottom
-              #             @y--
-              #             @scroll()
-              #         line++
-              #     @updateRange @y
+              #  while line < @get_html_height_in_lines(html) - 1
+              #    @y++
+              #    if @y > @scrollBottom
+              #      @y--
+              #      @scroll()
+              #    line++
+              #  @updateRange @y
 
             # reset colors
             @params = []
