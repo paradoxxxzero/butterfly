@@ -19,6 +19,17 @@ The js part is heavily based on [term.js](https://github.com/chjj/term.js/) whic
 
 Then open [localhost:57575](http://localhost:57575) in your favorite browser and done.
 
+## Run it with systemd (linux)
+
+Systemd provides a way to automatically activate daemons when needed (socket activation):
+
+```bash
+    $ cd /etc/systemd/system
+    # curl -O https://raw.githubusercontent.com/paradoxxxzero/butterfly/master/butterfly.service
+    # curl -O https://raw.githubusercontent.com/paradoxxxzero/butterfly/master/butterfly.socket
+    # systemctl enable butterfly.socket
+    # systemctl start butterfly.socket
+```
 
 ## Contribute
 
@@ -56,3 +67,16 @@ Run `python dev.py --debug --port=12345` and you are set (yes you can launch it 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
+
+## Docker Usage
+There is a docker repository created for this project that is set to automatically rebuild when there is a push
+into this repository: https://registry.hub.docker.com/u/garland/butterfly/
+
+### Starting
+
+        docker run \
+        --env PASSWORD=password \
+        --env PORT=57575 \
+        -p 57575:57575 \
+        -d garland/butterfly
+

@@ -12,21 +12,16 @@ module.exports = (grunt) ->
       butterfly:
         files:
           'butterfly/static/main.min.js': 'butterfly/static/main.js'
-
-
-    sass_to_scss:
-      butterfly:
-        expand: true
-        cwd: 'sass/'
-        src: '*.sass'
-        dest: 'butterfly/scss/'
-        ext: '.scss'
+          'butterfly/static/ext.min.js': 'butterfly/static/ext.js'
 
     sass:
+      options:
+        includePaths: ['butterfly/sass/']
+
       butterfly:
         expand: true
-        cwd: 'butterfly/scss'
-        src: '*.scss'
+        cwd: 'butterfly/sass/'
+        src: '*.sass'
         dest: 'butterfly/static/'
         ext: '.css'
 
@@ -36,12 +31,8 @@ module.exports = (grunt) ->
 
       butterfly:
         files:
-          'butterfly/static/main.js': [
-            'coffees/term.coffee'
-            'coffees/selection.coffee'
-            'coffees/virtual_input.coffee'
-            'coffees/main.coffee'
-          ]
+          'butterfly/static/main.js': 'coffees/*.coffee'
+          'butterfly/static/ext.js':  'coffees/ext/*.coffee'
 
     coffeelint:
       butterfly:
@@ -52,6 +43,7 @@ module.exports = (grunt) ->
         livereload: true
       coffee:
         files: [
+          'coffees/ext/*.coffee'
           'coffees/*.coffee'
           'Gruntfile.coffee'
         ]
@@ -59,9 +51,9 @@ module.exports = (grunt) ->
 
       sass:
         files: [
-          'sass/*.sass'
+          'butterfly/sass/*.sass'
         ]
-        tasks: ['sass_to_scss', 'sass']
+        tasks: ['sass']
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-watch'
@@ -69,12 +61,8 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-cssmin'
   grunt.loadNpmTasks 'grunt-coffeelint'
   grunt.loadNpmTasks 'grunt-sass'
-  grunt.loadNpmTasks 'grunt-sass-to-scss'
-
   grunt.registerTask 'dev', [
-    'coffeelint', 'coffee', 'sass_to_scss', 'sass', 'watch']
-  grunt.registerTask 'css', ['sass_to_scss', 'sass']
+    'coffeelint', 'coffee', 'sass', 'watch']
+  grunt.registerTask 'css', ['sass']
   grunt.registerTask 'default', [
-    'coffeelint', 'coffee',
-    'sass_to_scss', 'sass',
-    'uglify']
+    'coffeelint', 'coffee', 'sass', 'uglify']

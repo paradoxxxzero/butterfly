@@ -37,15 +37,9 @@ def get_style():
     if style is None:
         return
 
-    if style.endswith('.sass'):
-        log.error('SASS syntax is not yet supported (see: '
-                  'https://github.com/hcatlin/libsass/issues/16'
-                  ') please use SCSS')
-        return
-
-    if style.endswith('.scss'):
-        scss_path = os.path.join(
-            os.path.dirname(__file__), 'scss')
+    if style.endswith('.scss') or style.endswith('.sass'):
+        sass_path = os.path.join(
+            os.path.dirname(__file__), 'sass')
         try:
             import sass
         except:
@@ -54,9 +48,11 @@ def get_style():
             return
 
         try:
-            return sass.compile(filename=style, include_paths=[scss_path])
+            return sass.compile(filename=style, include_paths=[sass_path])
         except sass.CompileError:
-            log.error('Unable to compile style.scss', exc_info=True)
+            log.error(
+                'Unable to compile style.scss (filename: %s, paths: %r) ' % (
+                    style, [sass_path]), exc_info=True)
             return
 
     with open(style) as s:

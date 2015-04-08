@@ -6,7 +6,7 @@ import os
 import mimetypes
 import base64
 import io
-print('\x1b]99;')
+print('\x1bP;HTML|')
 
 out = ''
 
@@ -29,4 +29,4 @@ for f in os.listdir(os.getcwd()):
 
 print(out)
 
-print('\x07')
+print('\x1bP')

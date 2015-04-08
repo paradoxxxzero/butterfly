@@ -16,6 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 selection = null
 
+cancel = (ev) ->
+  ev.preventDefault() if ev.preventDefault
+  ev.stopPropagation() if ev.stopPropagation
+  ev.cancelBubble = true
+  false
+
 previous_leaf = (node) ->
   previous = node.previousSibling
   if not previous
@@ -38,7 +44,7 @@ next_leaf = (node) ->
 
 class Selection
   constructor: ->
-    term.element.classList.add('selection')
+    butterfly.element.classList.add('selection')
     @selection = getSelection()
 
   reset: ->
@@ -68,11 +74,11 @@ class Selection
     @selection.removeAllRanges()
 
   destroy: ->
-    term.element.classList.remove('selection')
+    butterfly.element.classList.remove('selection')
     @clear()
 
   text: ->
-    @selection.toString()
+    @selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ')
 
   up: ->
     @go -1
@@ -81,12 +87,12 @@ class Selection
     @go +1
 
   go: (n) ->
-    index = term.children.indexOf(@start_line) + n
-    return unless 0 <= index < term.children.length
+    index = butterfly.children.indexOf(@start_line) + n
+    return unless 0 <= index < butterfly.children.length
 
-    until term.children[index].textContent.match /\S/
+    until butterfly.children[index].textContent.match /\S/
       index += n
-      return unless 0 <= index < term.children.length
+      return unless 0 <= index < butterfly.children.length
 
     @select_line index
 
@@ -98,7 +104,7 @@ class Selection
     @selection.addRange range
 
   select_line: (index) ->
-    line = term.children[index]
+    line = butterfly.children[index]
     line_start =
       node: line.firstChild
       offset: 0
@@ -170,7 +176,7 @@ document.addEventListener 'keydown', (e) ->
   # Paste natural selection too if shiftkey
   if e.shiftKey and e.keyCode is 13 and
       not selection and not getSelection().isCollapsed
-    term.handler getSelection().toString()
+    butterfly.send getSelection().toString()
     getSelection().removeAllRanges()
     return cancel e
 
@@ -200,7 +206,7 @@ document.addEventListener 'keydown', (e) ->
   # Start selection mode with shift up
   if not selection and e.ctrlKey and e.shiftKey and e.keyCode == 38
     selection = new Selection()
-    selection.select_line term.y - 1
+    selection.select_line butterfly.y - 1
     selection.apply()
     return cancel e
   true
@@ -210,7 +216,7 @@ document.addEventListener 'keyup', (e) ->
 
   if selection
     if e.keyCode == 13
-      term.handler selection.text()
+      butterfly.send selection.text()
       selection.destroy()
       selection = null
       return cancel e

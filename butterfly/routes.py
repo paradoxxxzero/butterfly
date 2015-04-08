@@ -120,6 +120,8 @@ class Style(Route):
 @url(r'/ws(?:/user/([^/]+))?/?(?:/wd/(.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
+    terminals = set()
+
     def pty(self):
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
@@ -174,7 +176,11 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             # or login is explicitly turned off
             if (
                     not tornado.options.options.unsecure and
-                    tornado.options.options.login):
+                    tornado.options.options.login and not (
+                        self.socket.local and
+                        self.caller == self.callee and
+                        server == self.callee
+                    )):
                 # User is authed by ssl, setting groups
                 try:
                     os.initgroups(self.callee.name, self.callee.gid)
@@ -185,8 +191,12 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                           'if you want to log as different user\n')
                     sys.exit(1)
 
-            args = [tornado.options.options.shell or self.callee.shell]
-            args.append('-i')
+            if tornado.options.options.cmd:
+                args = tornado.options.options.cmd.split(' ')
+            else:
+                args = [tornado.options.options.shell or self.callee.shell]
+                args.append('-i')
+
             os.execvpe(args[0], args, env)
             # This process has been replaced
 
@@ -239,6 +249,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
     def open(self, user, path):
+        self.fd = None
         if self.request.headers['Origin'] not in (
                 'http://%s' % self.request.headers['Host'],
                 'https://%s' % self.request.headers['Host']):
@@ -273,13 +284,15 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             if not self.callee and not self.user and self.socket.local:
                 self.callee = self.caller
         else:
-            user = utils.parse_cert(self.request.get_ssl_certificate())
+            user = utils.parse_cert(self.stream.socket.getpeercert())
             assert user, 'No user in certificate'
             self.user = user
             try:
                 self.callee = utils.User(name=self.user)
             except LookupError:
                 raise Exception('Invalid user in certificate')
+
+        TermWebSocket.terminals.add(self)
 
         self.write_message(motd(self.socket))
         self.pty()
@@ -319,7 +332,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.close()
 
     def on_close(self):
-        self.log.info('Closing fd %d' % self.fd)
+        if self.fd is not None:
+            self.log.info('Closing fd %d' % self.fd)
 
         if getattr(self, 'pid', 0) == 0:
             self.log.info('pid is 0')
@@ -341,4 +355,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         except Exception:
             self.log.debug('waitpid fail', exc_info=True)
 
+        TermWebSocket.terminals.remove(self)
         self.log.info('Websocket closed')
+
+        if self.application.systemd and not len(TermWebSocket.terminals):
+            self.log.info('No more terminals, exiting...')
+            sys.exit(0)

@@ -20,6 +20,7 @@
 import tornado.options
 import tornado.ioloop
 import tornado.httpserver
+import tornado_systemd
 import uuid
 import ssl
 import getpass
@@ -35,16 +36,23 @@ tornado.options.define("more", default=False,
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
+tornado.options.define("cmd",
+                       help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("allow_html_escapes", default=False,
+                       help="Allow use of HTML escapes. "
+                       "Really unsafe as it is now.")
+tornado.options.define("native_scroll", default=False,
+                       help="Use experimental native scroll")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
-
+tornado.options.define("ssl_version", default=None,
+                       help="SSL protocol version")
 tornado.options.define("generate_certs", default=False,
                        help="Generate butterfly certificates")
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication")
-
 tornado.options.define("unminified", default=False,
                        help="Use the unminified js (for development only)")
 
@@ -217,14 +225,27 @@ else:
         'ca_certs': ca,
         'cert_reqs': ssl.CERT_REQUIRED
     }
-
+    if tornado.options.options.ssl_version is not None:
+        if not hasattr(
+                ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version):
+            print(
+                "Unknown SSL protocol %s" %
+                tornado.options.options.ssl_version)
+            sys.exit(1)
+        ssl_opts['ssl_version'] = getattr(
+            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version)
 
 from butterfly import application
-http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_opts)
-http_server.listen(port, address=host)
 
+http_server = tornado_systemd.SystemdHTTPServer(
+    application, ssl_options=ssl_opts)
+http_server.listen(port, address=host)
 url = "http%s://%s:%d/*" % (
     "s" if not tornado.options.options.unsecure else "", host, port)
+
+if http_server.systemd:
+    os.environ.pop('LISTEN_PID')
+    os.environ.pop('LISTEN_FDS')
 
 # This is for debugging purpose
 try:

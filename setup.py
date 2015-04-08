@@ -24,14 +24,14 @@ options = dict(
     platforms="Any",
     scripts=['butterfly.server.py'],
     packages=['butterfly'],
-    install_requires=["tornado>=3.2", "pyOpenSSL"],
+    install_requires=["tornado>=3.2", "pyOpenSSL", 'tornado_systemd'],
     package_data={
         'butterfly': [
-            'scss/*.scss',
+            'sass/*.sass',
             'static/fonts/*',
             'static/images/favicon.png',
             'static/main.css',
-            'static/main.min.js',
+            'static/*.min.js',
             'templates/index.html'
         ]
     },

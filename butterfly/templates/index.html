@@ -13,9 +13,13 @@
     <link href="/style.css" rel="stylesheet">
   </head>
 
-  <body spellcheck="false">
+  <body spellcheck="false"
+        data-allow-html="{{ 'yes' if options.allow_html_escapes else 'no' }}"
+        data-native-scroll="{{ 'yes' if options.native_scroll else 'no' }}">
     <main id="wrapper"> </main>
     <script src="{{ static_url('main.%sjs' % (
+                 '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('ext.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
   </body>
 </html>

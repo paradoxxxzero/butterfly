@@ -21,72 +21,74 @@ open_ts = (new Date()).getTime()
 
 $ = document.querySelectorAll.bind(document)
 
-send = (data) ->
-  ws.send 'S' + data
+document.addEventListener 'DOMContentLoaded', ->
 
-ctl = (type, args...) ->
-  params = args.join(',')
-  if type == 'Resize'
-    ws.send 'R' + params
+  send = (data) ->
+    ws.send 'S' + data
 
-if location.protocol == 'https:'
-  ws_url = 'wss://'
-else
-  ws_url = 'ws://'
+  ctl = (type, args...) ->
+    params = args.join(',')
+    if type == 'Resize'
+      ws.send 'R' + params
 
-ws_url += document.location.host + '/ws' + location.pathname
-ws = new WebSocket ws_url
+  if location.protocol == 'https:'
+    ws_url = 'wss://'
+  else
+    ws_url = 'ws://'
 
-ws.addEventListener 'open', ->
-  console.log "WebSocket open", arguments
-  ws.send 'R' + term.cols + ',' + term.rows
-  open_ts = (new Date()).getTime()
+  ws_url += document.location.host + '/ws' + location.pathname
+  ws = new WebSocket ws_url
 
-ws.addEventListener 'error', ->
-  console.log "WebSocket error", arguments
+  ws.addEventListener 'open', ->
+    console.log "WebSocket open", arguments
+    ws.send 'R' + term.cols + ',' + term.rows
+    open_ts = (new Date()).getTime()
 
-ws.addEventListener 'message', (e) ->
-  setTimeout ->
-    term.write e.data
-  , 1
+  ws.addEventListener 'error', ->
+    console.log "WebSocket error", arguments
 
-ws.addEventListener 'close', ->
-  console.log "WebSocket closed", arguments
-  setTimeout ->
-    term.write 'Closed'
-    # Allow quick reload
-    term.skipNextKey = true
-    term.element.classList.add('dead')
-  , 1
-  quit = true
-  # Don't autoclose if websocket didn't last 1 minute
-  if (new Date()).getTime() - open_ts > 60 * 1000
-    open('','_self').close()
+  ws.addEventListener 'message', (e) ->
+    setTimeout ->
+      term.write e.data
+    , 1
 
-term = new Terminal $('#wrapper')[0], send, ctl
-addEventListener 'beforeunload', ->
-  if not quit
-    'This will exit the terminal session'
+  ws.addEventListener 'close', ->
+    console.log "WebSocket closed", arguments
+    setTimeout ->
+      term.write 'Closed'
+      # Allow quick reload
+      term.skipNextKey = true
+      term.element.classList.add('dead')
+    , 1
+    quit = true
+    # Don't autoclose if websocket didn't last 1 minute
+    if (new Date()).getTime() - open_ts > 60 * 1000
+      open('','_self').close()
 
-bench = (n=100000000) ->
-  rnd = ''
-  while rnd.length < n
-    rnd += Math.random().toString(36).substring(2)
+  term = new Terminal $('#wrapper')[0], send, ctl
+  addEventListener 'beforeunload', ->
+    if not quit
+      'This will exit the terminal session'
 
-  t0 = (new Date()).getTime()
-  term.write rnd
-  console.log "#{n} chars in #{(new Date()).getTime() - t0} ms"
+  bench = (n=100000000) ->
+    rnd = ''
+    while rnd.length < n
+      rnd += Math.random().toString(36).substring(2)
 
-
-cbench = (n=100000000) ->
-  rnd = ''
-  while rnd.length < n
-    rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
-    rnd += Math.random().toString(36).substring(2)
-
-  t0 = (new Date()).getTime()
-  term.write rnd
-  console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
+    t0 = (new Date()).getTime()
+    term.write rnd
+    console.log "#{n} chars in #{(new Date()).getTime() - t0} ms"
 
 
-window.butterfly = term
+  cbench = (n=100000000) ->
+    rnd = ''
+    while rnd.length < n
+      rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
+      rnd += Math.random().toString(36).substring(2)
+
+    t0 = (new Date()).getTime()
+    term.write rnd
+    console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
+
+  term.ws = ws
+  window.butterfly = term
