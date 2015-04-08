@@ -1115,13 +1115,14 @@
                         console.log("HTML escapes are disabled");
                         break;
                       }
-                      html = "<div class=\"inline-html\">" + content + "</div>";
                       if (this.native_scroll) {
-                        this.next_line();
+                        html = document.createElement('div');
+                        html.classList.add('inline-html');
+                        html.innerHTML = content;
                         this.html[this.y] = html;
                         this.updateRange(this.y);
-                        this.next_line();
                       } else {
+                        html = "<div class=\"inline-html\">" + content + "</div>";
                         this.screen[this.y + this.ybase][this.x] = [this.curAttr, html];
                         line = 0;
                         while (line < this.get_html_height_in_lines(html) - 1) {

@@ -76,36 +76,6 @@ body {
 /* GNU General Public License for more details. */
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  line-height: 1.2; }
-
-#wrapper {
-  height: 100%;
-  overflow: hidden;
-  white-space: nowrap; }
-
-body[data-native-scroll="yes"] #wrapper {
-  overflow-y: auto; }
-
-.terminal {
-  outline: none; }
-
-/* *-* coding: utf-8 *-* */
-/* This file is part of butterfly */
-/* butterfly Copyright (C) 2014  Florian Mounier */
-/* This program is free software: you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License as published by */
-/* the Free Software Foundation, either version 3 of the License, or */
-/* (at your option) any later version. */
-/* This program is distributed in the hope that it will be useful, */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
-/* GNU General Public License for more details. */
-/* You should have received a copy of the GNU General Public License */
-/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .terminal {
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   transition: 200ms; }
@@ -3029,6 +2999,42 @@ body[data-native-scroll="yes"] #wrapper {
   text-shadow: 0 0 6px rgba(244, 234, 213, 0.5); }
   .fg-color-257.reverse-video {
     background-color: #f4ead5 !important; }
+
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2; }
+
+#wrapper {
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap; }
+
+body[data-native-scroll="yes"] #wrapper {
+  overflow-y: auto; }
+body[data-native-scroll="yes"] ::-webkit-scrollbar {
+  background: #110f13;
+  width: .5em;
+  height: .5em; }
+body[data-native-scroll="yes"] ::-webkit-scrollbar-thumb {
+  background: #f4ead5; }
+
+.terminal {
+  outline: none; }
 
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */

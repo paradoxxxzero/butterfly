@@ -1069,13 +1069,14 @@ class Terminal
                       console.log "HTML escapes are disabled"
                       break
 
-                    html = "<div class=\"inline-html\">" + content + "</div>"
                     if @native_scroll
-                      @next_line()
+                      html = document.createElement 'div'
+                      html.classList.add 'inline-html'
+                      html.innerHTML = content
                       @html[@y] = html
                       @updateRange @y
-                      @next_line()
                     else
+                      html = "<div class=\"inline-html\">" + content + "</div>"
                       @screen[@y + @ybase][@x] = [
                           @curAttr
                           html
