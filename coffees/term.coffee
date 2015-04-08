@@ -787,29 +787,10 @@ class Terminal
             i++ if ch is "\x1b"
             @params.push @currentParam
             switch @params[0]
-              when 0, 1 , 2
+              when 0, 1, 2
                 if @params[1]
                   @title = @params[1] + " - ƸӜƷ butterfly"
                   @handleTitle @title
-
-              # Disabling this for now as we need a good script
-              #  striper to avoid malicious script injection
-              # when 99
-              #     # Custom escape to produce raw html
-              #     html = "<div class=\"inline-html\">" + @params[1] + "</div>"
-              #     @lines[@y + @ybase][@x] = [
-              #         @curAttr
-              #         html
-              #     ]
-              #     line = 0
-
-              #     while line < @get_html_height_in_lines(html) - 1
-              #         @y++
-              #         if @y > @scrollBottom
-              #             @y--
-              #             @scroll()
-              #         line++
-              #     @updateRange @y
 
             # reset colors
             @params = []
@@ -1035,7 +1016,49 @@ class Terminal
             switch @prefix
               # User-Defined Keys (DECUDK).
               when ""
-                break
+                # Disabling this for now as we need a good script
+                #  striper to avoid malicious script injection
+                pt = @currentParam
+                unless pt[0] is ';'
+                  console.error "Unknown DECUDK: #{pt}"
+                  break
+                pt = pt.slice(1)
+
+                [type, content] = pt.split('|', 2)
+
+                unless content
+                  console.error "No type for inline DECUDK: #{pt}"
+                  break
+
+                switch type
+                  when "HTML"
+                    unless document.getElementsByTagName('body')[0]
+                    .getAttribute('data-allow-html') is 'yes'
+                      console.log "HTML escapes are disabled"
+                      break
+
+                    html = "<div class=\"inline-html\">" + content + "</div>"
+                    @lines[@y + @ybase][@x] = [
+                        @curAttr
+                        html
+                    ]
+                    line = 0
+
+                    while line < @get_html_height_in_lines(html) - 1
+                      @y++
+                      if @y > @scrollBottom
+                        @y--
+                        @scroll()
+                      line++
+
+                  when "PROMPT"
+                    @send content
+
+                  when "TEXT"
+                    l += content.length
+                    data = data.slice(0, i + 1) + content + data.slice(i + 1)
+                  else
+                    console.error "Unknown type #{type} for DECUDK"
 
               # Request Status String (DECRQSS).
               # test: echo -e '\eP$q"p\e\\'

@@ -1,6 +1,6 @@
 (function() {
   var Selection, alt, cancel, copy, ctrl, first, next_leaf, previous_leaf, selection, set_alarm, virtual_input,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   set_alarm = function(notification) {
     var alarm;
@@ -48,14 +48,14 @@
   });
 
   document.addEventListener('copy', copy = function(e) {
-    var data, end, line, sel, _i, _len, _ref;
+    var data, end, j, len1, line, ref, sel;
     butterfly.bell("copied");
     e.clipboardData.clearData();
     sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
     data = '';
-    _ref = sel.split('\n');
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      line = _ref[_i];
+    ref = sel.split('\n');
+    for (j = 0, len1 = ref.length; j < len1; j++) {
+      line = ref[j];
       if (line.slice(-1) === '\u23CE') {
         end = '';
         line = line.slice(0, -1);
@@ -127,7 +127,7 @@
     }
 
     Selection.prototype.reset = function() {
-      var fake_range, _ref, _results;
+      var fake_range, ref, results;
       this.selection = getSelection();
       fake_range = document.createRange();
       fake_range.setStart(this.selection.anchorNode, this.selection.anchorOffset);
@@ -141,18 +141,18 @@
         offset: this.selection.focusOffset
       };
       if (fake_range.collapsed) {
-        _ref = [this.end, this.start], this.start = _ref[0], this.end = _ref[1];
+        ref = [this.end, this.start], this.start = ref[0], this.end = ref[1];
       }
       this.start_line = this.start.node;
-      while (!this.start_line.classList || __indexOf.call(this.start_line.classList, 'line') < 0) {
+      while (!this.start_line.classList || indexOf.call(this.start_line.classList, 'line') < 0) {
         this.start_line = this.start_line.parentNode;
       }
       this.end_line = this.end.node;
-      _results = [];
-      while (!this.end_line.classList || __indexOf.call(this.end_line.classList, 'line') < 0) {
-        _results.push(this.end_line = this.end_line.parentNode);
+      results = [];
+      while (!this.end_line.classList || indexOf.call(this.end_line.classList, 'line') < 0) {
+        results.push(this.end_line = this.end_line.parentNode);
       }
-      return _results;
+      return results;
     };
 
     Selection.prototype.clear = function() {
@@ -302,8 +302,8 @@
   })();
 
   document.addEventListener('keydown', function(e) {
-    var _ref, _ref1;
-    if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    var ref, ref1;
+    if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
     }
     if (e.shiftKey && e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
@@ -313,7 +313,7 @@
     }
     if (selection) {
       selection.reset();
-      if (!e.ctrlKey && e.shiftKey && (37 <= (_ref1 = e.keyCode) && _ref1 <= 40)) {
+      if (!e.ctrlKey && e.shiftKey && (37 <= (ref1 = e.keyCode) && ref1 <= 40)) {
         return true;
       }
       if (e.shiftKey && e.ctrlKey) {
@@ -348,8 +348,8 @@
   });
 
   document.addEventListener('keyup', function(e) {
-    var _ref, _ref1;
-    if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    var ref, ref1;
+    if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
     }
     if (selection) {
@@ -359,7 +359,7 @@
         selection = null;
         return cancel(e);
       }
-      if (_ref1 = e.keyCode, __indexOf.call([37, 38, 39, 40], _ref1) < 0) {
+      if (ref1 = e.keyCode, indexOf.call([37, 38, 39, 40], ref1) < 0) {
         selection.destroy();
         selection = null;
         return true;

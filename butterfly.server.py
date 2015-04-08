@@ -40,6 +40,9 @@ tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("allow_html_escapes", default=False,
+                       help="Allow use of HTML escapes. "
+                       "Really unsafe as it is now.")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
 tornado.options.define("ssl_version", default=None,

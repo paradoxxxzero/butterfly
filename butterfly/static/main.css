@@ -133,12 +133,12 @@ html, body {
       width: 100%;
       height: 100%;
       transform: rotate(-45deg);
-      opacity: 0.2;
+      opacity: .2;
       font-weight: 900; }
   .terminal.copied {
     transform: scale(1.05); }
   .terminal.pasted {
-    transform: scale(0.95); }
+    transform: scale(.95); }
 
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */

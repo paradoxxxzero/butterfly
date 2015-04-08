@@ -1,7 +1,7 @@
 (function() {
   var $, State, Terminal, cancel, cols, open_ts, quit, rows, s,
-    __slice = [].slice,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    slice = [].slice,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   cols = rows = null;
 
@@ -18,7 +18,7 @@
     };
     ctl = function() {
       var args, params, type;
-      type = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      type = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       params = args.join(',');
       if (type === 'Resize') {
         return ws.send('R' + params);
@@ -73,7 +73,7 @@
       }
       t0 = (new Date()).getTime();
       term.write(rnd);
-      return console.log("" + n + " chars in " + ((new Date()).getTime() - t0) + " ms");
+      return console.log(n + " chars in " + ((new Date()).getTime() - t0) + " ms");
     };
     cbench = function(n) {
       var rnd, t0;
@@ -87,7 +87,7 @@
       }
       t0 = (new Date()).getTime();
       term.write(rnd);
-      return console.log("" + n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
+      return console.log(n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
     };
     term.ws = ws;
     return window.butterfly = term;
@@ -117,11 +117,11 @@
   };
 
   Terminal = (function() {
-    function Terminal(parent, out, ctl) {
+    function Terminal(parent1, out1, ctl1) {
       var div, i, term_size;
-      this.parent = parent;
-      this.out = out;
-      this.ctl = ctl != null ? ctl : function() {};
+      this.parent = parent1;
+      this.out = out1;
+      this.ctl = ctl1 != null ? ctl1 : function() {};
       this.context = this.parent.ownerDocument.defaultView;
       this.document = this.parent.ownerDocument;
       this.body = this.document.getElementsByTagName('body')[0];
@@ -622,7 +622,7 @@
     };
 
     Terminal.prototype.write = function(data) {
-      var ch, cs, i, j, l, pt, valid, _ref;
+      var ch, content, cs, html, i, j, l, line, pt, ref, ref1, type, valid;
       this.refreshStart = this.y;
       this.refreshEnd = this.y;
       if (this.ybase !== this.ydisp) {
@@ -673,7 +673,7 @@
                 break;
               default:
                 if (ch >= " ") {
-                  if ((_ref = this.charset) != null ? _ref[ch] : void 0) {
+                  if ((ref = this.charset) != null ? ref[ch] : void 0) {
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
@@ -1043,6 +1043,45 @@
               }
               switch (this.prefix) {
                 case "":
+                  pt = this.currentParam;
+                  if (pt[0] !== ';') {
+                    console.error("Unknown DECUDK: " + pt);
+                    break;
+                  }
+                  pt = pt.slice(1);
+                  ref1 = pt.split('|', 2), type = ref1[0], content = ref1[1];
+                  if (!content) {
+                    console.error("No type for inline DECUDK: " + pt);
+                    break;
+                  }
+                  switch (type) {
+                    case "HTML":
+                      if (document.getElementsByTagName('body')[0].getAttribute('data-allow-html') !== 'yes') {
+                        console.log("HTML escapes are disabled");
+                        break;
+                      }
+                      html = "<div class=\"inline-html\">" + content + "</div>";
+                      this.lines[this.y + this.ybase][this.x] = [this.curAttr, html];
+                      line = 0;
+                      while (line < this.get_html_height_in_lines(html) - 1) {
+                        this.y++;
+                        if (this.y > this.scrollBottom) {
+                          this.y--;
+                          this.scroll();
+                        }
+                        line++;
+                      }
+                      break;
+                    case "PROMPT":
+                      this.send(content);
+                      break;
+                    case "TEXT":
+                      l += content.length;
+                      data = data.slice(0, i + 1) + content + data.slice(i + 1);
+                      break;
+                    default:
+                      console.error("Unknown type " + type + " for DECUDK");
+                  }
                   break;
                 case "$q":
                   pt = this.currentParam;
@@ -1104,18 +1143,18 @@
     };
 
     Terminal.prototype.writeln = function(data) {
-      return this.write("" + data + "\r\n");
+      return this.write(data + "\r\n");
     };
 
     Terminal.prototype.keyDown = function(ev) {
-      var id, key, t, _ref;
+      var id, key, ref, t;
       if (ev.keyCode > 15 && ev.keyCode < 19) {
         return true;
       }
       if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
         return true;
       }
-      if ((ev.shiftKey && ev.ctrlKey) && ((_ref = ev.keyCode) === 67 || _ref === 86)) {
+      if ((ev.shiftKey && ev.ctrlKey) && ((ref = ev.keyCode) === 67 || ref === 86)) {
         return true;
       }
       if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
@@ -1290,7 +1329,7 @@
                 key = String.fromCharCode(29);
               }
             }
-          } else if ((ev.altKey && __indexOf.call(navigator.platform, 'Mac') < 0) || (ev.metaKey && __indexOf.call(navigator.platform, 'Mac') >= 0)) {
+          } else if ((ev.altKey && indexOf.call(navigator.platform, 'Mac') < 0) || (ev.metaKey && indexOf.call(navigator.platform, 'Mac') >= 0)) {
             if (ev.keyCode >= 65 && ev.keyCode <= 90) {
               key = "\x1b" + String.fromCharCode(ev.keyCode + 32);
             } else if (ev.keyCode === 192) {
@@ -1476,7 +1515,7 @@
     };
 
     Terminal.prototype.setupStops = function(i) {
-      var _results;
+      var results;
       if (i != null) {
         if (!this.tabs[i]) {
           i = this.prevStop(i);
@@ -1485,12 +1524,12 @@
         this.tabs = {};
         i = 0;
       }
-      _results = [];
+      results = [];
       while (i < this.cols) {
         this.tabs[i] = true;
-        _results.push(i += 8);
+        results.push(i += 8);
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.prevStop = function(x) {
@@ -1696,34 +1735,34 @@
     };
 
     Terminal.prototype.eraseInDisplay = function(params) {
-      var j, _results, _results1, _results2;
+      var j, results, results1, results2;
       switch (params[0]) {
         case 0:
           this.eraseRight(this.x, this.y);
           j = this.y + 1;
-          _results = [];
+          results = [];
           while (j < this.rows) {
             this.eraseLine(j);
-            _results.push(j++);
+            results.push(j++);
           }
-          return _results;
+          return results;
           break;
         case 1:
           this.eraseLeft(this.x, this.y);
           j = this.y;
-          _results1 = [];
+          results1 = [];
           while (j--) {
-            _results1.push(this.eraseLine(j));
+            results1.push(this.eraseLine(j));
           }
-          return _results1;
+          return results1;
           break;
         case 2:
           j = this.rows;
-          _results2 = [];
+          results2 = [];
           while (j--) {
-            _results2.push(this.eraseLine(j));
+            results2.push(this.eraseLine(j));
           }
-          return _results2;
+          return results2;
       }
     };
 
@@ -1834,7 +1873,7 @@
     };
 
     Terminal.prototype.insertChars = function(params) {
-      var ch, j, param, row, _results;
+      var ch, j, param, results, row;
       param = params[0];
       if (param < 1) {
         param = 1;
@@ -1842,12 +1881,12 @@
       row = this.y + this.ybase;
       j = this.x;
       ch = [this.eraseAttr(), " "];
-      _results = [];
+      results = [];
       while (param-- && j < this.cols) {
         this.lines[row].splice(j++, 0, ch);
-        _results.push(this.lines[row].pop());
+        results.push(this.lines[row].pop());
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.cursorNextLine = function(params) {
@@ -1920,23 +1959,23 @@
     };
 
     Terminal.prototype.deleteChars = function(params) {
-      var ch, param, row, _results;
+      var ch, param, results, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y + this.ybase;
       ch = [this.eraseAttr(), " "];
-      _results = [];
+      results = [];
       while (param--) {
         this.lines[row].splice(this.x, 1);
-        _results.push(this.lines[row].push(ch));
+        results.push(this.lines[row].push(ch));
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.eraseChars = function(params) {
-      var ch, j, param, row, _results;
+      var ch, j, param, results, row;
       param = params[0];
       if (param < 1) {
         param = 1;
@@ -1944,11 +1983,11 @@
       row = this.y + this.ybase;
       j = this.x;
       ch = [this.eraseAttr(), " "];
-      _results = [];
+      results = [];
       while (param-- && j < this.cols) {
-        _results.push(this.lines[row][j++] = ch);
+        results.push(this.lines[row][j++] = ch);
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.charPosAbsolute = function(params) {
@@ -2199,13 +2238,13 @@
     };
 
     Terminal.prototype.cursorForwardTab = function(params) {
-      var param, _results;
+      var param, results;
       param = params[0] || 1;
-      _results = [];
+      results = [];
       while (param--) {
-        _results.push(this.x = this.nextStop());
+        results.push(this.x = this.nextStop());
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.scrollUp = function(params) {
@@ -2235,25 +2274,25 @@
     Terminal.prototype.resetTitleModes = function(params) {};
 
     Terminal.prototype.cursorBackwardTab = function(params) {
-      var param, _results;
+      var param, results;
       param = params[0] || 1;
-      _results = [];
+      results = [];
       while (param--) {
-        _results.push(this.x = this.prevStop());
+        results.push(this.x = this.prevStop());
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.repeatPrecedingCharacter = function(params) {
-      var ch, line, param, _results;
+      var ch, line, param, results;
       param = params[0] || 1;
       line = this.lines[this.ybase + this.y];
       ch = line[this.x - 1] || [this.defAttr, " "];
-      _results = [];
+      results = [];
       while (param--) {
-        _results.push(line[this.x++] = ch);
+        results.push(line[this.x++] = ch);
       }
-      return _results;
+      return results;
     };
 
     Terminal.prototype.tabClear = function(params) {
