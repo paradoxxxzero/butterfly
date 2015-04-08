@@ -3078,3 +3078,5 @@ html, body {
 .blur .cursor.reverse-video {
   background: none; }
 
+.inline-html {
+  overflow: hidden; }
