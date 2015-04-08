@@ -397,7 +397,8 @@ class Terminal
     end = Math.min(end, @screen.length - 1)
 
     for j in [start..end]
-      line = @screen[row + @ydisp]
+      row = j + @ydisp
+      line = @screen[row]
       out = ""
 
       if j is @y and not @cursorHidden and (
@@ -527,10 +528,10 @@ class Terminal
         # pushing is faster than splicing
         # when they amount to the same
         # behavior.
-        @screen.push @blankLine()
+        @screen.push @blank_line()
       else
         # add our new line
-        @screen.splice row, 0, @blankLine()
+        @screen.splice row, 0, @blank_line()
 
       if @scrollTop isnt 0
         if @ybase isnt 0
@@ -624,7 +625,7 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @lines[@y + @ybase][@x] = [@curAttr, '\u23CE']
+                  @screen[@y + @ybase][@x] = [@curAttr, '\u23CE']
                   @x = 0
                   @next_line()
 
@@ -1075,7 +1076,7 @@ class Terminal
                       @updateRange @y
                       @next_line()
                     else
-                      @lines[@y + @ybase][@x] = [
+                      @screen[@y + @ybase][@x] = [
                           @curAttr
                           html
                       ]
@@ -2016,7 +2017,7 @@ class Terminal
       else
         j = @rows - 1 - @scrollBottom
         j = @rows - 1 + @ybase - j
-        @screen.splice j + 1, 0, @blankLine(true)
+        @screen.splice j + 1, 0, @blank_line(true)
       @screen.splice @y, 1
 
     @updateRange @y
@@ -2301,7 +2302,7 @@ class Terminal
         when 1049, 47, 1047 # alt screen buffer
           unless @normal
             normal =
-              lines: @lines
+              lines: @screen
               ybase: @ybase
               ydisp: @ydisp
               x: @x
@@ -2434,7 +2435,7 @@ class Terminal
           @cursorHidden = true
         when 1049, 47, 1047 # normal screen buffer - clearing it first
           if @normal
-            @lines = @normal.lines
+            @screen = @normal.lines
             @ybase = @normal.ybase
             @ydisp = @normal.ydisp
             @x = @normal.x
@@ -2536,7 +2537,7 @@ class Terminal
   # CSI Ps b    Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
-    line = @lines[@ybase + @y]
+    line = @screen[@ybase + @y]
     ch = line[@x - 1] or [@defAttr, " "]
     line[@x++] = ch while param--
 
@@ -2710,7 +2711,7 @@ class Terminal
     r = params[3]
     attr = params[4]
     while t < b + 1
-      line = @lines[@ybase + t]
+      line = @screen[@ybase + t]
       i = l
       while i < r
         line[i] = [attr, line[i][1]]
@@ -2869,7 +2870,7 @@ class Terminal
     b = params[3]
     r = params[4]
     while t < b + 1
-      line = @lines[@ybase + t]
+      line = @screen[@ybase + t]
       i = l
       while i < r
         line[i] = [line[i][0], String.fromCharCode(ch)]
@@ -2907,7 +2908,7 @@ class Terminal
     r = params[3]
     ch = [@eraseAttr(), " "]
     while t < b + 1
-      line = @lines[@ybase + t]
+      line = @screen[@ybase + t]
       i = l
       while i < r
         line[i] = ch
@@ -2991,8 +2992,8 @@ class Terminal
     while param--
       i = @ybase
       while i < l
-        @lines[i].splice @x + 1, 0, ch
-        @lines[i].pop()
+        @screen[i].splice @x + 1, 0, ch
+        @screen[i].pop()
         i++
     @maxRange()
 
@@ -3007,8 +3008,8 @@ class Terminal
     while param--
       i = @ybase
       while i < l
-        @lines[i].splice @x, 1
-        @lines[i].push ch
+        @screen[i].splice @x, 1
+        @screen[i].push ch
         i++
     @maxRange()
 

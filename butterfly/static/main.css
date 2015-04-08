@@ -86,8 +86,9 @@ html, body {
   height: 100%;
   overflow: hidden;
   white-space: nowrap; }
-  #wrapper [data-native-scroll="yes"] {
-    overflow-y: auto; }
+
+body[data-native-scroll="yes"] #wrapper {
+  overflow-y: auto; }
 
 .terminal {
   outline: none; }

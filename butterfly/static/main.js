@@ -454,7 +454,7 @@
     };
 
     Terminal.prototype.refresh = function(start, end) {
-      var attr, bg, ch, classes, data, fg, flags, html, i, j, k, l, line, m, o, out, parent, ref, ref1, ref2, ref3, ref4, x;
+      var attr, bg, ch, classes, data, fg, flags, html, i, j, k, l, line, m, o, out, parent, ref, ref1, ref2, ref3, ref4, row, x;
       if (!this.native_scroll && end - start >= this.rows / 3) {
         parent = this.element.parentNode;
         if (parent != null) {
@@ -471,7 +471,8 @@
       }
       end = Math.min(end, this.screen.length - 1);
       for (j = m = ref1 = start, ref2 = end; ref1 <= ref2 ? m <= ref2 : m >= ref2; j = ref1 <= ref2 ? ++m : --m) {
-        line = this.screen[row + this.ydisp];
+        row = j + this.ydisp;
+        line = this.screen[row];
         out = "";
         if (j === this.y && !this.cursorHidden && (this.native_scroll || this.ydisp === this.ybase || this.selectMode)) {
           x = this.x;
@@ -630,9 +631,9 @@
         row = this.ybase + this.rows - 1;
         row -= this.rows - 1 - this.scrollBottom;
         if (row === this.screen.length) {
-          this.screen.push(this.blankLine());
+          this.screen.push(this.blank_line());
         } else {
-          this.screen.splice(row, 0, this.blankLine());
+          this.screen.splice(row, 0, this.blank_line());
         }
         if (this.scrollTop !== 0) {
           if (this.ybase !== 0) {
@@ -736,7 +737,7 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.lines[this.y + this.ybase][this.x] = [this.curAttr, '\u23CE'];
+                    this.screen[this.y + this.ybase][this.x] = [this.curAttr, '\u23CE'];
                     this.x = 0;
                     this.next_line();
                   }
@@ -1121,7 +1122,7 @@
                         this.updateRange(this.y);
                         this.next_line();
                       } else {
-                        this.lines[this.y + this.ybase][this.x] = [this.curAttr, html];
+                        this.screen[this.y + this.ybase][this.x] = [this.curAttr, html];
                         line = 0;
                         while (line < this.get_html_height_in_lines(html) - 1) {
                           this.y++;
@@ -2021,7 +2022,7 @@
         } else {
           j = this.rows - 1 - this.scrollBottom;
           j = this.rows - 1 + this.ybase - j;
-          this.screen.splice(j + 1, 0, this.blankLine(true));
+          this.screen.splice(j + 1, 0, this.blank_line(true));
         }
         this.screen.splice(this.y, 1);
       }
@@ -2206,7 +2207,7 @@
           case 1047:
             if (!this.normal) {
               normal = {
-                lines: this.lines,
+                lines: this.screen,
                 ybase: this.ybase,
                 ydisp: this.ydisp,
                 x: this.x,
@@ -2272,7 +2273,7 @@
           case 47:
           case 1047:
             if (this.normal) {
-              this.lines = this.normal.lines;
+              this.screen = this.normal.lines;
               this.ybase = this.normal.ybase;
               this.ydisp = this.normal.ydisp;
               this.x = this.normal.x;
@@ -2363,7 +2364,7 @@
     Terminal.prototype.repeatPrecedingCharacter = function(params) {
       var ch, line, param, results;
       param = params[0] || 1;
-      line = this.lines[this.ybase + this.y];
+      line = this.screen[this.ybase + this.y];
       ch = line[this.x - 1] || [this.defAttr, " "];
       results = [];
       while (param--) {
@@ -2430,7 +2431,7 @@
       r = params[3];
       attr = params[4];
       while (t < b + 1) {
-        line = this.lines[this.ybase + t];
+        line = this.screen[this.ybase + t];
         i = l;
         while (i < r) {
           line[i] = [attr, line[i][1]];
@@ -2470,7 +2471,7 @@
       b = params[3];
       r = params[4];
       while (t < b + 1) {
-        line = this.lines[this.ybase + t];
+        line = this.screen[this.ybase + t];
         i = l;
         while (i < r) {
           line[i] = [line[i][0], String.fromCharCode(ch)];
@@ -2495,7 +2496,7 @@
       r = params[3];
       ch = [this.eraseAttr(), " "];
       while (t < b + 1) {
-        line = this.lines[this.ybase + t];
+        line = this.screen[this.ybase + t];
         i = l;
         while (i < r) {
           line[i] = ch;
@@ -2521,8 +2522,8 @@
       while (param--) {
         i = this.ybase;
         while (i < l) {
-          this.lines[i].splice(this.x + 1, 0, ch);
-          this.lines[i].pop();
+          this.screen[i].splice(this.x + 1, 0, ch);
+          this.screen[i].pop();
           i++;
         }
       }
@@ -2537,8 +2538,8 @@
       while (param--) {
         i = this.ybase;
         while (i < l) {
-          this.lines[i].splice(this.x, 1);
-          this.lines[i].push(ch);
+          this.screen[i].splice(this.x, 1);
+          this.screen[i].push(ch);
           i++;
         }
       }
