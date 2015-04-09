@@ -387,7 +387,6 @@
       new_range.setEnd(sel.anchorNode, sel.anchorOffset);
       sel.addRange(new_range);
     }
-    range.detach();
     while (!(sel.toString().match(/\s/) || !sel.toString())) {
       sel.modify('extend', 'forward', 'character');
     }

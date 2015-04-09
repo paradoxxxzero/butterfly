@@ -95,6 +95,7 @@ class Terminal
     @termName = 'xterm'
     @cursorBlink = true
     @cursorState = 0
+    @stop = false
     @last_cc = 0
     @reset_vars()
 
@@ -1342,11 +1343,14 @@ class Terminal
           if ev.keyCode >= 65 and ev.keyCode <= 90
             if ev.keyCode is 67
               t = (new Date()).getTime()
-              if (t - @last_cc) < 75
-                id = (setTimeout ->) - 6  # Let the end write
-                @write '\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n'
+              if (t - @last_cc) < 200 and not @stop
+                id = (setTimeout ->)
                 (clearTimeout id if id not in [
                   @t_bell, @t_queue, @t_blink]) while id--
+                @element.classList.add 'stopped'
+                @stop = true
+              else if @stop
+                return true
               @last_cc = t
             key = String.fromCharCode(ev.keyCode - 64)
           else if ev.keyCode is 32
@@ -1489,6 +1493,8 @@ class Terminal
         if @children.length < @rows
           line = @document.createElement("div")
           line.className = 'line'
+          unless @native_scroll
+            line.style.height = @char_size.height + 'px'
           el.appendChild line
           @children.push line
     else if j > @rows
@@ -1502,6 +1508,9 @@ class Terminal
     @y = @rows - 1 if @y >= @rows
     @x = @cols - 1 if @x >= @cols
 
+    unless @native_scroll
+      @scrollTop = 0
+      @scrollBottom = @rows - 1
 
     @refresh 0, @rows - 1
 
@@ -1544,7 +1553,7 @@ class Terminal
     if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
   eraseRight: (x, y) ->
-    line = @screen[y]
+    line = @screen[@ybase + y]
     # xterm
     ch = [@eraseAttr(), " "]
 
@@ -1556,7 +1565,7 @@ class Terminal
   eraseLeft: (x, y) ->
     unless @native_scroll
       y += @ybase
-    line = @screen[y]
+    line = @screen[@ybase + y]
     # xterm
     ch = [@eraseAttr(), " "]
     x++
@@ -1564,8 +1573,6 @@ class Terminal
     @updateRange y
 
   eraseLine: (y) ->
-    unless @native_scroll
-      y += @ybase
     @eraseRight 0, y
 
   blank_line: (cur) ->
@@ -1599,7 +1606,7 @@ class Terminal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    console.log('TODO: Reverse index')
+    console.log 'TODO: Reverse index'
     unless @native_scroll
       @y--
       if @y < @scrollTop
@@ -1844,6 +1851,9 @@ class Terminal
       else if p is 8
         # invisible
         flags |= 16
+      else if p is 10
+         # Primary Font
+         # ignoring
       else if p is 22
         # not bold
         flags &= ~1

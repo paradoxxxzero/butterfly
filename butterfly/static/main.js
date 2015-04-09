@@ -12,7 +12,7 @@
   $ = document.querySelectorAll.bind(document);
 
   document.addEventListener('DOMContentLoaded', function() {
-    var bench, cbench, ctl, send, term, ws, ws_url;
+    var bench, cbench, ctl, last_data, send, t_stop, term, ws, ws_url;
     send = function(data) {
       return ws.send('S' + data);
     };
@@ -39,8 +39,28 @@
     ws.addEventListener('error', function() {
       return console.log("WebSocket error", arguments);
     });
+    t_stop = null;
+    last_data = '';
     ws.addEventListener('message', function(e) {
-      return setTimeout(function() {
+      var t;
+      if (term.stop) {
+        last_data += e.data;
+        last_data = last_data.slice(-10 * 1024);
+        if (t_stop) {
+          if (t_stop) {
+            clearTimeout(t_stop);
+          }
+        }
+        t_stop = setTimeout(function() {
+          term.stop = false;
+          term.element.classList.remove('stopped');
+          term.write(last_data);
+          last_data = '';
+          return t_stop = null;
+        }, 100);
+        return;
+      }
+      return t = setTimeout(function() {
         return term.write(e.data);
       }, 1);
     });
@@ -164,6 +184,7 @@
       this.termName = 'xterm';
       this.cursorBlink = true;
       this.cursorState = 0;
+      this.stop = false;
       this.last_cc = 0;
       this.reset_vars();
       if (!this.native_scroll) {
@@ -1367,14 +1388,17 @@
             if (ev.keyCode >= 65 && ev.keyCode <= 90) {
               if (ev.keyCode === 67) {
                 t = (new Date()).getTime();
-                if ((t - this.last_cc) < 75) {
-                  id = (setTimeout(function() {})) - 6;
-                  this.write('\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n');
+                if ((t - this.last_cc) < 200 && !this.stop) {
+                  id = setTimeout(function() {});
                   while (id--) {
                     if (id !== this.t_bell && id !== this.t_queue && id !== this.t_blink) {
                       clearTimeout(id);
                     }
                   }
+                  this.element.classList.add('stopped');
+                  this.stop = true;
+                } else if (this.stop) {
+                  return true;
                 }
                 this.last_cc = t;
               }
@@ -1533,6 +1557,9 @@
           if (this.children.length < this.rows) {
             line = this.document.createElement("div");
             line.className = 'line';
+            if (!this.native_scroll) {
+              line.style.height = this.char_size.height + 'px';
+            }
             el.appendChild(line);
             this.children.push(line);
           }
@@ -1555,6 +1582,10 @@
       }
       if (this.x >= this.cols) {
         this.x = this.cols - 1;
+      }
+      if (!this.native_scroll) {
+        this.scrollTop = 0;
+        this.scrollBottom = this.rows - 1;
       }
       this.refresh(0, this.rows - 1);
       return this.normal = null;
@@ -1630,7 +1661,7 @@
 
     Terminal.prototype.eraseRight = function(x, y) {
       var ch, line;
-      line = this.screen[y];
+      line = this.screen[this.ybase + y];
       ch = [this.eraseAttr(), " "];
       while (x < this.cols) {
         line[x] = ch;
@@ -1644,7 +1675,7 @@
       if (!this.native_scroll) {
         y += this.ybase;
       }
-      line = this.screen[y];
+      line = this.screen[this.ybase + y];
       ch = [this.eraseAttr(), " "];
       x++;
       while (x--) {
@@ -1654,9 +1685,6 @@
     };
 
     Terminal.prototype.eraseLine = function(y) {
-      if (!this.native_scroll) {
-        y += this.ybase;
-      }
       return this.eraseRight(0, y);
     };
 
@@ -1879,6 +1907,8 @@
           flags |= 8;
         } else if (p === 8) {
           flags |= 16;
+        } else if (p === 10) {
+
         } else if (p === 22) {
           flags &= ~1;
         } else if (p === 24) {

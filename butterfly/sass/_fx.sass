@@ -22,6 +22,7 @@ $shadow-alpha: .5 !default
 .terminal
   text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
   transition: 200ms
+  transform-origin: bottom
 
   &.bell
     -webkit-filter: blur(2px)
@@ -32,16 +33,16 @@ $shadow-alpha: .5 !default
     filter: sepia(1)
 
   &.selection
-    -webkit-filter: unquote("saturate(2)")
-    filter: unquote("saturate(2)")
+    -webkit-filter: saturate(2)
+    filter: saturate(2)
 
   &.alarm
     -webkit-filter: hue-rotate(150deg)
     filter: hue-rotate(150deg)
 
   &.dead
-    -webkit-filter: unquote("grayscale(1)")
-    filter: unquote("grayscale(1)")
+    -webkit-filter: grayscale(1)
+    filter: grayscale(1)
 
     &:after
       content: "CLOSED"
@@ -63,3 +64,7 @@ $shadow-alpha: .5 !default
 
   &.pasted
     transform: scale(.95)
+
+  &.stopped
+    -webkit-filter: brightness(50%)
+    filter: brightness(50%)

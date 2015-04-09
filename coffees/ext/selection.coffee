@@ -169,7 +169,6 @@ class Selection
 
     return needle
 
-
 document.addEventListener 'keydown', (e) ->
   return true if e.keyCode in [16..19]
 
@@ -240,7 +239,6 @@ document.addEventListener 'dblclick', (e) ->
     new_range.setStart(sel.focusNode, sel.focusOffset)
     new_range.setEnd(sel.anchorNode, sel.anchorOffset)
     sel.addRange(new_range)
-  range.detach()
 
   until sel.toString().match(/\s/) or not sel.toString()
     sel.modify 'extend', 'forward', 'character'

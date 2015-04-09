@@ -78,7 +78,8 @@ body {
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .terminal {
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
-  transition: 200ms; }
+  transition: 200ms;
+  transform-origin: bottom; }
   .terminal.bell {
     -webkit-filter: blur(2px);
     filter: blur(2px); }
@@ -112,6 +113,9 @@ body {
     transform: scale(1.05); }
   .terminal.pasted {
     transform: scale(.95); }
+  .terminal.stopped {
+    -webkit-filter: brightness(50%);
+    filter: brightness(50%); }
 
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
@@ -3028,10 +3032,10 @@ body[data-native-scroll="yes"] #wrapper {
   overflow-y: auto; }
 body[data-native-scroll="yes"] ::-webkit-scrollbar {
   background: #110f13;
-  width: .5em;
-  height: .5em; }
+  width: .75em;
+  height: .75em; }
 body[data-native-scroll="yes"] ::-webkit-scrollbar-thumb {
-  background: #f4ead5; }
+  background: rgba(244, 234, 213, 0.1); }
 
 .terminal {
   outline: none; }

@@ -100,7 +100,9 @@ class Style(Route):
         default_style = os.path.join(
             os.path.dirname(__file__), 'static', 'main.css')
 
+        self.log.info('Getting style')
         css = utils.get_style()
+        self.log.debug('Style ok')
 
         self.set_header("Content-Type", "text/css")
 
