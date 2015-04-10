@@ -461,8 +461,7 @@ class Terminal
       for l, html of @html
         @element.insertBefore(html, @children[l])
       @html = {}
-      @parent.scrollTop = @parent.scrollHeight
-
+      @native_scroll_to()
 
   _cursorBlink: ->
     @cursorState ^= 1
@@ -536,9 +535,14 @@ class Terminal
       @updateRange @scrollTop
       @updateRange @scrollBottom
 
+  native_scroll_to: (scroll=-1) ->
+    if scroll is -1
+      scroll = @parent.scrollHeight - @parent.getBoundingClientRect().height
+    @parent.scrollTop = scroll
+
   scroll_display: (disp) ->
     if @native_scroll
-      @parent.scrollTop += disp * @char_size.height
+      @native_scroll_to @parent.scrollTop + disp * @char_size.height
     else
       @ydisp += disp
       if @ydisp > @ybase

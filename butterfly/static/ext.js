@@ -401,6 +401,39 @@
     return sel.modify('extend', 'forward', 'character');
   });
 
+  document.addEventListener('DOMContentLoaded', function() {
+    var req;
+    return;
+    req = null;
+    return butterfly.native_scroll_to = function(scroll) {
+      var diff, e, scroll_step, step;
+      if (scroll == null) {
+        scroll = -1;
+      }
+      e = butterfly.parent;
+      if (req) {
+        cancelAnimationFrame(req);
+      }
+      if (scroll === -1 || (scroll > e.scrollHeight - e.getBoundingClientRect().height)) {
+        scroll = e.scrollHeight - e.getBoundingClientRect().height;
+      }
+      diff = scroll - e.scrollTop;
+      if (diff === 0) {
+        return;
+      }
+      step = diff / 25;
+      scroll_step = function() {
+        if (Math.abs(e.scrollTop - scroll) < Math.abs(step)) {
+          return e.scrollTop = scroll;
+        } else {
+          e.scrollTop += step;
+          return req = requestAnimationFrame(scroll_step);
+        }
+      };
+      return req = requestAnimationFrame(scroll_step);
+    };
+  });
+
   if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
     ctrl = false;
     alt = false;

@@ -563,7 +563,7 @@
           this.element.insertBefore(html, this.children[l]);
         }
         this.html = {};
-        return this.parent.scrollTop = this.parent.scrollHeight;
+        return this.native_scroll_to();
       }
     };
 
@@ -646,9 +646,19 @@
       }
     };
 
+    Terminal.prototype.native_scroll_to = function(scroll) {
+      if (scroll == null) {
+        scroll = -1;
+      }
+      if (scroll === -1) {
+        scroll = this.parent.scrollHeight - this.parent.getBoundingClientRect().height;
+      }
+      return this.parent.scrollTop = scroll;
+    };
+
     Terminal.prototype.scroll_display = function(disp) {
       if (this.native_scroll) {
-        return this.parent.scrollTop += disp * this.char_size.height;
+        return this.native_scroll_to(this.parent.scrollTop + disp * this.char_size.height);
       } else {
         this.ydisp += disp;
         if (this.ydisp > this.ybase) {
