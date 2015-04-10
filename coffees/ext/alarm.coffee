@@ -24,7 +24,7 @@ cancel = (ev) ->
   false
 
 
-document.addEventListener 'keydown', (e) ->
+addEventListener 'keydown', (e) ->
   return true unless e.altKey and e.keyCode is 65
 
   if Notification and Notification.permission is 'default'

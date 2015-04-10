@@ -169,7 +169,7 @@ class Selection
 
     return needle
 
-document.addEventListener 'keydown', (e) ->
+addEventListener 'keydown', (e) ->
   return true if e.keyCode in [16..19]
 
   # Paste natural selection too if shiftkey
@@ -210,7 +210,7 @@ document.addEventListener 'keydown', (e) ->
     return cancel e
   true
 
-document.addEventListener 'keyup', (e) ->
+addEventListener 'keyup', (e) ->
   return true if e.keyCode in [16..19]
 
   if selection
@@ -225,7 +225,7 @@ document.addEventListener 'keyup', (e) ->
       return true
   true
 
-document.addEventListener 'dblclick', (e) ->
+addEventListener 'dblclick', (e) ->
   return if e.ctrlKey or e.altkey
   sel = getSelection()
   return if sel.isCollapsed or sel.toString().match /\s/

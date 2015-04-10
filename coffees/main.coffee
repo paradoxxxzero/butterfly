@@ -64,9 +64,7 @@ document.addEventListener 'DOMContentLoaded', ->
       , 100
       return
 
-    t = setTimeout ->
-      term.write e.data
-    , 1
+    term.write e.data
 
   ws.addEventListener 'close', ->
     console.log "WebSocket closed", arguments
@@ -86,25 +84,30 @@ document.addEventListener 'DOMContentLoaded', ->
     if not quit
       'This will exit the terminal session'
 
-  bench = (n=100000000) ->
+  term.ws = ws
+  window.butterfly = term
+
+
+  window.bench = (n=100000000) ->
     rnd = ''
     while rnd.length < n
       rnd += Math.random().toString(36).substring(2)
 
-    t0 = (new Date()).getTime()
+    console.time('bench')
+    console.profile('bench')
     term.write rnd
-    console.log "#{n} chars in #{(new Date()).getTime() - t0} ms"
+    console.profileEnd()
+    console.timeEnd('bench')
 
 
-  cbench = (n=100000000) ->
+  window.cbench = (n=100000000) ->
     rnd = ''
     while rnd.length < n
       rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
       rnd += Math.random().toString(36).substring(2)
 
-    t0 = (new Date()).getTime()
+    console.time('cbench')
+    console.profile('cbench')
     term.write rnd
-    console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
-
-  term.ws = ws
-  window.butterfly = term
+    console.profileEnd()
+    console.timeEnd('cbench')

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-document.addEventListener 'copy', copy = (e) ->
+addEventListener 'copy', copy = (e) ->
   butterfly.bell "copied"
   e.clipboardData.clearData()
   sel = getSelection().toString().replace(
@@ -33,7 +33,7 @@ document.addEventListener 'copy', copy = (e) ->
   e.clipboardData.setData 'text/plain', data.slice(0, -1)
   e.preventDefault()
 
-document.addEventListener 'paste', (e) ->
+addEventListener 'paste', (e) ->
   butterfly.bell "pasted"
   data = e.clipboardData.getData 'text/plain'
   data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r')

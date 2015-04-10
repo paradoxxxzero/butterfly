@@ -33,7 +33,7 @@
     return false;
   };
 
-  document.addEventListener('keydown', function(e) {
+  addEventListener('keydown', function(e) {
     if (!(e.altKey && e.keyCode === 65)) {
       return true;
     }
@@ -47,7 +47,7 @@
     return cancel(e);
   });
 
-  document.addEventListener('copy', copy = function(e) {
+  addEventListener('copy', copy = function(e) {
     var data, end, j, len1, line, ref, sel;
     butterfly.bell("copied");
     e.clipboardData.clearData();
@@ -68,7 +68,7 @@
     return e.preventDefault();
   });
 
-  document.addEventListener('paste', function(e) {
+  addEventListener('paste', function(e) {
     var data;
     butterfly.bell("pasted");
     data = e.clipboardData.getData('text/plain');
@@ -301,7 +301,7 @@
 
   })();
 
-  document.addEventListener('keydown', function(e) {
+  addEventListener('keydown', function(e) {
     var ref, ref1;
     if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
@@ -347,7 +347,7 @@
     return true;
   });
 
-  document.addEventListener('keyup', function(e) {
+  addEventListener('keyup', function(e) {
     var ref, ref1;
     if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
@@ -368,7 +368,7 @@
     return true;
   });
 
-  document.addEventListener('dblclick', function(e) {
+  addEventListener('dblclick', function(e) {
     var anchorNode, anchorOffset, new_range, range, sel;
     if (e.ctrlKey || e.altkey) {
       return;

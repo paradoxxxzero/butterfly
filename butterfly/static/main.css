@@ -3029,7 +3029,7 @@ html, body {
   white-space: nowrap; }
 
 body[data-native-scroll="yes"] #wrapper {
-  overflow-y: auto; }
+  overflow-y: scroll; }
 body[data-native-scroll="yes"] ::-webkit-scrollbar {
   background: #110f13;
   width: .75em;

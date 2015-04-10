@@ -72,10 +72,11 @@ class Terminal
 
     @compute_char_size()
     div.style.height = @char_size.height + 'px' unless @native_scroll
-    term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width)
-    @rows = Math.floor(term_size.height / @char_size.height)
-    px = term_size.height % @char_size.height
+    term_width = @element.getBoundingClientRect().width
+    term_height = @parent.getBoundingClientRect().height
+    @cols = Math.floor(term_width / @char_size.width)
+    @rows = Math.floor(term_height / @char_size.height)
+    px = term_height % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
 
     @html = {}
@@ -88,7 +89,6 @@ class Terminal
       @children.push(div)
 
     @scrollback = 5000
-    @missing_lines = 0
     @visualBell = 100
 
     @convertEol = false
@@ -110,15 +110,11 @@ class Terminal
     addEventListener 'blur', @blur.bind(@)
     addEventListener 'resize', @resize.bind(@)
 
-    # Horrible Firefox paste workaround
+    # # Horrible Firefox paste workaround
     if typeof InstallTrigger isnt "undefined"
-      @element.contentEditable = 'true'
-      @element.addEventListener "mouseup", ->
-        sel = getSelection().getRangeAt(0)
-        if sel.startOffset is sel.endOffset
-          getSelection().removeAllRanges()
+      @body.contentEditable = 'true'
 
-    @initmouse() unless @native_scroll
+    @initmouse()
 
     setTimeout(@resize.bind(@), 100)
 
@@ -131,9 +127,8 @@ class Terminal
 
     @ybase = 0
     @ydisp = 0
-    unless @native_scroll
-      @scrollTop = 0
-      @scrollBottom = @rows - 1
+    @scrollTop = 0
+    @scrollBottom = @rows - 1
 
     # modes
     @applicationKeypad = false
@@ -327,7 +322,7 @@ class Terminal
 
       # convert to cols/rows
       w = @element.clientWidth
-      h = @element.clientHeight
+      h = @parent.clientHeight
       x = Math.ceil((x / w) * @cols)
       y = Math.ceil((y / h) * @rows)
 
@@ -355,12 +350,12 @@ class Terminal
 
       # fix for odd bug
       #if (@vt200Mouse && !@normalMouse) {
-      if @vt200Mouse
-        sendButton
-          __proto__: ev
-          type: "mouseup"
+      # if @vt200Mouse
+      #   sendButton
+      #     __proto__: ev
+      #     type: "mouseup"
 
-        return cancel(ev)
+      #   return cancel(ev)
 
       sm = sendMove.bind(this)
       addEventListener "mousemove", sm if @normalMouse
@@ -385,15 +380,10 @@ class Terminal
 
 
   refresh: (start, end) ->
+    console.log "Refresh #{start} -> #{end}"
     if not @native_scroll and end - start >= @rows / 3
       parent = @element.parentNode
       parent?.removeChild @element
-
-    if @native_scroll
-      if @missing_lines
-        for i in [1..@missing_lines]
-          @new_line()
-        @missing_lines = 0
 
     end = Math.min(end, @screen.length - 1)
 
@@ -466,7 +456,6 @@ class Terminal
         attr = data
       out += "</span>" if attr isnt @defAttr
       @children[j].innerHTML = out
-
     parent?.appendChild @element
 
     if @native_scroll
@@ -506,12 +495,20 @@ class Terminal
 
   scroll: ->
     if @native_scroll
-      @screen.shift()
-      @screen.push @blank_line()
-      @refreshStart = Math.max(@refreshStart - 1, 0)
-      @missing_lines++
-      if @missing_lines >= @rows
-        @refresh 0, @rows - 1
+
+      if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+        # inner scroll
+        console.log('Non native scroll')
+        @screen.splice @scrollTop, 1
+        @screen.splice @scrollBottom, 0, @blank_line()
+        console.log(@y)
+        @y--
+        @maxRange()
+      else
+        @screen.shift()
+        @screen.push @blank_line()
+        @refreshStart = Math.max(@refreshStart - 1, 0)
+        @new_line()
     else
       if ++@ybase is @scrollback
         @ybase = @ybase / 2 | 0
@@ -567,7 +564,7 @@ class Terminal
 
   next_line: ->
     @y++
-    if @y >= (if @native_scroll then @rows else @scrollBottom)
+    if @y >= @scrollBottom
       @y--
       @scroll()
 
@@ -583,7 +580,7 @@ class Terminal
     i = 0
     l = data.length
     while i < l
-      ch = data[i]
+      ch = data.charAt(i)
       switch @state
         when State.normal
           switch ch
@@ -630,9 +627,10 @@ class Terminal
                   @x = 0
                   @next_line()
 
+                @updateRange @y
+
                 @screen[@y + @ybase][@x] = [@curAttr, ch]
                 @x++
-                @updateRange @y
                 if "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
                     @screen[@y + @ybase][@x - 1] = [@curAttr, " "]
@@ -1343,7 +1341,7 @@ class Terminal
           if ev.keyCode >= 65 and ev.keyCode <= 90
             if ev.keyCode is 67
               t = (new Date()).getTime()
-              if (t - @last_cc) < 200 and not @stop
+              if (t - @last_cc) < 500 and not @stop
                 id = (setTimeout ->)
                 (clearTimeout id if id not in [
                   @t_bell, @t_queue, @t_blink]) while id--
@@ -1421,6 +1419,16 @@ class Terminal
       @skipNextKey = null
       return true
 
+    # Don't handle modifiers alone
+    return true if ev.keyCode > 15 and ev.keyCode < 19
+
+    # Handle shift insert and ctrl insert
+    # copy/paste usefull for typematrix keyboard
+    return true if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
+
+    # Let the ctrl+shift+c, ctrl+shift+v go through to handle native copy paste
+    return true if (ev.shiftKey and ev.ctrlKey) and ev.keyCode in [67, 86]
+
     cancel ev
 
     if ev.charCode
@@ -1459,11 +1467,12 @@ class Terminal
     old_cols = @cols
     old_rows = @rows
     @compute_char_size()
-    term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width)
-    @rows = Math.floor(term_size.height / @char_size.height)
-    @element.style['padding-bottom'] = "#{term_size.height %
-      @char_size.height}px"
+    term_width = @element.getBoundingClientRect().width
+    term_height = @parent.getBoundingClientRect().height
+    @cols = Math.floor(term_width / @char_size.width)
+    @rows = Math.floor(term_height / @char_size.height)
+    px = term_height % @char_size.height
+    @element.style['padding-bottom'] = "#{px}px"
 
     if old_cols == @cols and old_rows == @rows
       return
@@ -1508,9 +1517,8 @@ class Terminal
     @y = @rows - 1 if @y >= @rows
     @x = @cols - 1 if @x >= @cols
 
-    unless @native_scroll
-      @scrollTop = 0
-      @scrollBottom = @rows - 1
+    @scrollTop = 0
+    @scrollBottom = @rows - 1
 
     @refresh 0, @rows - 1
 
@@ -1606,8 +1614,27 @@ class Terminal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    console.log 'TODO: Reverse index'
-    unless @native_scroll
+    if @native_scroll
+      if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+        # inner scroll
+        console.log('Non native scroll')
+        @screen.splice @scrollBottom, 1
+        @screen.splice @scrollTop, 0, @blank_line(true)
+        console.log(@y)
+        @y--
+        @maxRange()
+      else
+        prevNode = @children[0].previousElementSibling
+        if prevNode
+          @children.slice(-1)[0].remove()
+          @children.pop()
+          @children.unshift @children[0].previousElementSibling
+        else
+          @new_line()
+        @screen.pop()
+        @screen.unshift @blank_line()
+      @maxRange()
+    else
       @y--
       if @y < @scrollTop
         @y++

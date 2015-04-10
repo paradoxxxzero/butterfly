@@ -12,7 +12,7 @@
   $ = document.querySelectorAll.bind(document);
 
   document.addEventListener('DOMContentLoaded', function() {
-    var bench, cbench, ctl, last_data, send, t_stop, term, ws, ws_url;
+    var ctl, last_data, send, t_stop, term, ws, ws_url;
     send = function(data) {
       return ws.send('S' + data);
     };
@@ -42,7 +42,6 @@
     t_stop = null;
     last_data = '';
     ws.addEventListener('message', function(e) {
-      var t;
       if (term.stop) {
         last_data += e.data;
         last_data = last_data.slice(-10 * 1024);
@@ -60,9 +59,7 @@
         }, 100);
         return;
       }
-      return t = setTimeout(function() {
-        return term.write(e.data);
-      }, 1);
+      return term.write(e.data);
     });
     ws.addEventListener('close', function() {
       console.log("WebSocket closed", arguments);
@@ -82,8 +79,10 @@
         return 'This will exit the terminal session';
       }
     });
-    bench = function(n) {
-      var rnd, t0;
+    term.ws = ws;
+    window.butterfly = term;
+    window.bench = function(n) {
+      var rnd;
       if (n == null) {
         n = 100000000;
       }
@@ -91,12 +90,14 @@
       while (rnd.length < n) {
         rnd += Math.random().toString(36).substring(2);
       }
-      t0 = (new Date()).getTime();
+      console.time('bench');
+      console.profile('bench');
       term.write(rnd);
-      return console.log(n + " chars in " + ((new Date()).getTime() - t0) + " ms");
+      console.profileEnd();
+      return console.timeEnd('bench');
     };
-    cbench = function(n) {
-      var rnd, t0;
+    return window.cbench = function(n) {
+      var rnd;
       if (n == null) {
         n = 100000000;
       }
@@ -105,12 +106,12 @@
         rnd += "\x1b[" + (30 + parseInt(Math.random() * 20)) + "m";
         rnd += Math.random().toString(36).substring(2);
       }
-      t0 = (new Date()).getTime();
+      console.time('cbench');
+      console.profile('cbench');
       term.write(rnd);
-      return console.log(n + " chars + colors in " + ((new Date()).getTime() - t0) + " ms");
+      console.profileEnd();
+      return console.timeEnd('cbench');
     };
-    term.ws = ws;
-    return window.butterfly = term;
   });
 
   cancel = function(ev) {
@@ -138,7 +139,7 @@
 
   Terminal = (function() {
     function Terminal(parent1, out1, ctl1) {
-      var div, i, px, term_size;
+      var div, i, px, term_height, term_width;
       this.parent = parent1;
       this.out = out1;
       this.ctl = ctl1 != null ? ctl1 : function() {};
@@ -161,10 +162,11 @@
       if (!this.native_scroll) {
         div.style.height = this.char_size.height + 'px';
       }
-      term_size = this.parent.getBoundingClientRect();
-      this.cols = Math.floor(term_size.width / this.char_size.width);
-      this.rows = Math.floor(term_size.height / this.char_size.height);
-      px = term_size.height % this.char_size.height;
+      term_width = this.element.getBoundingClientRect().width;
+      term_height = this.parent.getBoundingClientRect().height;
+      this.cols = Math.floor(term_width / this.char_size.width);
+      this.rows = Math.floor(term_height / this.char_size.height);
+      px = term_height % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
       this.html = {};
       i = this.rows - 1;
@@ -178,7 +180,6 @@
         this.children.push(div);
       }
       this.scrollback = 5000;
-      this.missing_lines = 0;
       this.visualBell = 100;
       this.convertEol = false;
       this.termName = 'xterm';
@@ -198,18 +199,9 @@
       addEventListener('blur', this.blur.bind(this));
       addEventListener('resize', this.resize.bind(this));
       if (typeof InstallTrigger !== "undefined") {
-        this.element.contentEditable = 'true';
-        this.element.addEventListener("mouseup", function() {
-          var sel;
-          sel = getSelection().getRangeAt(0);
-          if (sel.startOffset === sel.endOffset) {
-            return getSelection().removeAllRanges();
-          }
-        });
+        this.body.contentEditable = 'true';
       }
-      if (!this.native_scroll) {
-        this.initmouse();
-      }
+      this.initmouse();
       setTimeout(this.resize.bind(this), 100);
     }
 
@@ -222,10 +214,8 @@
       this.queue = '';
       this.ybase = 0;
       this.ydisp = 0;
-      if (!this.native_scroll) {
-        this.scrollTop = 0;
-        this.scrollBottom = this.rows - 1;
-      }
+      this.scrollTop = 0;
+      this.scrollBottom = this.rows - 1;
       this.applicationKeypad = false;
       this.applicationCursor = false;
       this.originMode = false;
@@ -401,7 +391,7 @@
             el = "offsetParent" in el ? el.offsetParent : el.parentNode;
           }
           w = _this.element.clientWidth;
-          h = _this.element.clientHeight;
+          h = _this.parent.clientHeight;
           x = Math.ceil((x / w) * _this.cols);
           y = Math.ceil((y / h) * _this.rows);
           if (x < 0) {
@@ -432,13 +422,6 @@
             return;
           }
           sendButton(ev);
-          if (_this.vt200Mouse) {
-            sendButton({
-              __proto__: ev,
-              type: "mouseup"
-            });
-            return cancel(ev);
-          }
           sm = sendMove.bind(_this);
           if (_this.normalMouse) {
             addEventListener("mousemove", sm);
@@ -475,23 +458,16 @@
     };
 
     Terminal.prototype.refresh = function(start, end) {
-      var attr, bg, ch, classes, data, fg, flags, html, i, j, k, l, line, m, o, out, parent, ref, ref1, ref2, ref3, ref4, row, x;
+      var attr, bg, ch, classes, data, fg, flags, html, i, j, k, l, line, m, out, parent, ref, ref1, ref2, ref3, row, x;
+      console.log("Refresh " + start + " -> " + end);
       if (!this.native_scroll && end - start >= this.rows / 3) {
         parent = this.element.parentNode;
         if (parent != null) {
           parent.removeChild(this.element);
         }
       }
-      if (this.native_scroll) {
-        if (this.missing_lines) {
-          for (i = k = 1, ref = this.missing_lines; 1 <= ref ? k <= ref : k >= ref; i = 1 <= ref ? ++k : --k) {
-            this.new_line();
-          }
-          this.missing_lines = 0;
-        }
-      }
       end = Math.min(end, this.screen.length - 1);
-      for (j = m = ref1 = start, ref2 = end; ref1 <= ref2 ? m <= ref2 : m >= ref2; j = ref1 <= ref2 ? ++m : --m) {
+      for (j = k = ref = start, ref1 = end; ref <= ref1 ? k <= ref1 : k >= ref1; j = ref <= ref1 ? ++k : --k) {
         row = j + this.ydisp;
         line = this.screen[row];
         out = "";
@@ -501,7 +477,7 @@
           x = -Infinity;
         }
         attr = this.defAttr;
-        for (i = o = 0, ref3 = this.cols - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; i = 0 <= ref3 ? ++o : --o) {
+        for (i = m = 0, ref2 = this.cols - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
           data = line[i][0];
           ch = line[i][1];
           if (data !== attr) {
@@ -582,9 +558,9 @@
         parent.appendChild(this.element);
       }
       if (this.native_scroll) {
-        ref4 = this.html;
-        for (l in ref4) {
-          html = ref4[l];
+        ref3 = this.html;
+        for (l in ref3) {
+          html = ref3[l];
           this.element.insertBefore(html, this.children[l]);
         }
         this.html = {};
@@ -636,12 +612,18 @@
     Terminal.prototype.scroll = function() {
       var row;
       if (this.native_scroll) {
-        this.screen.shift();
-        this.screen.push(this.blank_line());
-        this.refreshStart = Math.max(this.refreshStart - 1, 0);
-        this.missing_lines++;
-        if (this.missing_lines >= this.rows) {
-          return this.refresh(0, this.rows - 1);
+        if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+          console.log('Non native scroll');
+          this.screen.splice(this.scrollTop, 1);
+          this.screen.splice(this.scrollBottom, 0, this.blank_line());
+          console.log(this.y);
+          this.y--;
+          return this.maxRange();
+        } else {
+          this.screen.shift();
+          this.screen.push(this.blank_line());
+          this.refreshStart = Math.max(this.refreshStart - 1, 0);
+          return this.new_line();
         }
       } else {
         if (++this.ybase === this.scrollback) {
@@ -698,7 +680,7 @@
 
     Terminal.prototype.next_line = function() {
       this.y++;
-      if (this.y >= (this.native_scroll ? this.rows : this.scrollBottom)) {
+      if (this.y >= this.scrollBottom) {
         this.y--;
         return this.scroll();
       }
@@ -717,7 +699,7 @@
       i = 0;
       l = data.length;
       while (i < l) {
-        ch = data[i];
+        ch = data.charAt(i);
         switch (this.state) {
           case State.normal:
             switch (ch) {
@@ -762,9 +744,9 @@
                     this.x = 0;
                     this.next_line();
                   }
+                  this.updateRange(this.y);
                   this.screen[this.y + this.ybase][this.x] = [this.curAttr, ch];
                   this.x++;
-                  this.updateRange(this.y);
                   if (("\uff00" < ch && ch < "\uffef")) {
                     if (this.cols < 2 || this.x >= this.cols) {
                       this.screen[this.y + this.ybase][this.x - 1] = [this.curAttr, " "];
@@ -1388,7 +1370,7 @@
             if (ev.keyCode >= 65 && ev.keyCode <= 90) {
               if (ev.keyCode === 67) {
                 t = (new Date()).getTime();
-                if ((t - this.last_cc) < 200 && !this.stop) {
+                if ((t - this.last_cc) < 500 && !this.stop) {
                   id = setTimeout(function() {});
                   while (id--) {
                     if (id !== this.t_bell && id !== this.t_queue && id !== this.t_blink) {
@@ -1466,9 +1448,18 @@
     };
 
     Terminal.prototype.keyPress = function(ev) {
-      var key;
+      var key, ref;
       if (this.skipNextKey === false) {
         this.skipNextKey = null;
+        return true;
+      }
+      if (ev.keyCode > 15 && ev.keyCode < 19) {
+        return true;
+      }
+      if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
+        return true;
+      }
+      if ((ev.shiftKey && ev.ctrlKey) && ((ref = ev.keyCode) === 67 || ref === 86)) {
         return true;
       }
       cancel(ev);
@@ -1518,14 +1509,16 @@
     };
 
     Terminal.prototype.resize = function() {
-      var ch, el, i, j, line, old_cols, old_rows, term_size;
+      var ch, el, i, j, line, old_cols, old_rows, px, term_height, term_width;
       old_cols = this.cols;
       old_rows = this.rows;
       this.compute_char_size();
-      term_size = this.parent.getBoundingClientRect();
-      this.cols = Math.floor(term_size.width / this.char_size.width);
-      this.rows = Math.floor(term_size.height / this.char_size.height);
-      this.element.style['padding-bottom'] = (term_size.height % this.char_size.height) + "px";
+      term_width = this.element.getBoundingClientRect().width;
+      term_height = this.parent.getBoundingClientRect().height;
+      this.cols = Math.floor(term_width / this.char_size.width);
+      this.rows = Math.floor(term_height / this.char_size.height);
+      px = term_height % this.char_size.height;
+      this.element.style['padding-bottom'] = px + "px";
       if (old_cols === this.cols && old_rows === this.rows) {
         return;
       }
@@ -1583,10 +1576,8 @@
       if (this.x >= this.cols) {
         this.x = this.cols - 1;
       }
-      if (!this.native_scroll) {
-        this.scrollTop = 0;
-        this.scrollBottom = this.rows - 1;
-      }
+      this.scrollTop = 0;
+      this.scrollBottom = this.rows - 1;
       this.refresh(0, this.rows - 1);
       return this.normal = null;
     };
@@ -1727,9 +1718,29 @@
     };
 
     Terminal.prototype.reverseIndex = function() {
-      var j;
-      console.log('TODO: Reverse index');
-      if (!this.native_scroll) {
+      var j, prevNode;
+      if (this.native_scroll) {
+        if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+          console.log('Non native scroll');
+          this.screen.splice(this.scrollBottom, 1);
+          this.screen.splice(this.scrollTop, 0, this.blank_line(true));
+          console.log(this.y);
+          this.y--;
+          this.maxRange();
+        } else {
+          prevNode = this.children[0].previousElementSibling;
+          if (prevNode) {
+            this.children.slice(-1)[0].remove();
+            this.children.pop();
+            this.children.unshift(this.children[0].previousElementSibling);
+          } else {
+            this.new_line();
+          }
+          this.screen.pop();
+          this.screen.unshift(this.blank_line());
+        }
+        this.maxRange();
+      } else {
         this.y--;
         if (this.y < this.scrollTop) {
           this.y++;
