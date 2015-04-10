@@ -380,7 +380,6 @@ class Terminal
 
 
   refresh: (start, end) ->
-    console.log "Refresh #{start} -> #{end}"
     if not @native_scroll and end - start >= @rows / 3
       parent = @element.parentNode
       parent?.removeChild @element
@@ -498,11 +497,8 @@ class Terminal
 
       if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
         # inner scroll
-        console.log('Non native scroll')
         @screen.splice @scrollTop, 1
         @screen.splice @scrollBottom, 0, @blank_line()
-        console.log(@y)
-        @y--
         @maxRange()
       else
         @screen.shift()
@@ -1617,11 +1613,8 @@ class Terminal
     if @native_scroll
       if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
         # inner scroll
-        console.log('Non native scroll')
         @screen.splice @scrollBottom, 1
         @screen.splice @scrollTop, 0, @blank_line(true)
-        console.log(@y)
-        @y--
         @maxRange()
       else
         prevNode = @children[0].previousElementSibling
@@ -2030,15 +2023,12 @@ class Terminal
     while param--
       @screen.splice row, 0, @blank_line(true)
       # blank_line(true) - xterm/linux behavior
-      if @native_scroll
-        @screen.pop()
-      else
-        j = @rows - 1 - @scrollBottom
-        j = @rows - 1 + @ybase - j + 1
-        @screen.splice j, 1
+      j = @rows - 1 - @scrollBottom
+      j = @rows - 1 + @ybase - j + 1
+      @screen.splice j, 1
 
     @updateRange @y
-    @updateRange if @native_scroll then @screen.length - 1 else @scrollBottom
+    @updateRange @scrollBottom
 
   # CSI Ps M
   # Delete Ps Line(s) (default = 1) (DL).
@@ -2059,7 +2049,7 @@ class Terminal
       @screen.splice @y, 1
 
     @updateRange @y
-    @updateRange if @native_scroll then @screen.length - 1 else @scrollBottom
+    @updateRange @scrollBottom
 
   # CSI Ps P
   # Delete Ps Character(s) (default = 1) (DCH).
@@ -2522,7 +2512,6 @@ class Terminal
 
   # CSI Ps S    Scroll up Ps lines (default = 1) (SU).
   scrollUp: (params) ->
-    return if @native_scroll
     param = params[0] or 1
     while param--
       @screen.splice @ybase + @scrollTop, 1
@@ -2534,7 +2523,6 @@ class Terminal
 
   # CSI Ps T    Scroll down Ps lines (default = 1) (SD).
   scrollDown: (params) ->
-    return if @native_scroll
     param = params[0] or 1
     while param--
       @screen.splice @ybase + @scrollBottom, 1

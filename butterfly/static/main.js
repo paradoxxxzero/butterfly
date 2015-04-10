@@ -459,7 +459,6 @@
 
     Terminal.prototype.refresh = function(start, end) {
       var attr, bg, ch, classes, data, fg, flags, html, i, j, k, l, line, m, out, parent, ref, ref1, ref2, ref3, row, x;
-      console.log("Refresh " + start + " -> " + end);
       if (!this.native_scroll && end - start >= this.rows / 3) {
         parent = this.element.parentNode;
         if (parent != null) {
@@ -613,11 +612,8 @@
       var row;
       if (this.native_scroll) {
         if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-          console.log('Non native scroll');
           this.screen.splice(this.scrollTop, 1);
           this.screen.splice(this.scrollBottom, 0, this.blank_line());
-          console.log(this.y);
-          this.y--;
           return this.maxRange();
         } else {
           this.screen.shift();
@@ -1721,11 +1717,8 @@
       var j, prevNode;
       if (this.native_scroll) {
         if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-          console.log('Non native scroll');
           this.screen.splice(this.scrollBottom, 1);
           this.screen.splice(this.scrollTop, 0, this.blank_line(true));
-          console.log(this.y);
-          this.y--;
           this.maxRange();
         } else {
           prevNode = this.children[0].previousElementSibling;
@@ -2039,16 +2032,12 @@
       row = this.y + this.ybase;
       while (param--) {
         this.screen.splice(row, 0, this.blank_line(true));
-        if (this.native_scroll) {
-          this.screen.pop();
-        } else {
-          j = this.rows - 1 - this.scrollBottom;
-          j = this.rows - 1 + this.ybase - j + 1;
-          this.screen.splice(j, 1);
-        }
+        j = this.rows - 1 - this.scrollBottom;
+        j = this.rows - 1 + this.ybase - j + 1;
+        this.screen.splice(j, 1);
       }
       this.updateRange(this.y);
-      return this.updateRange(this.native_scroll ? this.screen.length - 1 : this.scrollBottom);
+      return this.updateRange(this.scrollBottom);
     };
 
     Terminal.prototype.deleteLines = function(params) {
@@ -2069,7 +2058,7 @@
         this.screen.splice(this.y, 1);
       }
       this.updateRange(this.y);
-      return this.updateRange(this.native_scroll ? this.screen.length - 1 : this.scrollBottom);
+      return this.updateRange(this.scrollBottom);
     };
 
     Terminal.prototype.deleteChars = function(params) {
@@ -2363,9 +2352,6 @@
 
     Terminal.prototype.scrollUp = function(params) {
       var param;
-      if (this.native_scroll) {
-        return;
-      }
       param = params[0] || 1;
       while (param--) {
         this.screen.splice(this.ybase + this.scrollTop, 1);
@@ -2377,9 +2363,6 @@
 
     Terminal.prototype.scrollDown = function(params) {
       var param;
-      if (this.native_scroll) {
-        return;
-      }
       param = params[0] || 1;
       while (param--) {
         this.screen.splice(this.ybase + this.scrollBottom, 1);
