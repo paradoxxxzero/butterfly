@@ -399,14 +399,24 @@ class Terminal
 
       attr = @defAttr
       i = 0
+      spanIndex = null
+      spanLength = 0
       while i < line.length
         data = line[i][0]
         ch = line[i][1]
         if data isnt attr
-          out += "</span>" if attr isnt @defAttr
+          if attr isnt @defAttr
+            if spanIndex?
+              lhs = out.substring(0, spanIndex)
+              rhs = out.substring(spanIndex)
+              out = lhs + "style=\"display: inline-block; width: " + \
+                    (spanLength * @char_size.width) + "px;\" " + rhs
+            out += "</span>"
           if data isnt @defAttr
             classes = []
             out += "<span "
+            spanLength = 0
+            spanIndex = out.length
             bg = data & 0x1ff
             fg = (data >> 9) & 0x1ff
             flags = data >> 18
@@ -451,10 +461,12 @@ class Terminal
                 out += "&nbsp;"
               else
                 i++ if "\uff00" < ch < "\uffef"
+                spanLength++ if "\uff00" < ch < "\uffef"
                 out += ch
         out += "</span>" if i is x
         attr = data
         i++
+        spanLength++
       out += "</span>" if attr isnt @defAttr
       @children[y].innerHTML = out
       y++
@@ -1005,7 +1017,6 @@ class Terminal
             when "p"
               if @prefix is '!'
                 @softReset @params
-
             else
               console.error "Unknown CSI code: %s.", ch
           @prefix = ""
