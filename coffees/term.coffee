@@ -118,6 +118,29 @@ class Terminal
 
     setTimeout(@resize.bind(@), 100)
 
+  getDefAttr: ->
+    bg: 256
+    fg: 0
+    bold: false
+    underline: false
+    blink: false
+    inverse: false
+    invisible: false
+
+  cloneAttr: (a) ->
+    bg: a.bg
+    fg: a.fg
+    bold: a.bold
+    underline: a.underline
+    blink: a.blink
+    inverse: a.inverse
+    invisible: a.invisible
+
+  equalAttr: (a, b) ->
+    (a.bg is b.bg and a.fg is b.fg and a.bold is b.bold and
+     a.underline is b.underline and a.blink is b.blink and
+      a.inverse is b.inverse and a.invisible is b.invisible)
+
   reset_vars: ->
     @x = 0
     @y = 0
@@ -144,8 +167,9 @@ class Terminal
     @charsets = [null]
 
     # stream
-    @defAttr = (0 << 18) | (257 << 9) | (256 << 0)
-    @curAttr = @defAttr
+    @defAttr = @getDefAttr()
+
+    @curAttr = @getDefAttr()
     @params = []
     @currentParam = 0
     @prefix = ""
@@ -397,37 +421,50 @@ class Terminal
       else
         x = -Infinity
 
-      attr = @defAttr
+      attr = @getDefAttr()
       for i in [0..@cols - 1]
         data = line[i][0]
         ch = line[i][1]
-        if data isnt attr
-          out += "</span>" if attr isnt @defAttr
-          if data isnt @defAttr
+        unless @equalAttr data, attr
+          out += "</span>" unless @equalAttr attr, @getDefAttr()
+          unless @equalAttr data, @getDefAttr()
             classes = []
+            styles = []
             out += "<span "
-            bg = data & 0x1ff
-            fg = (data >> 9) & 0x1ff
-            flags = data >> 18
 
             # bold
-            classes.push "bold" if flags & 1
+            classes.push "bold" if data.bold
             # underline
-            classes.push "underline" if flags & 2
+            classes.push "underline" if data.underline
             # blink
-            classes.push "blink" if flags & 4
+            classes.push "blink" if data.blink
             # inverse
-            classes.push "reverse-video" if flags & 8
+            classes.push "reverse-video" if data.inverse
             # invisible
-            classes.push "invisible" if flags & 16
+            classes.push "invisible" if data.invisible
 
-            fg += 8 if flags & 1 and fg < 8
-            classes.push "bg-color-" + bg
-            classes.push "fg-color-" + fg
+            if typeof data.fg is 'number'
+              fg = data.fg
+              if data.bold and fg < 8
+                fg += 8
+              classes.push "fg-color-" + fg
+
+            if typeof data.fg is 'string'
+              styles.push "color: " + data.fg
+
+            if typeof data.bg is 'number'
+              classes.push "bg-color-" + data.bg
+
+            if typeof data.bg is 'string'
+              styles.push "background-color: " + data.bg
 
             out += "class=\""
             out += classes.join(" ")
-            out += "\">"
+            out += "\""
+            if styles.length
+              out += " style=\"" + styles.join("; ") + "\""
+            out += ">"
+
         out += "<span class=\"" + (
           if @cursorState then "reverse-video " else ""
         ) + "cursor\">" if i is x
@@ -453,7 +490,7 @@ class Terminal
                 out += ch
         out += "</span>" if i is x
         attr = data
-      out += "</span>" if attr isnt @defAttr
+      out += "</span>" unless @equalAttr attr, @getDefAttr()
       @children[j].innerHTML = out
     parent?.appendChild @element
 
@@ -625,20 +662,20 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @screen[@y + @ybase][@x] = [@curAttr, '\u23CE']
+                  @screen[@y + @ybase][@x] = [@cloneAttr(@curAttr), '\u23CE']
                   @x = 0
                   @next_line()
 
                 @updateRange @y
 
-                @screen[@y + @ybase][@x] = [@curAttr, ch]
+                @screen[@y + @ybase][@x] = [@cloneAttr(@curAttr), ch]
                 @x++
                 if "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
-                    @screen[@y + @ybase][@x - 1] = [@curAttr, " "]
+                    @screen[@y + @ybase][@x - 1] = [@cloneAttr(@curAttr), " "]
                     break
 
-                  @screen[@y + @ybase][@x] = [@curAttr, " "]
+                  @screen[@y + @ybase][@x] = [@cloneAttr(@curAttr), " "]
                   @x++
 
         when State.escaped
@@ -1079,7 +1116,7 @@ class Terminal
                     else
                       html = "<div class=\"inline-html\">" + content + "</div>"
                       @screen[@y + @ybase][@x] = [
-                          @curAttr
+                          @cloneAttr(@curAttr)
                           html
                       ]
                       line = 0
@@ -1778,7 +1815,7 @@ class Terminal
   #         Ps = 7    -> Inverse.
   #         Ps = 8    -> Invisible, i.e., hidden (VT300).
   #         Ps = 2 2    -> Normal (neither bold nor faint).
-  #         Ps = 2 4    -> Not underlined.
+  #         Ps = 2 4    -> Not underline.
   #         Ps = 2 5    -> Steady (not blinking).
   #         Ps = 2 7    -> Positive (not inverse).
   #         Ps = 2 8    -> Visible, i.e., not hidden (VT300).
@@ -1835,113 +1872,96 @@ class Terminal
   charAttributes: (params) ->
     # Optimize a single SGR0.
     if params.length is 1 and params[0] is 0
-      @curAttr = @defAttr
+      @curAttr = @getDefAttr()
       return
-    flags = @curAttr >> 18
-
-    fg = (@curAttr >> 9) & 0x1ff
-    bg = @curAttr & 0x1ff
-
     l = params.length
     i = 0
     while i < l
       p = params[i]
       if p >= 30 and p <= 37
         # fg color 8
-        fg = p - 30
+        @curAttr.fg = p - 30
       else if p >= 40 and p <= 47
         # bg color 8
-        bg = p - 40
+        @curAttr.bg = p - 40
       else if p >= 90 and p <= 97
         # fg color 16
         p += 8
-        fg = p - 90
+        @curAttr.fg = p - 90
       else if p >= 100 and p <= 107
         # bg color 16
         p += 8
-        bg = p - 100
+        @curAttr.bg = p - 100
       else if p is 0
         # default
-        flags = @defAttr >> 18
-        fg = (@defAttr >> 9) & 0x1ff
-        bg = @defAttr & 0x1ff
-
-      # flags = 0;
-      # fg = 0x1ff;
-      # bg = 0x1ff;
+        @curAttr = @getDefAttr()
       else if p is 1
         # bold text
-        flags |= 1
+        @curAttr.bold = true
       else if p is 4
-        # underlined text
-        flags |= 2
+        # underline text
+        @curAttr.underline = true
       else if p is 5
         # blink
-        flags |= 4
+        @curAttr.blink = true
       else if p is 7
         # inverse and positive
         # test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
-        flags |= 8
+        @curAttr.inverse = true
       else if p is 8
         # invisible
-        flags |= 16
+        @curAttr.invisible = true
       else if p is 10
          # Primary Font
          # ignoring
       else if p is 22
         # not bold
-        flags &= ~1
+        @curAttr.bold = false
       else if p is 24
-        # not underlined
-        flags &= ~2
+        # not underline
+        @curAttr.underline = false
       else if p is 25
         # not blink
-        flags &= ~4
+        @curAttr.blink = false
       else if p is 27
         # not inverse
-        flags &= ~8
+        @curAttr.inverse = false
       else if p is 28
         # not invisible
-        flags &= ~16
+        @curAttr.invisible = false
       else if p is 39
         # reset fg
-        fg = (@defAttr >> 9) & 0x1ff
+        @curAttr.fg = 0
       else if p is 49
         # reset bg
-        bg = @defAttr & 0x1ff
+        @curAttr.bg = 256
       else if p is 38
         if params[i + 1] is 2
           # fg color 2^24
           i += 2
-          fg = "#" + params[i] & 0xff +
-            params[i + 1] & 0xff +
-            params[i + 2] & 0xff
+          @curAttr.fg = "rgb(#{params[i]}, #{params[i+1]}, #{params[i+2]})"
           i += 2
         else if params[i + 1] is 5
           # fg color 256
           i += 2
-          fg = params[i] & 0xff
+          @curAttr.fg = params[i] & 0xff
       else if p is 48
         if params[i + 1] is 2
           # bg color 2^24
           i += 2
-          bg = "#" + params[i] & 0xff +
-            params[i + 1] & 0xff +
-            params[i + 2] & 0xff
+          @curAttr.bg = "rgb(#{params[i]}, #{params[i+1]}, #{params[i+2]})"
           i += 2
         else if params[i + 1] is 5
           # bg color 256
           i += 2
-          bg = params[i] & 0xff
+          @curAttr.bg = params[i] & 0xff
       else if p is 100
         # reset fg/bg
-        fg = (@defAttr >> 9) & 0x1ff
-        bg = @defAttr & 0x1ff
+        @curAttr.fg = 0
+        @curAttr.bg = 256
       else
         console.error "Unknown SGR attribute: %d.", p
       i++
-    @curAttr = (flags << 18) | (fg << 9) | bg
-
 
   # CSI Ps n    Device Status Report (DSR).
   #         Ps = 5    -> Status Report.    Result (``OK'') is

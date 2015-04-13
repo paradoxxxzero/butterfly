@@ -205,6 +205,34 @@
       setTimeout(this.resize.bind(this), 100);
     }
 
+    Terminal.prototype.getDefAttr = function() {
+      return {
+        bg: 256,
+        fg: 0,
+        bold: false,
+        underline: false,
+        blink: false,
+        inverse: false,
+        invisible: false
+      };
+    };
+
+    Terminal.prototype.cloneAttr = function(a) {
+      return {
+        bg: a.bg,
+        fg: a.fg,
+        bold: a.bold,
+        underline: a.underline,
+        blink: a.blink,
+        inverse: a.inverse,
+        invisible: a.invisible
+      };
+    };
+
+    Terminal.prototype.equalAttr = function(a, b) {
+      return a.bg === b.bg && a.fg === b.fg && a.bold === b.bold && a.underline === b.underline && a.blink === b.blink && a.inverse === b.inverse && a.invisible === b.invisible;
+    };
+
     Terminal.prototype.reset_vars = function() {
       var i;
       this.x = 0;
@@ -225,8 +253,8 @@
       this.gcharset = null;
       this.glevel = 0;
       this.charsets = [null];
-      this.defAttr = (0 << 18) | (257 << 9) | (256 << 0);
-      this.curAttr = this.defAttr;
+      this.defAttr = this.getDefAttr();
+      this.curAttr = this.getDefAttr();
       this.params = [];
       this.currentParam = 0;
       this.prefix = "";
@@ -458,7 +486,7 @@
     };
 
     Terminal.prototype.refresh = function(start, end) {
-      var attr, bg, ch, classes, data, fg, flags, html, i, j, k, l, line, m, out, parent, ref, ref1, ref2, ref3, row, x;
+      var attr, ch, classes, data, fg, html, i, j, k, l, line, m, out, parent, ref, ref1, ref2, ref3, row, styles, x;
       if (!this.native_scroll && end - start >= this.rows / 3) {
         parent = this.element.parentNode;
         if (parent != null) {
@@ -475,43 +503,56 @@
         } else {
           x = -Infinity;
         }
-        attr = this.defAttr;
+        attr = this.getDefAttr();
         for (i = m = 0, ref2 = this.cols - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
           data = line[i][0];
           ch = line[i][1];
-          if (data !== attr) {
-            if (attr !== this.defAttr) {
+          if (!this.equalAttr(data, attr)) {
+            if (!this.equalAttr(attr, this.getDefAttr())) {
               out += "</span>";
             }
-            if (data !== this.defAttr) {
+            if (!this.equalAttr(data, this.getDefAttr())) {
               classes = [];
+              styles = [];
               out += "<span ";
-              bg = data & 0x1ff;
-              fg = (data >> 9) & 0x1ff;
-              flags = data >> 18;
-              if (flags & 1) {
+              if (data.bold) {
                 classes.push("bold");
               }
-              if (flags & 2) {
+              if (data.underline) {
                 classes.push("underline");
               }
-              if (flags & 4) {
+              if (data.blink) {
                 classes.push("blink");
               }
-              if (flags & 8) {
+              if (data.inverse) {
                 classes.push("reverse-video");
               }
-              if (flags & 16) {
+              if (data.invisible) {
                 classes.push("invisible");
               }
-              if (flags & 1 && fg < 8) {
-                fg += 8;
+              if (typeof data.fg === 'number') {
+                fg = data.fg;
+                if (data.bold && fg < 8) {
+                  fg += 8;
+                }
+                classes.push("fg-color-" + fg);
               }
-              classes.push("bg-color-" + bg);
-              classes.push("fg-color-" + fg);
+              if (typeof data.fg === 'string') {
+                styles.push("color: " + data.fg);
+              }
+              if (typeof data.bg === 'number') {
+                classes.push("bg-color-" + data.bg);
+              }
+              if (typeof data.bg === 'string') {
+                styles.push("background-color: " + data.bg);
+              }
               out += "class=\"";
               out += classes.join(" ");
-              out += "\">";
+              out += "\"";
+              if (styles.length) {
+                out += " style=\"" + styles.join("; ") + "\"";
+              }
+              out += ">";
             }
           }
           if (i === x) {
@@ -548,7 +589,7 @@
           }
           attr = data;
         }
-        if (attr !== this.defAttr) {
+        if (!this.equalAttr(attr, this.getDefAttr())) {
           out += "</span>";
         }
         this.children[j].innerHTML = out;
@@ -747,19 +788,19 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.screen[this.y + this.ybase][this.x] = [this.curAttr, '\u23CE'];
+                    this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), '\u23CE'];
                     this.x = 0;
                     this.next_line();
                   }
                   this.updateRange(this.y);
-                  this.screen[this.y + this.ybase][this.x] = [this.curAttr, ch];
+                  this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), ch];
                   this.x++;
                   if (("\uff00" < ch && ch < "\uffef")) {
                     if (this.cols < 2 || this.x >= this.cols) {
-                      this.screen[this.y + this.ybase][this.x - 1] = [this.curAttr, " "];
+                      this.screen[this.y + this.ybase][this.x - 1] = [this.cloneAttr(this.curAttr), " "];
                       break;
                     }
-                    this.screen[this.y + this.ybase][this.x] = [this.curAttr, " "];
+                    this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), " "];
                     this.x++;
                   }
                 }
@@ -1133,7 +1174,7 @@
                         this.updateRange(this.y);
                       } else {
                         html = "<div class=\"inline-html\">" + content + "</div>";
-                        this.screen[this.y + this.ybase][this.x] = [this.curAttr, html];
+                        this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), html];
                         line = 0;
                         while (line < this.get_html_height_in_lines(html) - 1) {
                           this.y++;
@@ -1895,85 +1936,81 @@
     };
 
     Terminal.prototype.charAttributes = function(params) {
-      var bg, fg, flags, i, l, p;
+      var i, l, p, results;
       if (params.length === 1 && params[0] === 0) {
-        this.curAttr = this.defAttr;
+        this.curAttr = this.getDefAttr();
         return;
       }
-      flags = this.curAttr >> 18;
-      fg = (this.curAttr >> 9) & 0x1ff;
-      bg = this.curAttr & 0x1ff;
       l = params.length;
       i = 0;
+      results = [];
       while (i < l) {
         p = params[i];
         if (p >= 30 && p <= 37) {
-          fg = p - 30;
+          this.curAttr.fg = p - 30;
         } else if (p >= 40 && p <= 47) {
-          bg = p - 40;
+          this.curAttr.bg = p - 40;
         } else if (p >= 90 && p <= 97) {
           p += 8;
-          fg = p - 90;
+          this.curAttr.fg = p - 90;
         } else if (p >= 100 && p <= 107) {
           p += 8;
-          bg = p - 100;
+          this.curAttr.bg = p - 100;
         } else if (p === 0) {
-          flags = this.defAttr >> 18;
-          fg = (this.defAttr >> 9) & 0x1ff;
-          bg = this.defAttr & 0x1ff;
+          this.curAttr = this.getDefAttr();
         } else if (p === 1) {
-          flags |= 1;
+          this.curAttr.bold = true;
         } else if (p === 4) {
-          flags |= 2;
+          this.curAttr.underline = true;
         } else if (p === 5) {
-          flags |= 4;
+          this.curAttr.blink = true;
         } else if (p === 7) {
-          flags |= 8;
+          this.curAttr.inverse = true;
         } else if (p === 8) {
-          flags |= 16;
+          this.curAttr.invisible = true;
         } else if (p === 10) {
 
         } else if (p === 22) {
-          flags &= ~1;
+          this.curAttr.bold = false;
         } else if (p === 24) {
-          flags &= ~2;
+          this.curAttr.underline = false;
         } else if (p === 25) {
-          flags &= ~4;
+          this.curAttr.blink = false;
         } else if (p === 27) {
-          flags &= ~8;
+          this.curAttr.inverse = false;
         } else if (p === 28) {
-          flags &= ~16;
+          this.curAttr.invisible = false;
         } else if (p === 39) {
-          fg = (this.defAttr >> 9) & 0x1ff;
+          this.curAttr.fg = 0;
         } else if (p === 49) {
-          bg = this.defAttr & 0x1ff;
+          this.curAttr.bg = 256;
         } else if (p === 38) {
           if (params[i + 1] === 2) {
             i += 2;
-            fg = "#" + params[i] & 0xff + params[i + 1] & 0xff + params[i + 2] & 0xff;
+            this.curAttr.fg = "rgb(" + params[i] + ", " + params[i + 1] + ", " + params[i + 2] + ")";
             i += 2;
           } else if (params[i + 1] === 5) {
             i += 2;
-            fg = params[i] & 0xff;
+            this.curAttr.fg = params[i] & 0xff;
           }
         } else if (p === 48) {
           if (params[i + 1] === 2) {
             i += 2;
-            bg = "#" + params[i] & 0xff + params[i + 1] & 0xff + params[i + 2] & 0xff;
+            this.curAttr.bg = "rgb(" + params[i] + ", " + params[i + 1] + ", " + params[i + 2] + ")";
             i += 2;
           } else if (params[i + 1] === 5) {
             i += 2;
-            bg = params[i] & 0xff;
+            this.curAttr.bg = params[i] & 0xff;
           }
         } else if (p === 100) {
-          fg = (this.defAttr >> 9) & 0x1ff;
-          bg = this.defAttr & 0x1ff;
+          this.curAttr.fg = 0;
+          this.curAttr.bg = 256;
         } else {
           console.error("Unknown SGR attribute: %d.", p);
         }
-        i++;
+        results.push(i++);
       }
-      return this.curAttr = (flags << 18) | (fg << 9) | bg;
+      return results;
     };
 
     Terminal.prototype.deviceStatus = function(params) {
