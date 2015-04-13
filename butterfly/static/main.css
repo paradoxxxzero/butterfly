@@ -3093,3 +3093,6 @@ body[data-native-scroll="yes"] ::-webkit-scrollbar-thumb {
 
 .inline-html {
   overflow: hidden; }
+
+.inline-image {
+  max-width: 100%; }

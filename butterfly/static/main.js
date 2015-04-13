@@ -179,7 +179,7 @@
         this.element.appendChild(div);
         this.children.push(div);
       }
-      this.scrollback = 5000;
+      this.scrollback = 10000;
       this.visualBell = 100;
       this.convertEol = false;
       this.termName = 'xterm';
@@ -560,7 +560,8 @@
         ref3 = this.html;
         for (l in ref3) {
           html = ref3[l];
-          this.element.insertBefore(html, this.children[l]);
+          this.children[l].innerHTML = '';
+          this.children[l].appendChild(html);
         }
         this.html = {};
         return this.native_scroll_to();
@@ -1142,6 +1143,15 @@
                           }
                           line++;
                         }
+                      }
+                      break;
+                    case "IMAGE":
+                      if (this.native_scroll) {
+                        html = document.createElement('img');
+                        html.classList.add('inline-image');
+                        html.src = "data:image;base64," + content;
+                        this.html[this.y] = html;
+                        this.updateRange(this.y);
                       }
                       break;
                     case "PROMPT":

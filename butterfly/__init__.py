@@ -43,12 +43,12 @@ class Route(tornado.web.RequestHandler):
     def log(self):
         return log
 
+# Imported from executable
+if hasattr(tornado.options.options, 'debug'):
+    application = tornado.web.Application(
+        static_path=os.path.join(os.path.dirname(__file__), "static"),
+        template_path=os.path.join(os.path.dirname(__file__), "templates"),
+        debug=tornado.options.options.debug
+    )
 
-application = tornado.web.Application(
-    static_path=os.path.join(os.path.dirname(__file__), "static"),
-    template_path=os.path.join(os.path.dirname(__file__), "templates"),
-    debug=tornado.options.options.debug
-)
-
-
-import butterfly.routes
+    import butterfly.routes

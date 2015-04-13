@@ -114,7 +114,7 @@
     if (!next) {
       next = node.parentNode.parentNode.nextSibling;
     }
-    while (next.firstChild) {
+    while (next != null ? next.firstChild : void 0) {
       next = next.firstChild;
     }
     return next;
@@ -301,7 +301,7 @@
 
   })();
 
-  addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function(e) {
     var ref, ref1;
     if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
@@ -347,7 +347,7 @@
     return true;
   });
 
-  addEventListener('keyup', function(e) {
+  document.addEventListener('keyup', function(e) {
     var ref, ref1;
     if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
@@ -368,7 +368,7 @@
     return true;
   });
 
-  addEventListener('dblclick', function(e) {
+  document.addEventListener('dblclick', function(e) {
     var anchorNode, anchorOffset, new_range, range, sel;
     if (e.ctrlKey || e.altkey) {
       return;

@@ -88,7 +88,7 @@ class Terminal
       @element.appendChild(div)
       @children.push(div)
 
-    @scrollback = 5000
+    @scrollback = 10000
     @visualBell = 100
 
     @convertEol = false
@@ -459,7 +459,8 @@ class Terminal
 
     if @native_scroll
       for l, html of @html
-        @element.insertBefore(html, @children[l])
+        @children[l].innerHTML = ''
+        @children[l].appendChild(html)
       @html = {}
       @native_scroll_to()
 
@@ -539,6 +540,7 @@ class Terminal
     if scroll is -1
       scroll = @parent.scrollHeight - @parent.getBoundingClientRect().height
     @parent.scrollTop = scroll
+
 
   scroll_display: (disp) ->
     if @native_scroll
@@ -1088,6 +1090,14 @@ class Terminal
                           @y--
                           @scroll()
                         line++
+
+                  when "IMAGE"
+                    if @native_scroll
+                      html = document.createElement 'img'
+                      html.classList.add 'inline-image'
+                      html.src = "data:image;base64," + content
+                      @html[@y] = html
+                      @updateRange @y
 
                   when "PROMPT"
                     @send content

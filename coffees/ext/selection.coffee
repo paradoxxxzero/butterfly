@@ -38,7 +38,7 @@ next_leaf = (node) ->
     next = node.parentNode.nextSibling
   if not next
     next = node.parentNode.parentNode.nextSibling
-  while next.firstChild
+  while next?.firstChild
     next = next.firstChild
   next
 
@@ -169,7 +169,7 @@ class Selection
 
     return needle
 
-addEventListener 'keydown', (e) ->
+document.addEventListener 'keydown', (e) ->
   return true if e.keyCode in [16..19]
 
   # Paste natural selection too if shiftkey
@@ -210,7 +210,7 @@ addEventListener 'keydown', (e) ->
     return cancel e
   true
 
-addEventListener 'keyup', (e) ->
+document.addEventListener 'keyup', (e) ->
   return true if e.keyCode in [16..19]
 
   if selection
@@ -225,7 +225,7 @@ addEventListener 'keyup', (e) ->
       return true
   true
 
-addEventListener 'dblclick', (e) ->
+document.addEventListener 'dblclick', (e) ->
   return if e.ctrlKey or e.altkey
   sel = getSelection()
   return if sel.isCollapsed or sel.toString().match /\s/
