@@ -205,18 +205,6 @@
       setTimeout(this.resize.bind(this), 100);
     }
 
-    Terminal.prototype.getDefAttr = function() {
-      return {
-        bg: 256,
-        fg: 0,
-        bold: false,
-        underline: false,
-        blink: false,
-        inverse: false,
-        invisible: false
-      };
-    };
-
     Terminal.prototype.cloneAttr = function(a) {
       return {
         bg: a.bg,
@@ -253,8 +241,16 @@
       this.gcharset = null;
       this.glevel = 0;
       this.charsets = [null];
-      this.defAttr = this.getDefAttr();
-      this.curAttr = this.getDefAttr();
+      this.defAttr = {
+        bg: 256,
+        fg: 257,
+        bold: false,
+        underline: false,
+        blink: false,
+        inverse: false,
+        invisible: false
+      };
+      this.curAttr = this.cloneAttr(this.defAttr);
       this.params = [];
       this.currentParam = 0;
       this.prefix = "";
@@ -280,7 +276,10 @@
     };
 
     Terminal.prototype.eraseAttr = function() {
-      return (this.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
+      var erased;
+      erased = this.cloneAttr(this.defAttr);
+      erased.bg = this.curAttr.bg;
+      return erased;
     };
 
     Terminal.prototype.focus = function() {
@@ -503,15 +502,15 @@
         } else {
           x = -Infinity;
         }
-        attr = this.getDefAttr();
+        attr = this.cloneAttr(this.defAttr);
         for (i = m = 0, ref2 = this.cols - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
           data = line[i][0];
           ch = line[i][1];
           if (!this.equalAttr(data, attr)) {
-            if (!this.equalAttr(attr, this.getDefAttr())) {
+            if (!this.equalAttr(attr, this.defAttr)) {
               out += "</span>";
             }
-            if (!this.equalAttr(data, this.getDefAttr())) {
+            if (!this.equalAttr(data, this.defAttr)) {
               classes = [];
               styles = [];
               out += "<span ";
@@ -589,7 +588,7 @@
           }
           attr = data;
         }
-        if (!this.equalAttr(attr, this.getDefAttr())) {
+        if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
         }
         this.children[j].innerHTML = out;
@@ -610,8 +609,16 @@
     };
 
     Terminal.prototype._cursorBlink = function() {
-      var cursor;
+      var cursor, customStyle;
       this.cursorState ^= 1;
+      if (document.getElementById("blink")) {
+        document.getElementById("blink").remove();
+      } else {
+        customStyle = document.createElement("style");
+        customStyle.id = 'blink';
+        document.head.appendChild(customStyle);
+        customStyle.sheet.insertRule("#wrapper .blink { color: transparent !important }", 0);
+      }
       cursor = this.element.querySelector(".cursor");
       if (!cursor) {
         return;
@@ -1938,7 +1945,7 @@
     Terminal.prototype.charAttributes = function(params) {
       var i, l, p, results;
       if (params.length === 1 && params[0] === 0) {
-        this.curAttr = this.getDefAttr();
+        this.curAttr = this.cloneAttr(this.defAttr);
         return;
       }
       l = params.length;
@@ -1957,7 +1964,7 @@
           p += 8;
           this.curAttr.bg = p - 100;
         } else if (p === 0) {
-          this.curAttr = this.getDefAttr();
+          this.curAttr = this.cloneAttr(this.defAttr);
         } else if (p === 1) {
           this.curAttr.bold = true;
         } else if (p === 4) {
@@ -1981,7 +1988,7 @@
         } else if (p === 28) {
           this.curAttr.invisible = false;
         } else if (p === 39) {
-          this.curAttr.fg = 0;
+          this.curAttr.fg = 257;
         } else if (p === 49) {
           this.curAttr.bg = 256;
         } else if (p === 38) {
@@ -2003,7 +2010,7 @@
             this.curAttr.bg = params[i] & 0xff;
           }
         } else if (p === 100) {
-          this.curAttr.fg = 0;
+          this.curAttr.fg = 257;
           this.curAttr.bg = 256;
         } else {
           console.error("Unknown SGR attribute: %d.", p);

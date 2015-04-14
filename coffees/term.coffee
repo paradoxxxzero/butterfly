@@ -118,15 +118,6 @@ class Terminal
 
     setTimeout(@resize.bind(@), 100)
 
-  getDefAttr: ->
-    bg: 256
-    fg: 0
-    bold: false
-    underline: false
-    blink: false
-    inverse: false
-    invisible: false
-
   cloneAttr: (a) ->
     bg: a.bg
     fg: a.fg
@@ -167,9 +158,16 @@ class Terminal
     @charsets = [null]
 
     # stream
-    @defAttr = @getDefAttr()
+    @defAttr =
+      bg: 256
+      fg: 257
+      bold: false
+      underline: false
+      blink: false
+      inverse: false
+      invisible: false
 
-    @curAttr = @getDefAttr()
+    @curAttr = @cloneAttr @defAttr
     @params = []
     @currentParam = 0
     @prefix = ""
@@ -189,7 +187,9 @@ class Terminal
     @children[0].removeChild(test_span)
 
   eraseAttr: ->
-    (@defAttr & ~0x1ff) | (@curAttr & 0x1ff)
+    erased = @cloneAttr @defAttr
+    erased.bg = @curAttr.bg
+    erased
 
   focus: ->
     @send('\x1b[I') if @sendFocus
@@ -421,13 +421,13 @@ class Terminal
       else
         x = -Infinity
 
-      attr = @getDefAttr()
+      attr = @cloneAttr @defAttr
       for i in [0..@cols - 1]
         data = line[i][0]
         ch = line[i][1]
         unless @equalAttr data, attr
-          out += "</span>" unless @equalAttr attr, @getDefAttr()
-          unless @equalAttr data, @getDefAttr()
+          out += "</span>" unless @equalAttr attr, @defAttr
+          unless @equalAttr data, @defAttr
             classes = []
             styles = []
             out += "<span "
@@ -490,7 +490,7 @@ class Terminal
                 out += ch
         out += "</span>" if i is x
         attr = data
-      out += "</span>" unless @equalAttr attr, @getDefAttr()
+      out += "</span>" unless @equalAttr attr, @defAttr
       @children[j].innerHTML = out
     parent?.appendChild @element
 
@@ -503,6 +503,16 @@ class Terminal
 
   _cursorBlink: ->
     @cursorState ^= 1
+    # Restore blink text !
+    if document.getElementById "blink"
+      document.getElementById("blink").remove()
+    else
+      customStyle = document.createElement("style")
+      customStyle.id = 'blink'
+      document.head.appendChild customStyle
+      customStyle.sheet.insertRule(
+        "#wrapper .blink { color: transparent !important }", 0)
+
     cursor = @element.querySelector(".cursor")
     return unless cursor
     if cursor.classList.contains("reverse-video")
@@ -1872,7 +1882,7 @@ class Terminal
   charAttributes: (params) ->
     # Optimize a single SGR0.
     if params.length is 1 and params[0] is 0
-      @curAttr = @getDefAttr()
+      @curAttr = @cloneAttr @defAttr
       return
     l = params.length
     i = 0
@@ -1894,7 +1904,7 @@ class Terminal
         @curAttr.bg = p - 100
       else if p is 0
         # default
-        @curAttr = @getDefAttr()
+        @curAttr = @cloneAttr @defAttr
       else if p is 1
         # bold text
         @curAttr.bold = true
@@ -1931,7 +1941,7 @@ class Terminal
         @curAttr.invisible = false
       else if p is 39
         # reset fg
-        @curAttr.fg = 0
+        @curAttr.fg = 257
       else if p is 49
         # reset bg
         @curAttr.bg = 256
@@ -1957,7 +1967,7 @@ class Terminal
           @curAttr.bg = params[i] & 0xff
       else if p is 100
         # reset fg/bg
-        @curAttr.fg = 0
+        @curAttr.fg = 257
         @curAttr.bg = 256
       else
         console.error "Unknown SGR attribute: %d.", p

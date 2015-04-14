@@ -3078,9 +3078,9 @@ body[data-native-scroll="yes"] ::-webkit-scrollbar-thumb {
 .underline, .nbsp {
   text-decoration: underline; }
 
-.blink {
-  text-decoration: blink; }
-
+/* Not supported, emulated */
+/* .blink */
+/*   text-decoration: blink */
 .invisible {
   visibility: hidden; }
 
