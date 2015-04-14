@@ -28,6 +28,16 @@ $bg: #000 !default
 /* Not supported, emulated
 /* .blink
 /*   text-decoration: blink
+.blink
+  animation: blink 1s ease-in-out infinite
+
+@keyframes blink
+  0%
+    opacity: 1
+  50%
+    opacity: 0
+  100%
+    opacity: 1
 
 .invisible
   visibility: hidden

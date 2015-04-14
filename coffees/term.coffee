@@ -53,7 +53,6 @@ class Terminal
     @document = @parent.ownerDocument
     @body = @document.getElementsByTagName('body')[0]
     @html_escapes_enabled = @body.getAttribute('data-allow-html') is 'yes'
-    @native_scroll = @body.getAttribute('data-native-scroll') is 'yes'
 
     # Main terminal element
     @element = @document.createElement('div')
@@ -71,7 +70,6 @@ class Terminal
     @children = [div]
 
     @compute_char_size()
-    div.style.height = @char_size.height + 'px' unless @native_scroll
     term_width = @element.getBoundingClientRect().width
     term_height = @parent.getBoundingClientRect().height
     @cols = Math.floor(term_width / @char_size.width)
@@ -83,7 +81,6 @@ class Terminal
     i = @rows - 1
     while i--
       div = @document.createElement('div')
-      div.style.height = @char_size.height + 'px' unless @native_scroll
       div.className = 'line'
       @element.appendChild(div)
       @children.push(div)
@@ -98,8 +95,6 @@ class Terminal
     @stop = false
     @last_cc = 0
     @reset_vars()
-
-    @refresh 0, @rows - 1 unless @native_scroll
 
     @focus()
 
@@ -397,17 +392,9 @@ class Terminal
       if @mouseEvents
         return if @x10Mouse
         sendButton ev
-      else
-        return true if @applicationKeypad or @native_scroll
-        @scroll_display if ev.deltaY > 0 then 5 else -5
-      cancel ev
-
+        cancel ev
 
   refresh: (start, end) ->
-    if not @native_scroll and end - start >= @rows / 3
-      parent = @element.parentNode
-      parent?.removeChild @element
-
     end = Math.min(end, @screen.length - 1)
 
     for j in [start..end]
@@ -415,8 +402,7 @@ class Terminal
       line = @screen[row]
       out = ""
 
-      if j is @y and not @cursorHidden and (
-        @native_scroll or @ydisp is @ybase or @selectMode)
+      if j is @y and not @cursorHidden
         x = @x
       else
         x = -Infinity
@@ -492,27 +478,15 @@ class Terminal
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
       @children[j].innerHTML = out
-    parent?.appendChild @element
 
-    if @native_scroll
-      for l, html of @html
-        @children[l].innerHTML = ''
-        @children[l].appendChild(html)
-      @html = {}
-      @native_scroll_to()
+    for l, html of @html
+      @children[l].innerHTML = ''
+      @children[l].appendChild(html)
+    @html = {}
+    @native_scroll_to()
 
   _cursorBlink: ->
     @cursorState ^= 1
-    # Restore blink text !
-    if document.getElementById "blink"
-      document.getElementById("blink").remove()
-    else
-      customStyle = document.createElement("style")
-      customStyle.id = 'blink'
-      document.head.appendChild customStyle
-      customStyle.sheet.insertRule(
-        "#wrapper .blink { color: transparent !important }", 0)
-
     cursor = @element.querySelector(".cursor")
     return unless cursor
     if cursor.classList.contains("reverse-video")
@@ -540,66 +514,24 @@ class Terminal
 
 
   scroll: ->
-    if @native_scroll
-
-      if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
-        # inner scroll
-        @screen.splice @scrollTop, 1
-        @screen.splice @scrollBottom, 0, @blank_line()
-        @maxRange()
-      else
-        @screen.shift()
-        @screen.push @blank_line()
-        @refreshStart = Math.max(@refreshStart - 1, 0)
-        @new_line()
+    if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+      # inner scroll
+      @screen.splice @scrollTop, 1
+      @screen.splice @scrollBottom, 0, @blank_line()
+      @maxRange()
     else
-      if ++@ybase is @scrollback
-        @ybase = @ybase / 2 | 0
-        @screen = @screen.slice(-(@ybase + @rows) + 1)
-
-      @ydisp = @ybase
-
-      # last line
-      row = @ybase + @rows - 1
-
-      # subtract the bottom scroll region
-      row -= @rows - 1 - @scrollBottom
-      if row is @screen.length
-        # potential optimization:
-        # pushing is faster than splicing
-        # when they amount to the same
-        # behavior.
-        @screen.push @blank_line()
-      else
-        # add our new line
-        @screen.splice row, 0, @blank_line()
-
-      if @scrollTop isnt 0
-        if @ybase isnt 0
-          @ybase--
-          @ydisp = @ybase
-        @screen.splice @ybase + @scrollTop, 1
-
-      @updateRange @scrollTop
-      @updateRange @scrollBottom
+      @screen.shift()
+      @screen.push @blank_line()
+      @refreshStart = Math.max(@refreshStart - 1, 0)
+      @new_line()
 
   native_scroll_to: (scroll=-1) ->
     if scroll is -1
       scroll = @parent.scrollHeight - @parent.getBoundingClientRect().height
     @parent.scrollTop = scroll
 
-
   scroll_display: (disp) ->
-    if @native_scroll
-      @native_scroll_to @parent.scrollTop + disp * @char_size.height
-    else
-      @ydisp += disp
-      if @ydisp > @ybase
-        @ydisp = @ybase
-      else
-        @ydisp = 0  if @ydisp < 0
-
-      @refresh 0, @rows - 1
+    @native_scroll_to @parent.scrollTop + disp * @char_size.height
 
   new_line: ->
     div = @document.createElement('div')
@@ -620,11 +552,6 @@ class Terminal
   write: (data) ->
     @refreshStart = @y
     @refreshEnd = @y
-
-    unless @native_scroll
-      if @ybase isnt @ydisp
-        @ydisp = @ybase
-        @maxRange()
 
     i = 0
     l = data.length
@@ -1117,34 +1044,18 @@ class Terminal
                       console.log "HTML escapes are disabled"
                       break
 
-                    if @native_scroll
-                      html = document.createElement 'div'
-                      html.classList.add 'inline-html'
-                      html.innerHTML = content
-                      @html[@y] = html
-                      @updateRange @y
-                    else
-                      html = "<div class=\"inline-html\">" + content + "</div>"
-                      @screen[@y + @ybase][@x] = [
-                          @cloneAttr(@curAttr)
-                          html
-                      ]
-                      line = 0
-
-                      while line < @get_html_height_in_lines(html) - 1
-                        @y++
-                        if @y > @scrollBottom
-                          @y--
-                          @scroll()
-                        line++
+                    html = document.createElement 'div'
+                    html.classList.add 'inline-html'
+                    html.innerHTML = content
+                    @html[@y] = html
+                    @updateRange @y
 
                   when "IMAGE"
-                    if @native_scroll
-                      html = document.createElement 'img'
-                      html.classList.add 'inline-image'
-                      html.src = "data:image;base64," + content
-                      @html[@y] = html
-                      @updateRange @y
+                    html = document.createElement 'img'
+                    html.classList.add 'inline-image'
+                    html.src = "data:image;base64," + content
+                    @html[@y] = html
+                    @updateRange @y
 
                   when "PROMPT"
                     @send content
@@ -1450,14 +1361,6 @@ class Terminal
 
     return true unless key
 
-    if @prefixMode
-      @leavePrefix()
-      return cancel(ev)
-
-    if not @native_scroll and @selectMode
-      @keySelect ev, key
-      return cancel(ev)
-
     @showCursor()
     @handler(key)
     cancel ev
@@ -1559,8 +1462,6 @@ class Terminal
         if @children.length < @rows
           line = @document.createElement("div")
           line.className = 'line'
-          unless @native_scroll
-            line.style.height = @char_size.height + 'px'
           el.appendChild line
           @children.push line
     else if j > @rows
@@ -1628,8 +1529,6 @@ class Terminal
     @updateRange y
 
   eraseLeft: (x, y) ->
-    unless @native_scroll
-      y += @ybase
     line = @screen[@ybase + y]
     # xterm
     ch = [@eraseAttr(), " "]
@@ -1671,36 +1570,22 @@ class Terminal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    if @native_scroll
-      if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
-        # inner scroll
-        @screen.splice @scrollBottom, 1
-        @screen.splice @scrollTop, 0, @blank_line(true)
-        @maxRange()
-      else
-        prevNode = @children[0].previousElementSibling
-        if prevNode
-          @children.slice(-1)[0].remove()
-          @children.pop()
-          @children.unshift @children[0].previousElementSibling
-        else
-          @new_line()
-        @screen.pop()
-        @screen.unshift @blank_line()
+    if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+      # inner scroll
+      @screen.splice @scrollBottom, 1
+      @screen.splice @scrollTop, 0, @blank_line(true)
       @maxRange()
     else
-      @y--
-      if @y < @scrollTop
-        @y++
-        # possibly move the code below to term.reverseScroll();
-        # test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
-        # blank_line(true) is xterm/linux behavior
-        @screen.splice @y + @ybase, 0, @blank_line(true)
-        j = @rows - 1 - @scrollBottom
-        @screen.splice @rows - 1 + @ybase - j + 1, 1
-
-        @updateRange @scrollTop
-        @updateRange @scrollBottom
+      prevNode = @children[0].previousElementSibling
+      if prevNode
+        @children.slice(-1)[0].remove()
+        @children.pop()
+        @children.unshift @children[0].previousElementSibling
+      else
+        @new_line()
+      @screen.pop()
+      @screen.unshift @blank_line()
+    @maxRange()
     @state = State.normal
 
   # ESC c Full Reset (RIS).
@@ -2084,12 +1969,7 @@ class Terminal
     while param--
       # test: echo -e '\e[44m\e[1M\e[0m'
       # blank_line(true) - xterm/linux behavior
-      if @native_scroll
-        @screen.push @blank_line(true)
-      else
-        j = @rows - 1 - @scrollBottom
-        j = @rows - 1 + @ybase - j
-        @screen.splice j + 1, 0, @blank_line(true)
+      @screen.push @blank_line(true)
       @screen.splice @y, 1
 
     @updateRange @y
@@ -3082,15 +2962,6 @@ class Terminal
         @screen[i].push ch
         i++
     @maxRange()
-
-
-  get_html_height_in_lines: (html) ->
-    temp_node = document.createElement("div")
-    temp_node.innerHTML = html
-    @element.appendChild temp_node
-    html_height = temp_node.getBoundingClientRect().height
-    @element.removeChild temp_node
-    Math.ceil(html_height / @char_size.height)
 
   # DEC Special Character and Line Drawing Set.
   # http://vt100.net/docs/vt102-ug/table5-13.html

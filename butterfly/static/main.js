@@ -609,16 +609,8 @@
     };
 
     Terminal.prototype._cursorBlink = function() {
-      var cursor, customStyle;
+      var cursor;
       this.cursorState ^= 1;
-      if (document.getElementById("blink")) {
-        document.getElementById("blink").remove();
-      } else {
-        customStyle = document.createElement("style");
-        customStyle.id = 'blink';
-        document.head.appendChild(customStyle);
-        customStyle.sheet.insertRule("#wrapper .blink { color: transparent !important }", 0);
-      }
       cursor = this.element.querySelector(".cursor");
       if (!cursor) {
         return;
