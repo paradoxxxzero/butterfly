@@ -138,16 +138,15 @@
   };
 
   Terminal = (function() {
-    function Terminal(parent1, out1, ctl1) {
+    function Terminal(parent, out1, ctl1) {
       var div, i, px, term_height, term_width;
-      this.parent = parent1;
+      this.parent = parent;
       this.out = out1;
       this.ctl = ctl1 != null ? ctl1 : function() {};
       this.context = this.parent.ownerDocument.defaultView;
       this.document = this.parent.ownerDocument;
       this.body = this.document.getElementsByTagName('body')[0];
       this.html_escapes_enabled = this.body.getAttribute('data-allow-html') === 'yes';
-      this.native_scroll = this.body.getAttribute('data-native-scroll') === 'yes';
       this.element = this.document.createElement('div');
       this.element.className = 'terminal focus';
       this.element.style.outline = 'none';
@@ -159,9 +158,6 @@
       this.element.appendChild(div);
       this.children = [div];
       this.compute_char_size();
-      if (!this.native_scroll) {
-        div.style.height = this.char_size.height + 'px';
-      }
       term_width = this.element.getBoundingClientRect().width;
       term_height = this.parent.getBoundingClientRect().height;
       this.cols = Math.floor(term_width / this.char_size.width);
@@ -172,9 +168,6 @@
       i = this.rows - 1;
       while (i--) {
         div = this.document.createElement('div');
-        if (!this.native_scroll) {
-          div.style.height = this.char_size.height + 'px';
-        }
         div.className = 'line';
         this.element.appendChild(div);
         this.children.push(div);
@@ -188,9 +181,6 @@
       this.stop = false;
       this.last_cc = 0;
       this.reset_vars();
-      if (!this.native_scroll) {
-        this.refresh(0, this.rows - 1);
-      }
       this.focus();
       this.startBlink();
       addEventListener('keydown', this.keyDown.bind(this));
@@ -205,10 +195,14 @@
       setTimeout(this.resize.bind(this), 100);
     }
 
-    Terminal.prototype.cloneAttr = function(a) {
+    Terminal.prototype.cloneAttr = function(a, char) {
+      if (char == null) {
+        char = null;
+      }
       return {
         bg: a.bg,
         fg: a.fg,
+        ch: char !== null ? char : a.ch,
         bold: a.bold,
         underline: a.underline,
         blink: a.blink,
@@ -244,6 +238,7 @@
       this.defAttr = {
         bg: 256,
         fg: 257,
+        ch: " ",
         bold: false,
         underline: false,
         blink: false,
@@ -473,39 +468,28 @@
               return;
             }
             sendButton(ev);
-          } else {
-            if (_this.applicationKeypad || _this.native_scroll) {
-              return true;
-            }
-            _this.scroll_display(ev.deltaY > 0 ? 5 : -5);
+            return cancel(ev);
           }
-          return cancel(ev);
         };
       })(this));
     };
 
     Terminal.prototype.refresh = function(start, end) {
-      var attr, ch, classes, data, fg, html, i, j, k, l, line, m, out, parent, ref, ref1, ref2, ref3, row, styles, x;
-      if (!this.native_scroll && end - start >= this.rows / 3) {
-        parent = this.element.parentNode;
-        if (parent != null) {
-          parent.removeChild(this.element);
-        }
-      }
+      var attr, ch, classes, data, fg, html, i, j, k, l, line, m, out, ref, ref1, ref2, ref3, row, styles, x;
       end = Math.min(end, this.screen.length - 1);
       for (j = k = ref = start, ref1 = end; ref <= ref1 ? k <= ref1 : k >= ref1; j = ref <= ref1 ? ++k : --k) {
         row = j + this.ydisp;
         line = this.screen[row];
         out = "";
-        if (j === this.y && !this.cursorHidden && (this.native_scroll || this.ydisp === this.ybase || this.selectMode)) {
+        if (j === this.y && !this.cursorHidden) {
           x = this.x;
         } else {
           x = -Infinity;
         }
         attr = this.cloneAttr(this.defAttr);
         for (i = m = 0, ref2 = this.cols - 1; 0 <= ref2 ? m <= ref2 : m >= ref2; i = 0 <= ref2 ? ++m : --m) {
-          data = line[i][0];
-          ch = line[i][1];
+          data = line[i];
+          ch = data.ch;
           if (!this.equalAttr(data, attr)) {
             if (!this.equalAttr(attr, this.defAttr)) {
               out += "</span>";
@@ -593,19 +577,14 @@
         }
         this.children[j].innerHTML = out;
       }
-      if (parent != null) {
-        parent.appendChild(this.element);
+      ref3 = this.html;
+      for (l in ref3) {
+        html = ref3[l];
+        this.children[l].innerHTML = '';
+        this.children[l].appendChild(html);
       }
-      if (this.native_scroll) {
-        ref3 = this.html;
-        for (l in ref3) {
-          html = ref3[l];
-          this.children[l].innerHTML = '';
-          this.children[l].appendChild(html);
-        }
-        this.html = {};
-        return this.native_scroll_to();
-      }
+      this.html = {};
+      return this.native_scroll_to();
     };
 
     Terminal.prototype._cursorBlink = function() {
@@ -650,40 +629,15 @@
     };
 
     Terminal.prototype.scroll = function() {
-      var row;
-      if (this.native_scroll) {
-        if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-          this.screen.splice(this.scrollTop, 1);
-          this.screen.splice(this.scrollBottom, 0, this.blank_line());
-          return this.maxRange();
-        } else {
-          this.screen.shift();
-          this.screen.push(this.blank_line());
-          this.refreshStart = Math.max(this.refreshStart - 1, 0);
-          return this.new_line();
-        }
+      if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+        this.screen.splice(this.scrollTop, 1);
+        this.screen.splice(this.scrollBottom, 0, this.blank_line());
+        return this.maxRange();
       } else {
-        if (++this.ybase === this.scrollback) {
-          this.ybase = this.ybase / 2 | 0;
-          this.screen = this.screen.slice(-(this.ybase + this.rows) + 1);
-        }
-        this.ydisp = this.ybase;
-        row = this.ybase + this.rows - 1;
-        row -= this.rows - 1 - this.scrollBottom;
-        if (row === this.screen.length) {
-          this.screen.push(this.blank_line());
-        } else {
-          this.screen.splice(row, 0, this.blank_line());
-        }
-        if (this.scrollTop !== 0) {
-          if (this.ybase !== 0) {
-            this.ybase--;
-            this.ydisp = this.ybase;
-          }
-          this.screen.splice(this.ybase + this.scrollTop, 1);
-        }
-        this.updateRange(this.scrollTop);
-        return this.updateRange(this.scrollBottom);
+        this.screen.shift();
+        this.screen.push(this.blank_line());
+        this.refreshStart = Math.max(this.refreshStart - 1, 0);
+        return this.new_line();
       }
     };
 
@@ -698,19 +652,7 @@
     };
 
     Terminal.prototype.scroll_display = function(disp) {
-      if (this.native_scroll) {
-        return this.native_scroll_to(this.parent.scrollTop + disp * this.char_size.height);
-      } else {
-        this.ydisp += disp;
-        if (this.ydisp > this.ybase) {
-          this.ydisp = this.ybase;
-        } else {
-          if (this.ydisp < 0) {
-            this.ydisp = 0;
-          }
-        }
-        return this.refresh(0, this.rows - 1);
-      }
+      return this.native_scroll_to(this.parent.scrollTop + disp * this.char_size.height);
     };
 
     Terminal.prototype.new_line = function() {
@@ -734,15 +676,9 @@
     };
 
     Terminal.prototype.write = function(data) {
-      var ch, content, cs, html, i, l, line, pt, ref, ref1, type, valid;
+      var ch, content, cs, html, i, l, pt, ref, ref1, type, valid;
       this.refreshStart = this.y;
       this.refreshEnd = this.y;
-      if (!this.native_scroll) {
-        if (this.ybase !== this.ydisp) {
-          this.ydisp = this.ybase;
-          this.maxRange();
-        }
-      }
       i = 0;
       l = data.length;
       while (i < l) {
@@ -787,19 +723,19 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), '\u23CE'];
+                    this.screen[this.y + this.ybase][this.x] = this.cloneAttr(this.curAttr, '\u23CE');
                     this.x = 0;
                     this.next_line();
                   }
                   this.updateRange(this.y);
-                  this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), ch];
+                  this.screen[this.y + this.ybase][this.x] = this.cloneAttr(this.curAttr, ch);
                   this.x++;
                   if (("\uff00" < ch && ch < "\uffef")) {
                     if (this.cols < 2 || this.x >= this.cols) {
-                      this.screen[this.y + this.ybase][this.x - 1] = [this.cloneAttr(this.curAttr), " "];
+                      this.screen[this.y + this.ybase][this.x - 1] = this.cloneAttr(this.curAttr, " ");
                       break;
                     }
-                    this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), " "];
+                    this.screen[this.y + this.ybase][this.x] = this.cloneAttr(this.curAttr, " ");
                     this.x++;
                   }
                 }
@@ -1165,34 +1101,18 @@
                         console.log("HTML escapes are disabled");
                         break;
                       }
-                      if (this.native_scroll) {
-                        html = document.createElement('div');
-                        html.classList.add('inline-html');
-                        html.innerHTML = content;
-                        this.html[this.y] = html;
-                        this.updateRange(this.y);
-                      } else {
-                        html = "<div class=\"inline-html\">" + content + "</div>";
-                        this.screen[this.y + this.ybase][this.x] = [this.cloneAttr(this.curAttr), html];
-                        line = 0;
-                        while (line < this.get_html_height_in_lines(html) - 1) {
-                          this.y++;
-                          if (this.y > this.scrollBottom) {
-                            this.y--;
-                            this.scroll();
-                          }
-                          line++;
-                        }
-                      }
+                      html = document.createElement('div');
+                      html.classList.add('inline-html');
+                      html.innerHTML = content;
+                      this.html[this.y] = html;
+                      this.updateRange(this.y);
                       break;
                     case "IMAGE":
-                      if (this.native_scroll) {
-                        html = document.createElement('img');
-                        html.classList.add('inline-image');
-                        html.src = "data:image;base64," + content;
-                        this.html[this.y] = html;
-                        this.updateRange(this.y);
-                      }
+                      html = document.createElement('img');
+                      html.classList.add('inline-image');
+                      html.src = "data:image;base64," + content;
+                      this.html[this.y] = html;
+                      this.updateRange(this.y);
                       break;
                     case "PROMPT":
                       this.send(content);
@@ -1478,14 +1398,6 @@
       if (!key) {
         return true;
       }
-      if (this.prefixMode) {
-        this.leavePrefix();
-        return cancel(ev);
-      }
-      if (!this.native_scroll && this.selectMode) {
-        this.keySelect(ev, key);
-        return cancel(ev);
-      }
       this.showCursor();
       this.handler(key);
       return cancel(ev);
@@ -1565,7 +1477,7 @@
     };
 
     Terminal.prototype.resize = function() {
-      var ch, el, i, j, line, old_cols, old_rows, px, term_height, term_width;
+      var el, i, j, line, old_cols, old_rows, px, term_height, term_width;
       old_cols = this.cols;
       old_rows = this.rows;
       this.compute_char_size();
@@ -1580,11 +1492,10 @@
       }
       this.ctl('Resize', this.cols, this.rows);
       if (old_cols < this.cols) {
-        ch = [this.defAttr, " "];
         i = this.screen.length;
         while (i--) {
           while (this.screen[i].length < this.cols) {
-            this.screen[i].push(ch);
+            this.screen[i].push(this.defAttr);
           }
         }
       } else if (old_cols > this.cols) {
@@ -1606,9 +1517,6 @@
           if (this.children.length < this.rows) {
             line = this.document.createElement("div");
             line.className = 'line';
-            if (!this.native_scroll) {
-              line.style.height = this.char_size.height + 'px';
-            }
             el.appendChild(line);
             this.children.push(line);
           }
@@ -1707,26 +1615,21 @@
     };
 
     Terminal.prototype.eraseRight = function(x, y) {
-      var ch, line;
+      var line;
       line = this.screen[this.ybase + y];
-      ch = [this.eraseAttr(), " "];
       while (x < this.cols) {
-        line[x] = ch;
+        line[x] = this.eraseAttr();
         x++;
       }
       return this.updateRange(y);
     };
 
     Terminal.prototype.eraseLeft = function(x, y) {
-      var ch, line;
-      if (!this.native_scroll) {
-        y += this.ybase;
-      }
+      var line;
       line = this.screen[this.ybase + y];
-      ch = [this.eraseAttr(), " "];
       x++;
       while (x--) {
-        line[x] = ch;
+        line[x] = this.eraseAttr();
       }
       return this.updateRange(y);
     };
@@ -1736,13 +1639,12 @@
     };
 
     Terminal.prototype.blank_line = function(cur) {
-      var attr, ch, i, line;
+      var attr, i, line;
       attr = (cur ? this.eraseAttr() : this.defAttr);
-      ch = [attr, " "];
       line = [];
       i = 0;
       while (i < this.cols + 1) {
-        line[i] = ch;
+        line[i] = attr;
         i++;
       }
       return line;
@@ -1750,9 +1652,9 @@
 
     Terminal.prototype.ch = function(cur) {
       if (cur) {
-        return [this.eraseAttr(), " "];
+        return this.eraseAttr();
       } else {
-        return [this.defAttr, " "];
+        return this.defAttr;
       }
     };
 
@@ -1774,36 +1676,24 @@
     };
 
     Terminal.prototype.reverseIndex = function() {
-      var j, prevNode;
-      if (this.native_scroll) {
-        if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-          this.screen.splice(this.scrollBottom, 1);
-          this.screen.splice(this.scrollTop, 0, this.blank_line(true));
-          this.maxRange();
-        } else {
-          prevNode = this.children[0].previousElementSibling;
-          if (prevNode) {
-            this.children.slice(-1)[0].remove();
-            this.children.pop();
-            this.children.unshift(this.children[0].previousElementSibling);
-          } else {
-            this.new_line();
-          }
-          this.screen.pop();
-          this.screen.unshift(this.blank_line());
-        }
+      var prevNode;
+      if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+        this.screen.splice(this.scrollBottom, 1);
+        this.screen.splice(this.scrollTop, 0, this.blank_line(true));
         this.maxRange();
       } else {
-        this.y--;
-        if (this.y < this.scrollTop) {
-          this.y++;
-          this.screen.splice(this.y + this.ybase, 0, this.blank_line(true));
-          j = this.rows - 1 - this.scrollBottom;
-          this.screen.splice(this.rows - 1 + this.ybase - j + 1, 1);
-          this.updateRange(this.scrollTop);
-          this.updateRange(this.scrollBottom);
+        prevNode = this.children[0].previousElementSibling;
+        if (prevNode) {
+          this.children.slice(-1)[0].remove();
+          this.children.pop();
+          this.children.unshift(this.children[0].previousElementSibling);
+        } else {
+          this.new_line();
         }
+        this.screen.pop();
+        this.screen.unshift(this.blank_line());
       }
+      this.maxRange();
       return this.state = State.normal;
     };
 
@@ -2028,17 +1918,16 @@
     };
 
     Terminal.prototype.insertChars = function(params) {
-      var ch, j, param, results, row;
+      var j, param, results, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y + this.ybase;
       j = this.x;
-      ch = [this.eraseAttr(), " "];
       results = [];
       while (param-- && j < this.cols) {
-        this.screen[row].splice(j++, 0, ch);
+        this.screen[row].splice(j++, 0, this.eraseAttr());
         results.push(this.screen[row].pop());
       }
       return results;
@@ -2097,20 +1986,14 @@
     };
 
     Terminal.prototype.deleteLines = function(params) {
-      var j, param, row;
+      var param, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y + this.ybase;
       while (param--) {
-        if (this.native_scroll) {
-          this.screen.push(this.blank_line(true));
-        } else {
-          j = this.rows - 1 - this.scrollBottom;
-          j = this.rows - 1 + this.ybase - j;
-          this.screen.splice(j + 1, 0, this.blank_line(true));
-        }
+        this.screen.push(this.blank_line(true));
         this.screen.splice(this.y, 1);
       }
       this.updateRange(this.y);
@@ -2118,33 +2001,31 @@
     };
 
     Terminal.prototype.deleteChars = function(params) {
-      var ch, param, results, row;
+      var param, results, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y + this.ybase;
-      ch = [this.eraseAttr(), " "];
       results = [];
       while (param--) {
         this.screen[row].splice(this.x, 1);
-        results.push(this.screen[row].push(ch));
+        results.push(this.screen[row].push(this.eraseAttr()));
       }
       return results;
     };
 
     Terminal.prototype.eraseChars = function(params) {
-      var ch, j, param, results, row;
+      var j, param, results, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y + this.ybase;
       j = this.x;
-      ch = [this.eraseAttr(), " "];
       results = [];
       while (param-- && j < this.cols) {
-        results.push(this.screen[row][j++] = ch);
+        results.push(this.screen[row][j++] = this.eraseAttr());
       }
       return results;
     };
@@ -2446,7 +2327,7 @@
       var ch, line, param, results;
       param = params[0] || 1;
       line = this.screen[this.ybase + this.y];
-      ch = line[this.x - 1] || [this.defAttr, " "];
+      ch = line[this.x - 1] || this.defAttr;
       results = [];
       while (param--) {
         results.push(line[this.x++] = ch);
@@ -2515,7 +2396,7 @@
         line = this.screen[this.ybase + t];
         i = l;
         while (i < r) {
-          line[i] = [attr, line[i][1]];
+          line[i] = this.cloneAttr(attr, line[i].ch);
           i++;
         }
         t++;
@@ -2555,7 +2436,7 @@
         line = this.screen[this.ybase + t];
         i = l;
         while (i < r) {
-          line[i] = [line[i][0], String.fromCharCode(ch)];
+          line[i] = this.cloneAttr(line[i][0], String.fromCharCode(ch));
           i++;
         }
         t++;
@@ -2570,17 +2451,16 @@
     };
 
     Terminal.prototype.eraseRectangle = function(params) {
-      var b, ch, i, l, line, r, t;
+      var b, i, l, line, r, t;
       t = params[0];
       l = params[1];
       b = params[2];
       r = params[3];
-      ch = [this.eraseAttr(), " "];
       while (t < b + 1) {
         line = this.screen[this.ybase + t];
         i = l;
         while (i < r) {
-          line[i] = ch;
+          line[i] = this.eraseAttr();
           i++;
         }
         t++;
@@ -2596,14 +2476,13 @@
     Terminal.prototype.requestLocatorPosition = function(params) {};
 
     Terminal.prototype.insertColumns = function() {
-      var ch, i, l, param;
+      var i, l, param;
       param = params[0];
       l = this.ybase + this.rows;
-      ch = [this.eraseAttr(), " "];
       while (param--) {
         i = this.ybase;
         while (i < l) {
-          this.screen[i].splice(this.x + 1, 0, ch);
+          this.screen[i].splice(this.x + 1, 0, this.eraseAttr());
           this.screen[i].pop();
           i++;
         }
@@ -2612,29 +2491,18 @@
     };
 
     Terminal.prototype.deleteColumns = function() {
-      var ch, i, l, param;
+      var i, l, param;
       param = params[0];
       l = this.ybase + this.rows;
-      ch = [this.eraseAttr(), " "];
       while (param--) {
         i = this.ybase;
         while (i < l) {
           this.screen[i].splice(this.x, 1);
-          this.screen[i].push(ch);
+          this.screen[i].push(this.eraseAttr());
           i++;
         }
       }
       return this.maxRange();
-    };
-
-    Terminal.prototype.get_html_height_in_lines = function(html) {
-      var html_height, temp_node;
-      temp_node = document.createElement("div");
-      temp_node.innerHTML = html;
-      this.element.appendChild(temp_node);
-      html_height = temp_node.getBoundingClientRect().height;
-      this.element.removeChild(temp_node);
-      return Math.ceil(html_height / this.char_size.height);
     };
 
     Terminal.prototype.charsets = {

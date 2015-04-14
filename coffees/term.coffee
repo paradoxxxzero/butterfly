@@ -113,9 +113,10 @@ class Terminal
 
     setTimeout(@resize.bind(@), 100)
 
-  cloneAttr: (a) ->
+  cloneAttr: (a, char=null) ->
     bg: a.bg
     fg: a.fg
+    ch: unless char is null then char else a.ch
     bold: a.bold
     underline: a.underline
     blink: a.blink
@@ -123,6 +124,7 @@ class Terminal
     invisible: a.invisible
 
   equalAttr: (a, b) ->
+    # Not testing char
     (a.bg is b.bg and a.fg is b.fg and a.bold is b.bold and
      a.underline is b.underline and a.blink is b.blink and
       a.inverse is b.inverse and a.invisible is b.invisible)
@@ -156,6 +158,7 @@ class Terminal
     @defAttr =
       bg: 256
       fg: 257
+      ch: " "
       bold: false
       underline: false
       blink: false
@@ -409,8 +412,8 @@ class Terminal
 
       attr = @cloneAttr @defAttr
       for i in [0..@cols - 1]
-        data = line[i][0]
-        ch = line[i][1]
+        data = line[i]
+        ch = data.ch
         unless @equalAttr data, attr
           out += "</span>" unless @equalAttr attr, @defAttr
           unless @equalAttr data, @defAttr
@@ -599,20 +602,20 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @screen[@y + @ybase][@x] = [@cloneAttr(@curAttr), '\u23CE']
+                  @screen[@y + @ybase][@x] = @cloneAttr @curAttr, '\u23CE'
                   @x = 0
                   @next_line()
 
                 @updateRange @y
 
-                @screen[@y + @ybase][@x] = [@cloneAttr(@curAttr), ch]
+                @screen[@y + @ybase][@x] = @cloneAttr @curAttr, ch
                 @x++
                 if "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
-                    @screen[@y + @ybase][@x - 1] = [@cloneAttr(@curAttr), " "]
+                    @screen[@y + @ybase][@x - 1] = @cloneAttr @curAttr, " "
                     break
 
-                  @screen[@y + @ybase][@x] = [@cloneAttr(@curAttr), " "]
+                  @screen[@y + @ybase][@x] = @cloneAttr @curAttr, " "
                   @x++
 
         when State.escaped
@@ -1442,10 +1445,9 @@ class Terminal
     # resize cols
     if old_cols < @cols
       # does xterm use the default attr?
-      ch = [@defAttr, " "]
       i = @screen.length
       while i--
-        @screen[i].push ch while @screen[i].length < @cols
+        @screen[i].push @defAttr while @screen[i].length < @cols
     else if old_cols > @cols
       i = @screen.length
       while i--
@@ -1521,19 +1523,17 @@ class Terminal
   eraseRight: (x, y) ->
     line = @screen[@ybase + y]
     # xterm
-    ch = [@eraseAttr(), " "]
 
     while x < @cols
-      line[x] = ch
+      line[x] = @eraseAttr()
       x++
     @updateRange y
 
   eraseLeft: (x, y) ->
     line = @screen[@ybase + y]
     # xterm
-    ch = [@eraseAttr(), " "]
     x++
-    line[x] = ch while x--
+    line[x] = @eraseAttr() while x--
     @updateRange y
 
   eraseLine: (y) ->
@@ -1541,16 +1541,15 @@ class Terminal
 
   blank_line: (cur) ->
     attr = (if cur then @eraseAttr() else @defAttr)
-    ch = [attr, " "]
     line = []
     i = 0
     while i < @cols + 1
-      line[i] = ch
+      line[i] = attr
       i++
     line
 
   ch: (cur) ->
-    if cur then [@eraseAttr(), " "] else [@defAttr, " "]
+    if cur then @eraseAttr() else @defAttr
 
   isterm: (term) ->
     "#{@termName}".indexOf(term) is 0
@@ -1906,9 +1905,8 @@ class Terminal
     row = @y + @ybase
     j = @x
     # xterm
-    ch = [@eraseAttr(), " "]
     while param-- and j < @cols
-      @screen[row].splice j++, 0, ch
+      @screen[row].splice j++, 0, @eraseAttr()
       @screen[row].pop()
 
 
@@ -1982,10 +1980,9 @@ class Terminal
     param = 1 if param < 1
     row = @y + @ybase
     # xterm
-    ch = [@eraseAttr(), " "]
     while param--
       @screen[row].splice @x, 1
-      @screen[row].push ch
+      @screen[row].push @eraseAttr()
 
 
   # CSI Ps X
@@ -1996,8 +1993,7 @@ class Terminal
     row = @y + @ybase
     j = @x
     # xterm
-    ch = [@eraseAttr(), " "]
-    @screen[row][j++] = ch while param-- and j < @cols
+    @screen[row][j++] = @eraseAttr() while param-- and j < @cols
 
 
   # CSI Pm `    Character Position Absolute
@@ -2488,7 +2484,7 @@ class Terminal
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
     line = @screen[@ybase + @y]
-    ch = line[@x - 1] or [@defAttr, " "]
+    ch = line[@x - 1] or @defAttr
     line[@x++] = ch while param--
 
 
@@ -2664,7 +2660,7 @@ class Terminal
       line = @screen[@ybase + t]
       i = l
       while i < r
-        line[i] = [attr, line[i][1]]
+        line[i] = @cloneAttr attr, line[i].ch
         i++
       t++
 
@@ -2823,7 +2819,7 @@ class Terminal
       line = @screen[@ybase + t]
       i = l
       while i < r
-        line[i] = [line[i][0], String.fromCharCode(ch)]
+        line[i] = @cloneAttr line[i][0], String.fromCharCode(ch)
         i++
       t++
 
@@ -2856,12 +2852,11 @@ class Terminal
     l = params[1]
     b = params[2]
     r = params[3]
-    ch = [@eraseAttr(), " "]
     while t < b + 1
       line = @screen[@ybase + t]
       i = l
       while i < r
-        line[i] = ch
+        line[i] = @eraseAttr()
         i++
       t++
 
@@ -2938,11 +2933,10 @@ class Terminal
   insertColumns: ->
     param = params[0]
     l = @ybase + @rows
-    ch = [@eraseAttr(), " "]
     while param--
       i = @ybase
       while i < l
-        @screen[i].splice @x + 1, 0, ch
+        @screen[i].splice @x + 1, 0, @eraseAttr()
         @screen[i].pop()
         i++
     @maxRange()
@@ -2954,12 +2948,11 @@ class Terminal
   deleteColumns: ->
     param = params[0]
     l = @ybase + @rows
-    ch = [@eraseAttr(), " "]
     while param--
       i = @ybase
       while i < l
         @screen[i].splice @x, 1
-        @screen[i].push ch
+        @screen[i].push @eraseAttr()
         i++
     @maxRange()
 
