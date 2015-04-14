@@ -130,7 +130,7 @@ body {
 /* GNU General Public License for more details. */
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-#wrapper {
+html, body {
   background-color: #110f13; }
 
 .terminal {
@@ -3018,23 +3018,19 @@ body {
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
-  line-height: 1.2; }
-
-#wrapper {
-  height: 100%;
-  overflow: hidden;
+  line-height: 1.2;
+  overflow-x: hidden;
+  overflow-y: auto;
   white-space: nowrap; }
 
-body[data-native-scroll="yes"] #wrapper {
-  overflow-y: scroll; }
-body[data-native-scroll="yes"] ::-webkit-scrollbar {
+::-webkit-scrollbar {
   background: #110f13;
   width: .75em;
   height: .75em; }
-body[data-native-scroll="yes"] ::-webkit-scrollbar-thumb {
+
+::-webkit-scrollbar-thumb {
   background: rgba(244, 234, 213, 0.1); }
 
 .terminal {

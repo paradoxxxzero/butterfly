@@ -16,27 +16,20 @@
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 html, body
-  height: 100%
   margin: 0
   padding: 0
   line-height: 1.2
-
-#wrapper
-  height: 100%
-  overflow: hidden
+  overflow-x: hidden
+  overflow-y: auto
   white-space: nowrap
 
-body[data-native-scroll="yes"]
-  #wrapper
-    overflow-y: scroll
+::-webkit-scrollbar
+  background: $bg
+  width: .75em
+  height: .75em
 
-  ::-webkit-scrollbar
-    background: $bg
-    width: .75em
-    height: .75em
-
-  ::-webkit-scrollbar-thumb
-    background: rgba($fg, .1)
+::-webkit-scrollbar-thumb
+  background: rgba($fg, .1)
 
 .terminal
   outline: none

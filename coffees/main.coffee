@@ -79,7 +79,7 @@ document.addEventListener 'DOMContentLoaded', ->
     if (new Date()).getTime() - open_ts > 60 * 1000
       open('','_self').close()
 
-  term = new Terminal $('#wrapper')[0], send, ctl
+  term = new Terminal document.body, send, ctl
   addEventListener 'beforeunload', ->
     if not quit
       'This will exit the terminal session'

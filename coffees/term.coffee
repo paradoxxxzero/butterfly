@@ -61,7 +61,7 @@ class Terminal
     @element.setAttribute 'tabindex', 0
     @element.setAttribute 'spellcheck', 'false'
 
-    @parent.appendChild(@element)
+    @parent.insertBefore @element, @parent.firstChild
 
     # Adding one line to compute char size
     div = @document.createElement('div')
@@ -70,15 +70,13 @@ class Terminal
     @children = [div]
 
     @compute_char_size()
-    term_width = @element.getBoundingClientRect().width
-    term_height = @parent.getBoundingClientRect().height
-    @cols = Math.floor(term_width / @char_size.width)
-    @rows = Math.floor(term_height / @char_size.height)
-    px = term_height % @char_size.height
+    @cols = Math.floor(window.innerWidth / @char_size.width)
+    @rows = Math.floor(window.innerHeight / @char_size.height)
+    px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
 
     @html = {}
-    i = @rows - 1
+    i = Math.max @rows - 1, 0
     while i--
       div = @document.createElement('div')
       div.className = 'line'
@@ -530,11 +528,12 @@ class Terminal
 
   native_scroll_to: (scroll=-1) ->
     if scroll is -1
-      scroll = @parent.scrollHeight - @parent.getBoundingClientRect().height
-    @parent.scrollTop = scroll
+      @children.slice(-1)[0].scrollIntoView()
+    else
+      window.scrollTo scroll
 
   scroll_display: (disp) ->
-    @native_scroll_to @parent.scrollTop + disp * @char_size.height
+    @native_scroll_to window.scrollY + disp * @char_size.height
 
   new_line: ->
     div = @document.createElement('div')
@@ -1430,11 +1429,9 @@ class Terminal
     old_cols = @cols
     old_rows = @rows
     @compute_char_size()
-    term_width = @element.getBoundingClientRect().width
-    term_height = @parent.getBoundingClientRect().height
-    @cols = Math.floor(term_width / @char_size.width)
-    @rows = Math.floor(term_height / @char_size.height)
-    px = term_height % @char_size.height
+    @cols = Math.floor(window.innerWidth / @char_size.width)
+    @rows = Math.floor(window.innerHeight / @char_size.height)
+    px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
 
     if old_cols == @cols and old_rows == @rows

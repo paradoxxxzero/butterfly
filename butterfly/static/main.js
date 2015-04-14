@@ -73,7 +73,7 @@
         return open('', '_self').close();
       }
     });
-    term = new Terminal($('#wrapper')[0], send, ctl);
+    term = new Terminal(document.body, send, ctl);
     addEventListener('beforeunload', function() {
       if (!quit) {
         return 'This will exit the terminal session';
@@ -139,7 +139,7 @@
 
   Terminal = (function() {
     function Terminal(parent, out1, ctl1) {
-      var div, i, px, term_height, term_width;
+      var div, i, px;
       this.parent = parent;
       this.out = out1;
       this.ctl = ctl1 != null ? ctl1 : function() {};
@@ -152,20 +152,18 @@
       this.element.style.outline = 'none';
       this.element.setAttribute('tabindex', 0);
       this.element.setAttribute('spellcheck', 'false');
-      this.parent.appendChild(this.element);
+      this.parent.insertBefore(this.element, this.parent.firstChild);
       div = this.document.createElement('div');
       div.className = 'line';
       this.element.appendChild(div);
       this.children = [div];
       this.compute_char_size();
-      term_width = this.element.getBoundingClientRect().width;
-      term_height = this.parent.getBoundingClientRect().height;
-      this.cols = Math.floor(term_width / this.char_size.width);
-      this.rows = Math.floor(term_height / this.char_size.height);
-      px = term_height % this.char_size.height;
+      this.cols = Math.floor(window.innerWidth / this.char_size.width);
+      this.rows = Math.floor(window.innerHeight / this.char_size.height);
+      px = window.innerHeight % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
       this.html = {};
-      i = this.rows - 1;
+      i = Math.max(this.rows - 1, 0);
       while (i--) {
         div = this.document.createElement('div');
         div.className = 'line';
@@ -646,13 +644,14 @@
         scroll = -1;
       }
       if (scroll === -1) {
-        scroll = this.parent.scrollHeight - this.parent.getBoundingClientRect().height;
+        return this.children.slice(-1)[0].scrollIntoView();
+      } else {
+        return window.scrollTo(scroll);
       }
-      return this.parent.scrollTop = scroll;
     };
 
     Terminal.prototype.scroll_display = function(disp) {
-      return this.native_scroll_to(this.parent.scrollTop + disp * this.char_size.height);
+      return this.native_scroll_to(window.scrollY + disp * this.char_size.height);
     };
 
     Terminal.prototype.new_line = function() {
@@ -1477,15 +1476,13 @@
     };
 
     Terminal.prototype.resize = function() {
-      var el, i, j, line, old_cols, old_rows, px, term_height, term_width;
+      var el, i, j, line, old_cols, old_rows, px;
       old_cols = this.cols;
       old_rows = this.rows;
       this.compute_char_size();
-      term_width = this.element.getBoundingClientRect().width;
-      term_height = this.parent.getBoundingClientRect().height;
-      this.cols = Math.floor(term_width / this.char_size.width);
-      this.rows = Math.floor(term_height / this.char_size.height);
-      px = term_height % this.char_size.height;
+      this.cols = Math.floor(window.innerWidth / this.char_size.width);
+      this.rows = Math.floor(window.innerHeight / this.char_size.height);
+      px = window.innerHeight % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
       if (old_cols === this.cols && old_rows === this.rows) {
         return;
