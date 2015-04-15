@@ -143,7 +143,6 @@
       this.parent = parent;
       this.out = out1;
       this.ctl = ctl1 != null ? ctl1 : function() {};
-      this.context = this.parent.ownerDocument.defaultView;
       this.document = this.parent.ownerDocument;
       this.body = this.document.getElementsByTagName('body')[0];
       this.html_escapes_enabled = this.body.getAttribute('data-allow-html') === 'yes';
@@ -158,7 +157,7 @@
       this.element.appendChild(div);
       this.children = [div];
       this.compute_char_size();
-      this.cols = Math.floor(window.innerWidth / this.char_size.width);
+      this.cols = Math.floor(this.element.clientWidth / this.char_size.width);
       this.rows = Math.floor(window.innerHeight / this.char_size.height);
       px = window.innerHeight % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
@@ -220,8 +219,6 @@
       this.cursorHidden = false;
       this.state = State.normal;
       this.queue = '';
-      this.ybase = 0;
-      this.ydisp = 0;
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
       this.applicationKeypad = false;
@@ -277,7 +274,7 @@
 
     Terminal.prototype.focus = function() {
       if (this.sendFocus) {
-        this.send('\x1b[I');
+        this.handler('\x1b[I');
       }
       this.showCursor();
       this.element.classList.add('focus');
@@ -288,7 +285,7 @@
       this.cursorState = 1;
       this.refresh(this.y, this.y);
       if (this.sendFocus) {
-        this.send('\x1b[O');
+        this.handler('\x1b[O');
       }
       this.element.classList.add('blur');
       return this.element.classList.remove('focus');
@@ -356,20 +353,20 @@
             pos.y -= 32;
             pos.x++;
             pos.y++;
-            _this.send("\x1b[" + button + ";" + pos.x + ";" + pos.y + "M");
+            _this.handler("\x1b[" + button + ";" + pos.x + ";" + pos.y + "M");
             return;
           }
           if (_this.sgrMouse) {
             pos.x -= 32;
             pos.y -= 32;
-            _this.send("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
+            _this.handler("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
             return;
           }
           data = [];
           encode(data, button);
           encode(data, pos.x);
           encode(data, pos.y);
-          return _this.send("\x1b[M" + String.fromCharCode.apply(String, data));
+          return _this.handler("\x1b[M" + String.fromCharCode.apply(String, data));
         };
       })(this);
       getButton = (function(_this) {
@@ -411,7 +408,7 @@
             el = "offsetParent" in el ? el.offsetParent : el.parentNode;
           }
           w = _this.element.clientWidth;
-          h = _this.parent.clientHeight;
+          h = window.innerHeight;
           x = Math.ceil((x / w) * _this.cols);
           y = Math.ceil((y / h) * _this.rows);
           if (x < 0) {
@@ -435,6 +432,14 @@
           };
         };
       })(this);
+      addEventListener("contextmenu", (function(_this) {
+        return function(ev) {
+          if (!_this.mouseEvents) {
+            return;
+          }
+          return cancel(ev);
+        };
+      })(this));
       addEventListener("mousedown", (function(_this) {
         return function(ev) {
           var sm, up;
@@ -476,7 +481,7 @@
       var attr, ch, classes, data, fg, html, i, j, k, l, line, m, out, ref, ref1, ref2, ref3, row, styles, x;
       end = Math.min(end, this.screen.length - 1);
       for (j = k = ref = start, ref1 = end; ref <= ref1 ? k <= ref1 : k >= ref1; j = ref <= ref1 ? ++k : --k) {
-        row = j + this.ydisp;
+        row = j;
         line = this.screen[row];
         out = "";
         if (j === this.y && !this.cursorHidden) {
@@ -627,10 +632,12 @@
     };
 
     Terminal.prototype.scroll = function() {
-      if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+      if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+        this.screen.splice(this.scrollBottom + 1, 0, this.blank_line());
         this.screen.splice(this.scrollTop, 1);
-        this.screen.splice(this.scrollBottom, 0, this.blank_line());
-        return this.maxRange();
+        this.y;
+        this.updateRange(this.scrollTop);
+        return this.updateRange(this.scrollBottom);
       } else {
         this.screen.shift();
         this.screen.push(this.blank_line());
@@ -646,7 +653,7 @@
       if (scroll === -1) {
         return this.children.slice(-1)[0].scrollIntoView();
       } else {
-        return window.scrollTo(scroll);
+        return window.scrollTo(0, scroll);
       }
     };
 
@@ -668,7 +675,7 @@
 
     Terminal.prototype.next_line = function() {
       this.y++;
-      if (this.y >= this.scrollBottom) {
+      if (this.y > this.scrollBottom) {
         this.y--;
         return this.scroll();
       }
@@ -722,19 +729,19 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.screen[this.y + this.ybase][this.x] = this.cloneAttr(this.curAttr, '\u23CE');
+                    this.screen[this.y][this.x] = this.cloneAttr(this.curAttr, '\u23CE');
                     this.x = 0;
                     this.next_line();
                   }
                   this.updateRange(this.y);
-                  this.screen[this.y + this.ybase][this.x] = this.cloneAttr(this.curAttr, ch);
+                  this.screen[this.y][this.x] = this.cloneAttr(this.curAttr, ch);
                   this.x++;
                   if (("\uff00" < ch && ch < "\uffef")) {
                     if (this.cols < 2 || this.x >= this.cols) {
-                      this.screen[this.y + this.ybase][this.x - 1] = this.cloneAttr(this.curAttr, " ");
+                      this.screen[this.y][this.x - 1] = this.cloneAttr(this.curAttr, " ");
                       break;
                     }
-                    this.screen[this.y + this.ybase][this.x] = this.cloneAttr(this.curAttr, " ");
+                    this.screen[this.y][this.x] = this.cloneAttr(this.curAttr, " ");
                     this.x++;
                   }
                 }
@@ -1114,7 +1121,7 @@
                       this.updateRange(this.y);
                       break;
                     case "PROMPT":
-                      this.send(content);
+                      this.handler(content);
                       break;
                     case "TEXT":
                       l += content.length;
@@ -1144,12 +1151,12 @@
                       console.error("Unknown DCS Pt: %s.", pt);
                       pt = "";
                   }
-                  this.send("\x1bP" + +valid + "$r" + pt + "\x1b\\");
+                  this.handler("\x1bP" + +valid + "$r" + pt + "\x1b\\");
                   break;
                 case "+q":
                   pt = this.currentParam;
                   valid = false;
-                  this.send("\x1bP" + +valid + "+r" + pt + "\x1b\\");
+                  this.handler("\x1bP" + +valid + "+r" + pt + "\x1b\\");
                   break;
                 default:
                   console.error("Unknown DCS prefix: %s.", this.prefix);
@@ -1448,18 +1455,6 @@
       return false;
     };
 
-    Terminal.prototype.send = function(data) {
-      if (!this.queue) {
-        this.t_queue = setTimeout(((function(_this) {
-          return function() {
-            _this.handler(_this.queue);
-            return _this.queue = "";
-          };
-        })(this)), 1);
-      }
-      return this.queue += data;
-    };
-
     Terminal.prototype.bell = function(cls) {
       if (cls == null) {
         cls = "bell";
@@ -1480,7 +1475,7 @@
       old_cols = this.cols;
       old_rows = this.rows;
       this.compute_char_size();
-      this.cols = Math.floor(window.innerWidth / this.char_size.width);
+      this.cols = Math.floor(this.element.clientWidth / this.char_size.width);
       this.rows = Math.floor(window.innerHeight / this.char_size.height);
       px = window.innerHeight % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
@@ -1508,7 +1503,7 @@
       if (j < this.rows) {
         el = this.element;
         while (j++ < this.rows) {
-          if (this.screen.length < this.rows + this.ybase) {
+          if (this.screen.length < this.rows) {
             this.screen.push(this.blank_line());
           }
           if (this.children.length < this.rows) {
@@ -1520,7 +1515,7 @@
         }
       } else if (j > this.rows) {
         while (j-- > this.rows) {
-          if (this.screen.length > this.rows + this.ybase) {
+          if (this.screen.length > this.rows) {
             this.screen.pop();
           }
           if (this.children.length > this.rows) {
@@ -1613,7 +1608,7 @@
 
     Terminal.prototype.eraseRight = function(x, y) {
       var line;
-      line = this.screen[this.ybase + y];
+      line = this.screen[y];
       while (x < this.cols) {
         line[x] = this.eraseAttr();
         x++;
@@ -1623,7 +1618,7 @@
 
     Terminal.prototype.eraseLeft = function(x, y) {
       var line;
-      line = this.screen[this.ybase + y];
+      line = this.screen[y];
       x++;
       while (x--) {
         line[x] = this.eraseAttr();
@@ -1674,7 +1669,7 @@
 
     Terminal.prototype.reverseIndex = function() {
       var prevNode;
-      if (this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
+      if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
         this.screen.splice(this.scrollBottom, 1);
         this.screen.splice(this.scrollTop, 0, this.blank_line(true));
         this.maxRange();
@@ -1903,13 +1898,13 @@
       if (!this.prefix) {
         switch (params[0]) {
           case 5:
-            return this.send("\x1b[0n");
+            return this.handler("\x1b[0n");
           case 6:
-            return this.send("\x1b[" + (this.y + 1) + ";" + (this.x + 1) + "R");
+            return this.handler("\x1b[" + (this.y + 1) + ";" + (this.x + 1) + "R");
         }
       } else if (this.prefix === "?") {
         if (params[0] === 6) {
-          return this.send("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
+          return this.handler("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
         }
       }
     };
@@ -1920,7 +1915,7 @@
       if (param < 1) {
         param = 1;
       }
-      row = this.y + this.ybase;
+      row = this.y;
       j = this.x;
       results = [];
       while (param-- && j < this.cols) {
@@ -1966,17 +1961,14 @@
     };
 
     Terminal.prototype.insertLines = function(params) {
-      var j, param, row;
+      var param;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
-      row = this.y + this.ybase;
       while (param--) {
-        this.screen.splice(row, 0, this.blank_line(true));
-        j = this.rows - 1 - this.scrollBottom;
-        j = this.rows - 1 + this.ybase - j + 1;
-        this.screen.splice(j, 1);
+        this.screen.splice(this.y, 0, this.blank_line(true));
+        this.screen.splice(this.scrollBottom + 1, 1);
       }
       this.updateRange(this.y);
       return this.updateRange(this.scrollBottom);
@@ -1988,7 +1980,7 @@
       if (param < 1) {
         param = 1;
       }
-      row = this.y + this.ybase;
+      row = this.y;
       while (param--) {
         this.screen.push(this.blank_line(true));
         this.screen.splice(this.y, 1);
@@ -2003,7 +1995,7 @@
       if (param < 1) {
         param = 1;
       }
-      row = this.y + this.ybase;
+      row = this.y;
       results = [];
       while (param--) {
         this.screen[row].splice(this.x, 1);
@@ -2018,7 +2010,7 @@
       if (param < 1) {
         param = 1;
       }
-      row = this.y + this.ybase;
+      row = this.y;
       j = this.x;
       results = [];
       while (param-- && j < this.cols) {
@@ -2057,22 +2049,22 @@
       }
       if (!this.prefix) {
         if (this.isterm("xterm") || this.isterm("rxvt-unicode") || this.isterm("screen")) {
-          return this.send("\x1b[?1;2c");
+          return this.handler("\x1b[?1;2c");
         } else {
           if (this.isterm("linux")) {
-            return this.send("\x1b[?6c");
+            return this.handler("\x1b[?6c");
           }
         }
       } else if (this.prefix === ">") {
         if (this.isterm("xterm")) {
-          return this.send("\x1b[>0;276;0c");
+          return this.handler("\x1b[>0;276;0c");
         } else if (this.isterm("rxvt-unicode")) {
-          return this.send("\x1b[>85;95;0c");
+          return this.handler("\x1b[>85;95;0c");
         } else if (this.isterm("linux")) {
-          return this.send(params[0] + "c");
+          return this.handler(params[0] + "c");
         } else {
           if (this.isterm("screen")) {
-            return this.send("\x1b[>83;40003;0c");
+            return this.handler("\x1b[>83;40003;0c");
           }
         }
       }
@@ -2173,8 +2165,6 @@
             if (!this.normal) {
               normal = {
                 lines: this.screen,
-                ybase: this.ybase,
-                ydisp: this.ydisp,
                 x: this.x,
                 y: this.y,
                 scrollTop: this.scrollTop,
@@ -2239,8 +2229,6 @@
           case 1047:
             if (this.normal) {
               this.screen = this.normal.lines;
-              this.ybase = this.normal.ybase;
-              this.ydisp = this.normal.ydisp;
               this.x = this.normal.x;
               this.y = this.normal.y;
               this.scrollTop = this.normal.scrollTop;
@@ -2288,8 +2276,8 @@
       var param;
       param = params[0] || 1;
       while (param--) {
-        this.screen.splice(this.ybase + this.scrollTop, 1);
-        this.screen.splice(this.ybase + this.scrollBottom, 0, this.blank_line());
+        this.screen.splice(this.scrollTop, 1);
+        this.screen.splice(this.scrollBottom, 0, this.blank_line());
       }
       this.updateRange(this.scrollTop);
       return this.updateRange(this.scrollBottom);
@@ -2299,8 +2287,8 @@
       var param;
       param = params[0] || 1;
       while (param--) {
-        this.screen.splice(this.ybase + this.scrollBottom, 1);
-        this.screen.splice(this.ybase + this.scrollTop, 0, this.blank_line());
+        this.screen.splice(this.scrollBottom, 1);
+        this.screen.splice(this.scrollTop, 0, this.blank_line());
       }
       this.updateRange(this.scrollTop);
       return this.updateRange(this.scrollBottom);
@@ -2323,7 +2311,7 @@
     Terminal.prototype.repeatPrecedingCharacter = function(params) {
       var ch, line, param, results;
       param = params[0] || 1;
-      line = this.screen[this.ybase + this.y];
+      line = this.screen[this.y];
       ch = line[this.x - 1] || this.defAttr;
       results = [];
       while (param--) {
@@ -2390,7 +2378,7 @@
       r = params[3];
       attr = params[4];
       while (t < b + 1) {
-        line = this.screen[this.ybase + t];
+        line = this.screen[t];
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(attr, line[i].ch);
@@ -2430,7 +2418,7 @@
       b = params[3];
       r = params[4];
       while (t < b + 1) {
-        line = this.screen[this.ybase + t];
+        line = this.screen[t];
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(line[i][0], String.fromCharCode(ch));
@@ -2454,7 +2442,7 @@
       b = params[2];
       r = params[3];
       while (t < b + 1) {
-        line = this.screen[this.ybase + t];
+        line = this.screen[t];
         i = l;
         while (i < r) {
           line[i] = this.eraseAttr();
@@ -2475,9 +2463,9 @@
     Terminal.prototype.insertColumns = function() {
       var i, l, param;
       param = params[0];
-      l = this.ybase + this.rows;
+      l = this.rows;
       while (param--) {
-        i = this.ybase;
+        i = 0;
         while (i < l) {
           this.screen[i].splice(this.x + 1, 0, this.eraseAttr());
           this.screen[i].pop();
@@ -2490,9 +2478,9 @@
     Terminal.prototype.deleteColumns = function() {
       var i, l, param;
       param = params[0];
-      l = this.ybase + this.rows;
+      l = this.rows;
       while (param--) {
-        i = this.ybase;
+        i = 0;
         while (i < l) {
           this.screen[i].splice(this.x, 1);
           this.screen[i].push(this.eraseAttr());

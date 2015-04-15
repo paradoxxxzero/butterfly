@@ -49,7 +49,6 @@ State =
 class Terminal
   constructor: (@parent, @out, @ctl=->) ->
     # Global elements
-    @context = @parent.ownerDocument.defaultView
     @document = @parent.ownerDocument
     @body = @document.getElementsByTagName('body')[0]
     @html_escapes_enabled = @body.getAttribute('data-allow-html') is 'yes'
@@ -70,7 +69,7 @@ class Terminal
     @children = [div]
 
     @compute_char_size()
-    @cols = Math.floor(window.innerWidth / @char_size.width)
+    @cols = Math.floor(@element.clientWidth / @char_size.width)
     @rows = Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
@@ -134,8 +133,6 @@ class Terminal
     @state = State.normal
     @queue = ''
 
-    @ybase = 0
-    @ydisp = 0
     @scrollTop = 0
     @scrollBottom = @rows - 1
 
@@ -188,7 +185,7 @@ class Terminal
     erased
 
   focus: ->
-    @send('\x1b[I') if @sendFocus
+    @handler('\x1b[I') if @sendFocus
     @showCursor()
     @element.classList.add('focus')
     @element.classList.remove('blur')
@@ -196,7 +193,7 @@ class Terminal
   blur: ->
     @cursorState = 1
     @refresh(@y, @y)
-    @send('\x1b[O') if @sendFocus
+    @handler('\x1b[O') if @sendFocus
     @element.classList.add('blur')
     @element.classList.remove('focus')
 
@@ -217,10 +214,10 @@ class Terminal
     sendButton = (ev) ->
       # get the xterm-style button
       button = getButton(ev)
-
       # get mouse coordinates
       pos = getCoords(ev)
       return unless pos
+
       sendEvent button, pos
       switch ev.type
         when "mousedown"
@@ -273,13 +270,13 @@ class Terminal
         pos.y -= 32
         pos.x++
         pos.y++
-        @send "\x1b[" + button + ";" + pos.x + ";" + pos.y + "M"
+        @handler "\x1b[" + button + ";" + pos.x + ";" + pos.y + "M"
         return
 
       if @sgrMouse
         pos.x -= 32
         pos.y -= 32
-        @send "\x1b[<" + (
+        @handler "\x1b[<" + (
           if (button & 3) is 3 then button & ~3 else button
         ) + ";" + pos.x + ";" + pos.y + (
           if (button & 3) is 3 then "m" else "M"
@@ -290,7 +287,7 @@ class Terminal
       encode data, button
       encode data, pos.x
       encode data, pos.y
-      @send "\x1b[M" + String.fromCharCode.apply(String, data)
+      @handler "\x1b[M" + String.fromCharCode.apply(String, data)
 
     getButton = (ev) =>
       # two low bits:
@@ -342,7 +339,7 @@ class Terminal
 
       # convert to cols/rows
       w = @element.clientWidth
-      h = @parent.clientHeight
+      h = window.innerHeight
       x = Math.ceil((x / w) * @cols)
       y = Math.ceil((y / h) * @rows)
 
@@ -362,6 +359,10 @@ class Terminal
       y: y
       type: ev.type
 
+    addEventListener "contextmenu", (ev) =>
+      return unless @mouseEvents
+      cancel ev
+
     addEventListener "mousedown", (ev) =>
       return unless @mouseEvents
 
@@ -369,20 +370,12 @@ class Terminal
       sendButton ev
 
       # fix for odd bug
-      #if (@vt200Mouse && !@normalMouse) {
-      # if @vt200Mouse
-      #   sendButton
-      #     __proto__: ev
-      #     type: "mouseup"
-
-      #   return cancel(ev)
-
       sm = sendMove.bind(this)
       addEventListener "mousemove", sm if @normalMouse
 
       # x10 compatibility mode can't send button releases
       unless @x10Mouse
-        addEventListener "mouseup", up = (ev) =>
+        addEventListener "mouseup", up = (ev)  =>
           sendButton ev
           removeEventListener "mousemove", sm if @normalMouse
           removeEventListener "mouseup", up
@@ -399,7 +392,7 @@ class Terminal
     end = Math.min(end, @screen.length - 1)
 
     for j in [start..end]
-      row = j + @ydisp
+      row = j
       line = @screen[row]
       out = ""
 
@@ -515,11 +508,15 @@ class Terminal
 
 
   scroll: ->
-    if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+    # Use emulated scroll in alternate buffer or when scroll region is defined
+    if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       # inner scroll
+      @screen.splice @scrollBottom + 1, 0, @blank_line()
       @screen.splice @scrollTop, 1
-      @screen.splice @scrollBottom, 0, @blank_line()
-      @maxRange()
+      @y
+
+      @updateRange @scrollTop
+      @updateRange @scrollBottom
     else
       @screen.shift()
       @screen.push @blank_line()
@@ -530,7 +527,7 @@ class Terminal
     if scroll is -1
       @children.slice(-1)[0].scrollIntoView()
     else
-      window.scrollTo scroll
+      window.scrollTo 0, scroll
 
   scroll_display: (disp) ->
     @native_scroll_to window.scrollY + disp * @char_size.height
@@ -547,7 +544,7 @@ class Terminal
 
   next_line: ->
     @y++
-    if @y >= @scrollBottom
+    if @y > @scrollBottom
       @y--
       @scroll()
 
@@ -601,20 +598,20 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @screen[@y + @ybase][@x] = @cloneAttr @curAttr, '\u23CE'
+                  @screen[@y][@x] = @cloneAttr @curAttr, '\u23CE'
                   @x = 0
                   @next_line()
 
                 @updateRange @y
 
-                @screen[@y + @ybase][@x] = @cloneAttr @curAttr, ch
+                @screen[@y][@x] = @cloneAttr @curAttr, ch
                 @x++
                 if "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
-                    @screen[@y + @ybase][@x - 1] = @cloneAttr @curAttr, " "
+                    @screen[@y][@x - 1] = @cloneAttr @curAttr, " "
                     break
 
-                  @screen[@y + @ybase][@x] = @cloneAttr @curAttr, " "
+                  @screen[@y][@x] = @cloneAttr @curAttr, " "
                   @x++
 
         when State.escaped
@@ -1060,7 +1057,7 @@ class Terminal
                     @updateRange @y
 
                   when "PROMPT"
-                    @send content
+                    @handler content
 
                   when "TEXT"
                     l += content.length
@@ -1095,12 +1092,12 @@ class Terminal
                     console.error "Unknown DCS Pt: %s.", pt
                     pt = ""
 
-                @send "\x1bP" + +valid + "$r" + pt + "\x1b\\"
+                @handler "\x1bP" + +valid + "$r" + pt + "\x1b\\"
 
               when "+q"
                 pt = @currentParam
                 valid = false
-                @send "\x1bP" + +valid + "+r" + pt + "\x1b\\"
+                @handler "\x1bP" + +valid + "+r" + pt + "\x1b\\"
 
               else
                 console.error "Unknown DCS prefix: %s.", @prefix
@@ -1409,15 +1406,6 @@ class Terminal
     @handler key
     false
 
-  send: (data) ->
-    unless @queue
-      @t_queue = setTimeout (=>
-        @handler @queue
-        @queue = ""
-      ), 1
-
-    @queue += data
-
   bell: (cls="bell")->
     return unless @visualBell
     @element.classList.add cls
@@ -1429,7 +1417,7 @@ class Terminal
     old_cols = @cols
     old_rows = @rows
     @compute_char_size()
-    @cols = Math.floor(window.innerWidth / @char_size.width)
+    @cols = Math.floor(@element.clientWidth / @char_size.width)
     @rows = Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
@@ -1457,7 +1445,7 @@ class Terminal
     if j < @rows
       el = @element
       while j++ < @rows
-        @screen.push @blank_line() if @screen.length < @rows + @ybase
+        @screen.push @blank_line() if @screen.length < @rows
         if @children.length < @rows
           line = @document.createElement("div")
           line.className = 'line'
@@ -1465,7 +1453,7 @@ class Terminal
           @children.push line
     else if j > @rows
       while j-- > @rows
-        @screen.pop() if @screen.length > @rows + @ybase
+        @screen.pop() if @screen.length > @rows
         if @children.length > @rows
           el = @children.pop()
           el?.parentNode.removeChild el
@@ -1518,7 +1506,7 @@ class Terminal
     if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
   eraseRight: (x, y) ->
-    line = @screen[@ybase + y]
+    line = @screen[y]
     # xterm
 
     while x < @cols
@@ -1527,7 +1515,7 @@ class Terminal
     @updateRange y
 
   eraseLeft: (x, y) ->
-    line = @screen[@ybase + y]
+    line = @screen[y]
     # xterm
     x++
     line[x] = @eraseAttr() while x--
@@ -1566,7 +1554,7 @@ class Terminal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    if @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+    if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       # inner scroll
       @screen.splice @scrollBottom, 1
       @screen.splice @scrollTop, 0, @blank_line(true)
@@ -1880,16 +1868,16 @@ class Terminal
       switch params[0]
         when 5
           # status report
-          @send "\x1b[0n"
+          @handler "\x1b[0n"
         when 6
           # cursor position
-          @send "\x1b[" + (@y + 1) + ";" + (@x + 1) + "R"
+          @handler "\x1b[" + (@y + 1) + ";" + (@x + 1) + "R"
     else if @prefix is "?"
       # modern xterm doesnt seem to
       # respond to any of these except ?6, 6, and 5
       if params[0] is 6
         # cursor position
-        @send "\x1b[?" + (@y + 1) + ";" + (@x + 1) + "R"
+        @handler "\x1b[?" + (@y + 1) + ";" + (@x + 1) + "R"
 
 
   ## Additions ##
@@ -1899,7 +1887,7 @@ class Terminal
   insertChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
+    row = @y
     j = @x
     # xterm
     while param-- and j < @cols
@@ -1942,14 +1930,11 @@ class Terminal
   insertLines: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
 
     while param--
-      @screen.splice row, 0, @blank_line(true)
+      @screen.splice @y, 0, @blank_line(true)
       # blank_line(true) - xterm/linux behavior
-      j = @rows - 1 - @scrollBottom
-      j = @rows - 1 + @ybase - j + 1
-      @screen.splice j, 1
+      @screen.splice @scrollBottom + 1, 1
 
     @updateRange @y
     @updateRange @scrollBottom
@@ -1959,7 +1944,7 @@ class Terminal
   deleteLines: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
+    row = @y
 
     while param--
       # test: echo -e '\e[44m\e[1M\e[0m'
@@ -1975,7 +1960,7 @@ class Terminal
   deleteChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
+    row = @y
     # xterm
     while param--
       @screen[row].splice @x, 1
@@ -1987,7 +1972,7 @@ class Terminal
   eraseChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
+    row = @y
     j = @x
     # xterm
     @screen[row][j++] = @eraseAttr() while param-- and j < @cols
@@ -2051,22 +2036,22 @@ class Terminal
     return if params[0] > 0
     unless @prefix
       if @isterm("xterm") or @isterm("rxvt-unicode") or @isterm("screen")
-        @send "\x1b[?1;2c"
-      else @send "\x1b[?6c"    if @isterm("linux")
+        @handler "\x1b[?1;2c"
+      else @handler "\x1b[?6c"    if @isterm("linux")
 
     else if @prefix is ">"
       # xterm and urxvt
       # seem to spit this
       # out around ~370 times (?).
       if @isterm("xterm")
-        @send "\x1b[>0;276;0c"
+        @handler "\x1b[>0;276;0c"
       else if @isterm("rxvt-unicode")
-        @send "\x1b[>85;95;0c"
+        @handler "\x1b[>85;95;0c"
       else if @isterm("linux")
         # not supported by linux console.
         # linux console echoes parameters.
-        @send params[0] + "c"
-      else @send "\x1b[>83;40003;0c"    if @isterm("screen")
+        @handler params[0] + "c"
+      else @handler "\x1b[>83;40003;0c"    if @isterm("screen")
 
 
   # CSI Pm d
@@ -2248,8 +2233,6 @@ class Terminal
           unless @normal
             normal =
               lines: @screen
-              ybase: @ybase
-              ydisp: @ydisp
               x: @x
               y: @y
               scrollTop: @scrollTop
@@ -2381,8 +2364,6 @@ class Terminal
         when 1049, 47, 1047 # normal screen buffer - clearing it first
           if @normal
             @screen = @normal.lines
-            @ybase = @normal.ybase
-            @ydisp = @normal.ydisp
             @x = @normal.x
             @y = @normal.y
             @scrollTop = @normal.scrollTop
@@ -2431,8 +2412,8 @@ class Terminal
   scrollUp: (params) ->
     param = params[0] or 1
     while param--
-      @screen.splice @ybase + @scrollTop, 1
-      @screen.splice @ybase + @scrollBottom, 0, @blank_line()
+      @screen.splice @scrollTop, 1
+      @screen.splice @scrollBottom, 0, @blank_line()
 
     @updateRange @scrollTop
     @updateRange @scrollBottom
@@ -2442,8 +2423,8 @@ class Terminal
   scrollDown: (params) ->
     param = params[0] or 1
     while param--
-      @screen.splice @ybase + @scrollBottom, 1
-      @screen.splice @ybase + @scrollTop, 0, @blank_line()
+      @screen.splice @scrollBottom, 1
+      @screen.splice @scrollTop, 0, @blank_line()
 
     @updateRange @scrollTop
     @updateRange @scrollBottom
@@ -2480,7 +2461,7 @@ class Terminal
   # CSI Ps b    Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
-    line = @screen[@ybase + @y]
+    line = @screen[@y]
     ch = line[@x - 1] or @defAttr
     line[@x++] = ch while param--
 
@@ -2654,7 +2635,7 @@ class Terminal
     r = params[3]
     attr = params[4]
     while t < b + 1
-      line = @screen[@ybase + t]
+      line = @screen[t]
       i = l
       while i < r
         line[i] = @cloneAttr attr, line[i].ch
@@ -2813,7 +2794,7 @@ class Terminal
     b = params[3]
     r = params[4]
     while t < b + 1
-      line = @screen[@ybase + t]
+      line = @screen[t]
       i = l
       while i < r
         line[i] = @cloneAttr line[i][0], String.fromCharCode(ch)
@@ -2850,7 +2831,7 @@ class Terminal
     b = params[2]
     r = params[3]
     while t < b + 1
-      line = @screen[@ybase + t]
+      line = @screen[t]
       i = l
       while i < r
         line[i] = @eraseAttr()
@@ -2929,9 +2910,9 @@ class Terminal
   # NOTE: xterm doesn't enable this code by default.
   insertColumns: ->
     param = params[0]
-    l = @ybase + @rows
+    l = @rows
     while param--
-      i = @ybase
+      i = 0
       while i < l
         @screen[i].splice @x + 1, 0, @eraseAttr()
         @screen[i].pop()
@@ -2944,9 +2925,9 @@ class Terminal
   # NOTE: xterm doesn't enable this code by default.
   deleteColumns: ->
     param = params[0]
-    l = @ybase + @rows
+    l = @rows
     while param--
-      i = @ybase
+      i = 0
       while i < l
         @screen[i].splice @x, 1
         @screen[i].push @eraseAttr()
