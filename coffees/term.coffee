@@ -84,7 +84,7 @@ class Terminal
 
     @scrollback = 10000
     @visualBell = 100
-
+    @shift = 0
     @convertEol = false
     @termName = 'xterm'
     @cursorBlink = true
@@ -166,7 +166,7 @@ class Terminal
     @prefix = ""
     @screen = []
     i = @rows
-    @screen.push @blank_line() while i--
+    @screen.push [@blank_line(), true] while i--
     @setupStops()
     @skipNextKey = null
 
@@ -388,12 +388,10 @@ class Terminal
         sendButton ev
         cancel ev
 
-  refresh: (start, end) ->
-    end = Math.min(end, @screen.length - 1)
-
-    for j in [start..end]
-      row = j
-      line = @screen[row]
+  refresh: ->
+    new_out = ''
+    for [line, dirty], j in @screen
+      continue unless dirty
       out = ""
 
       if j is @y and not @cursorHidden
@@ -471,7 +469,16 @@ class Terminal
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
-      @children[j].innerHTML = out
+      if @children[j]
+        @children[j].innerHTML = out
+      else
+        new_out += "<div class=\"line\">#{out}</div>"
+      @screen[j][1] = false
+
+    if new_out isnt ''
+      @element.innerHTML += new_out
+      @children = Array.prototype.slice.call(@element.children, -@rows)
+
 
     for l, html of @html
       @children[l].innerHTML = ''
@@ -511,36 +518,39 @@ class Terminal
     # Use emulated scroll in alternate buffer or when scroll region is defined
     if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       # inner scroll
-      @screen.splice @scrollBottom + 1, 0, @blank_line()
+      @screen.splice @scrollBottom + 1, 0, [@blank_line(), true]
       @screen.splice @scrollTop, 1
       @y
 
       @updateRange @scrollTop
       @updateRange @scrollBottom
     else
-      @screen.shift()
-      @screen.push @blank_line()
-      @refreshStart = Math.max(@refreshStart - 1, 0)
-      @new_line()
+      # @screen.shift()
+      @screen.push [@blank_line(), true]
+      @shift++
+      # @refreshStart = Math.max(@refreshStart - 1, 0)
+      # @new_line()
 
   native_scroll_to: (scroll=-1) ->
     if scroll is -1
-      @children.slice(-1)[0].scrollIntoView()
+      last = @children.slice(-1)[0]
+      if last? and last isnt ''
+        last.scrollIntoView()
     else
       window.scrollTo 0, scroll
 
   scroll_display: (disp) ->
     @native_scroll_to window.scrollY + disp * @char_size.height
 
-  new_line: ->
-    div = @document.createElement('div')
-    div.className = 'line'
-    @element.appendChild(div)
-    if @element.childElementCount > @scrollback
-      @element.children[0].remove()
+  # new_line: ->
+  #   # div = @document.createElement('div')
+  #   # div.className = 'line'
+  #   # @element.appendChild(div)
+  #   while @element.childElementCount > @scrollback
+  #     @element.firstChild.remove()
 
-    @children.shift()
-    @children.push(div)
+  #   @children.shift()
+  #   # @children.push('')
 
   next_line: ->
     @y++
@@ -549,8 +559,8 @@ class Terminal
       @scroll()
 
   write: (data) ->
-    @refreshStart = @y
-    @refreshEnd = @y
+    # @refreshStart = @y
+    # @refreshEnd = @y
 
     i = 0
     l = data.length
@@ -598,20 +608,22 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @screen[@y][@x] = @cloneAttr @curAttr, '\u23CE'
+                  @screen[@y][0][@x] = @cloneAttr @curAttr, '\u23CE'
+                  @screen[@y][1] = true
                   @x = 0
                   @next_line()
 
-                @updateRange @y
-
-                @screen[@y][@x] = @cloneAttr @curAttr, ch
+                @screen[@y][0][@x] = @cloneAttr @curAttr, ch
+                @screen[@y][1][@x] = true
                 @x++
                 if "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
-                    @screen[@y][@x - 1] = @cloneAttr @curAttr, " "
+                    @screen[@y][0][@x - 1] = @cloneAttr @curAttr, " "
+                    @screen[@y][1] = true
                     break
 
-                  @screen[@y][@x] = @cloneAttr @curAttr, " "
+                  @screen[@y][0][@x] = @cloneAttr @curAttr, " "
+                  @screen[@y][1][@x] = true
                   @x++
 
         when State.escaped
@@ -1432,11 +1444,11 @@ class Terminal
       # does xterm use the default attr?
       i = @screen.length
       while i--
-        @screen[i].push @defAttr while @screen[i].length < @cols
+        @screen[i][0].push @defAttr while @screen[i][0].length < @cols
     else if old_cols > @cols
       i = @screen.length
       while i--
-        @screen[i].pop() while @screen[i].length > @cols
+        @screen[i][0].pop() while @screen[i][0].length > @cols
 
     @setupStops old_cols
 
@@ -1445,7 +1457,7 @@ class Terminal
     if j < @rows
       el = @element
       while j++ < @rows
-        @screen.push @blank_line() if @screen.length < @rows
+        @screen.push [@blank_line(), true] if @screen.length < @rows
         if @children.length < @rows
           line = @document.createElement("div")
           line.className = 'line'
@@ -1465,7 +1477,7 @@ class Terminal
     @scrollTop = 0
     @scrollBottom = @rows - 1
 
-    @refresh 0, @rows - 1
+    @refresh()
 
     # it's a real nightmare trying
     # to resize the original
@@ -1506,20 +1518,20 @@ class Terminal
     if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
   eraseRight: (x, y) ->
-    line = @screen[y]
+    line = @screen[y][0]
     # xterm
 
     while x < @cols
       line[x] = @eraseAttr()
       x++
-    @updateRange y
+    @screen[y][1] = true
 
   eraseLeft: (x, y) ->
-    line = @screen[y]
+    line = @screen[y][0]
     # xterm
     x++
     line[x] = @eraseAttr() while x--
-    @updateRange y
+    @screen[y][1] = true
 
   eraseLine: (y) ->
     @eraseRight 0, y
@@ -1557,7 +1569,7 @@ class Terminal
     if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       # inner scroll
       @screen.splice @scrollBottom, 1
-      @screen.splice @scrollTop, 0, @blank_line(true)
+      @screen.splice @scrollTop, 0, [@blank_line(true), true]
       @maxRange()
     else
       prevNode = @children[0].previousElementSibling
@@ -1568,7 +1580,7 @@ class Terminal
       else
         @new_line()
       @screen.pop()
-      @screen.unshift @blank_line()
+      @screen.unshift [@blank_line(), true]
     @maxRange()
     @state = State.normal
 
@@ -1891,7 +1903,7 @@ class Terminal
     j = @x
     # xterm
     while param-- and j < @cols
-      @screen[row].splice j++, 0, @eraseAttr()
+      @screen[row].splice j++, 0, [@eraseAttr(), true]
       @screen[row].pop()
 
 
@@ -1932,7 +1944,7 @@ class Terminal
     param = 1 if param < 1
 
     while param--
-      @screen.splice @y, 0, @blank_line(true)
+      @screen.splice @y, 0, [@blank_line(true), true]
       # blank_line(true) - xterm/linux behavior
       @screen.splice @scrollBottom + 1, 1
 
@@ -1949,7 +1961,7 @@ class Terminal
     while param--
       # test: echo -e '\e[44m\e[1M\e[0m'
       # blank_line(true) - xterm/linux behavior
-      @screen.push @blank_line(true)
+      @screen.push [@blank_line(true), true]
       @screen.splice @y, 1
 
     @updateRange @y
@@ -1963,8 +1975,9 @@ class Terminal
     row = @y
     # xterm
     while param--
-      @screen[row].splice @x, 1
-      @screen[row].push @eraseAttr()
+      @screen[row][0].splice @x, 1
+      @screen[row][0].push @eraseAttr()
+    @screen[row][1] = true
 
 
   # CSI Ps X
@@ -1975,8 +1988,8 @@ class Terminal
     row = @y
     j = @x
     # xterm
-    @screen[row][j++] = @eraseAttr() while param-- and j < @cols
-
+    @screen[row][0][j++] = @eraseAttr() while param-- and j < @cols
+    @screen[row][1] = true
 
   # CSI Pm `    Character Position Absolute
   #     [column] (default = [row,1]) (HPA).
@@ -2413,7 +2426,7 @@ class Terminal
     param = params[0] or 1
     while param--
       @screen.splice @scrollTop, 1
-      @screen.splice @scrollBottom, 0, @blank_line()
+      @screen.splice @scrollBottom, 0, [@blank_line(), true]
 
     @updateRange @scrollTop
     @updateRange @scrollBottom
@@ -2424,7 +2437,7 @@ class Terminal
     param = params[0] or 1
     while param--
       @screen.splice @scrollBottom, 1
-      @screen.splice @scrollTop, 0, @blank_line()
+      @screen.splice @scrollTop, 0, [@blank_line(), true]
 
     @updateRange @scrollTop
     @updateRange @scrollBottom
@@ -2461,10 +2474,10 @@ class Terminal
   # CSI Ps b    Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
-    line = @screen[@y]
+    line = @screen[@y][0]
     ch = line[@x - 1] or @defAttr
     line[@x++] = ch while param--
-
+    @screen[@y][1] = true
 
   # CSI Ps g    Tab Clear (TBC).
   #         Ps = 0    -> Clear Current Column (default).
@@ -2635,7 +2648,8 @@ class Terminal
     r = params[3]
     attr = params[4]
     while t < b + 1
-      line = @screen[t]
+      line = @screen[t][0]
+      @screen[t][1] = true
       i = l
       while i < r
         line[i] = @cloneAttr attr, line[i].ch
@@ -2794,7 +2808,8 @@ class Terminal
     b = params[3]
     r = params[4]
     while t < b + 1
-      line = @screen[t]
+      line = @screen[t][0]
+      @screen[t][1] = true
       i = l
       while i < r
         line[i] = @cloneAttr line[i][0], String.fromCharCode(ch)
@@ -2831,7 +2846,8 @@ class Terminal
     b = params[2]
     r = params[3]
     while t < b + 1
-      line = @screen[t]
+      line = @screen[t][0]
+      @screen[t][1] = true
       i = l
       while i < r
         line[i] = @eraseAttr()
@@ -2914,10 +2930,10 @@ class Terminal
     while param--
       i = 0
       while i < l
-        @screen[i].splice @x + 1, 0, @eraseAttr()
-        @screen[i].pop()
+        @screen[i][0].splice @x + 1, 0, @eraseAttr()
+        @screen[i][0].pop()
         i++
-    @maxRange()
+    @screen[i][1] = true
 
 
   # CSI P m SP ~
@@ -2929,10 +2945,10 @@ class Terminal
     while param--
       i = 0
       while i < l
-        @screen[i].splice @x, 1
-        @screen[i].push @eraseAttr()
+        @screen[i][0].splice @x, 1
+        @screen[i][0].push @eraseAttr()
         i++
-    @maxRange()
+    @screen[i][1] = true
 
   # DEC Special Character and Line Drawing Set.
   # http://vt100.net/docs/vt102-ug/table5-13.html

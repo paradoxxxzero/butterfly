@@ -49,9 +49,17 @@ document.addEventListener 'DOMContentLoaded', ->
 
   t_stop = null
   last_data = ''
+  t_queue = null
+
+  queue = ''
   ws.addEventListener 'message', (e) ->
+    clearTimeout t_queue if t_queue
+    queue += e.data
+    t_queue = setTimeout treat, 1
+
+  treat = ->
     if term.stop
-      last_data += e.data
+      last_data += queue
       last_data = last_data.slice(-10 * 1024) # Keep last 10kb
       if t_stop
         clearTimeout t_stop if t_stop
@@ -64,7 +72,8 @@ document.addEventListener 'DOMContentLoaded', ->
       , 100
       return
 
-    term.write e.data
+    term.write queue
+    queue = ''
 
   ws.addEventListener 'close', ->
     console.log "WebSocket closed", arguments

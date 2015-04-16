@@ -12,7 +12,7 @@
   $ = document.querySelectorAll.bind(document);
 
   document.addEventListener('DOMContentLoaded', function() {
-    var ctl, last_data, send, t_stop, term, ws, ws_url;
+    var ctl, last_data, queue, send, t_queue, t_stop, term, treat, ws, ws_url;
     send = function(data) {
       return ws.send('S' + data);
     };
@@ -41,9 +41,18 @@
     });
     t_stop = null;
     last_data = '';
+    t_queue = null;
+    queue = '';
     ws.addEventListener('message', function(e) {
+      if (t_queue) {
+        clearTimeout(t_queue);
+      }
+      queue += e.data;
+      return t_queue = setTimeout(treat, 1);
+    });
+    treat = function() {
       if (term.stop) {
-        last_data += e.data;
+        last_data += queue;
         last_data = last_data.slice(-10 * 1024);
         if (t_stop) {
           if (t_stop) {
@@ -59,8 +68,9 @@
         }, 100);
         return;
       }
-      return term.write(e.data);
-    });
+      term.write(queue);
+      return queue = '';
+    };
     ws.addEventListener('close', function() {
       console.log("WebSocket closed", arguments);
       setTimeout(function() {
@@ -171,6 +181,7 @@
       }
       this.scrollback = 10000;
       this.visualBell = 100;
+      this.shift = 0;
       this.convertEol = false;
       this.termName = 'xterm';
       this.cursorBlink = true;
@@ -247,7 +258,7 @@
       this.screen = [];
       i = this.rows;
       while (i--) {
-        this.screen.push(this.blank_line());
+        this.screen.push([this.blank_line(), true]);
       }
       this.setupStops();
       return this.skipNextKey = null;
@@ -477,12 +488,15 @@
       })(this));
     };
 
-    Terminal.prototype.refresh = function(start, end) {
-      var attr, ch, classes, data, fg, html, i, j, k, l, line, m, out, ref, ref1, ref2, ref3, row, styles, x;
-      end = Math.min(end, this.screen.length - 1);
-      for (j = k = ref = start, ref1 = end; ref <= ref1 ? k <= ref1 : k >= ref1; j = ref <= ref1 ? ++k : --k) {
-        row = j;
-        line = this.screen[row];
+    Terminal.prototype.refresh = function() {
+      var attr, ch, classes, data, dirty, fg, html, i, j, k, l, len, line, m, new_out, out, ref, ref1, ref2, ref3, styles, x;
+      new_out = '';
+      ref = this.screen;
+      for (j = k = 0, len = ref.length; k < len; j = ++k) {
+        ref1 = ref[j], line = ref1[0], dirty = ref1[1];
+        if (!dirty) {
+          continue;
+        }
         out = "";
         if (j === this.y && !this.cursorHidden) {
           x = this.x;
@@ -578,7 +592,16 @@
         if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
         }
-        this.children[j].innerHTML = out;
+        if (this.children[j]) {
+          this.children[j].innerHTML = out;
+        } else {
+          new_out += "<div class=\"line\">" + out + "</div>";
+        }
+        this.screen[j][1] = false;
+      }
+      if (new_out !== '') {
+        this.element.innerHTML += new_out;
+        this.children = Array.prototype.slice.call(this.element.children, -this.rows);
       }
       ref3 = this.html;
       for (l in ref3) {
@@ -633,25 +656,27 @@
 
     Terminal.prototype.scroll = function() {
       if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-        this.screen.splice(this.scrollBottom + 1, 0, this.blank_line());
+        this.screen.splice(this.scrollBottom + 1, 0, [this.blank_line(), true]);
         this.screen.splice(this.scrollTop, 1);
         this.y;
         this.updateRange(this.scrollTop);
         return this.updateRange(this.scrollBottom);
       } else {
-        this.screen.shift();
-        this.screen.push(this.blank_line());
-        this.refreshStart = Math.max(this.refreshStart - 1, 0);
-        return this.new_line();
+        this.screen.push([this.blank_line(), true]);
+        return this.shift++;
       }
     };
 
     Terminal.prototype.native_scroll_to = function(scroll) {
+      var last;
       if (scroll == null) {
         scroll = -1;
       }
       if (scroll === -1) {
-        return this.children.slice(-1)[0].scrollIntoView();
+        last = this.children.slice(-1)[0];
+        if ((last != null) && last !== '') {
+          return last.scrollIntoView();
+        }
       } else {
         return window.scrollTo(0, scroll);
       }
@@ -659,18 +684,6 @@
 
     Terminal.prototype.scroll_display = function(disp) {
       return this.native_scroll_to(window.scrollY + disp * this.char_size.height);
-    };
-
-    Terminal.prototype.new_line = function() {
-      var div;
-      div = this.document.createElement('div');
-      div.className = 'line';
-      this.element.appendChild(div);
-      if (this.element.childElementCount > this.scrollback) {
-        this.element.children[0].remove();
-      }
-      this.children.shift();
-      return this.children.push(div);
     };
 
     Terminal.prototype.next_line = function() {
@@ -683,8 +696,6 @@
 
     Terminal.prototype.write = function(data) {
       var ch, content, cs, html, i, l, pt, ref, ref1, type, valid;
-      this.refreshStart = this.y;
-      this.refreshEnd = this.y;
       i = 0;
       l = data.length;
       while (i < l) {
@@ -729,19 +740,22 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.screen[this.y][this.x] = this.cloneAttr(this.curAttr, '\u23CE');
+                    this.screen[this.y][0][this.x] = this.cloneAttr(this.curAttr, '\u23CE');
+                    this.screen[this.y][1] = true;
                     this.x = 0;
                     this.next_line();
                   }
-                  this.updateRange(this.y);
-                  this.screen[this.y][this.x] = this.cloneAttr(this.curAttr, ch);
+                  this.screen[this.y][0][this.x] = this.cloneAttr(this.curAttr, ch);
+                  this.screen[this.y][1][this.x] = true;
                   this.x++;
                   if (("\uff00" < ch && ch < "\uffef")) {
                     if (this.cols < 2 || this.x >= this.cols) {
-                      this.screen[this.y][this.x - 1] = this.cloneAttr(this.curAttr, " ");
+                      this.screen[this.y][0][this.x - 1] = this.cloneAttr(this.curAttr, " ");
+                      this.screen[this.y][1] = true;
                       break;
                     }
-                    this.screen[this.y][this.x] = this.cloneAttr(this.curAttr, " ");
+                    this.screen[this.y][0][this.x] = this.cloneAttr(this.curAttr, " ");
+                    this.screen[this.y][1][this.x] = true;
                     this.x++;
                   }
                 }
@@ -1486,15 +1500,15 @@
       if (old_cols < this.cols) {
         i = this.screen.length;
         while (i--) {
-          while (this.screen[i].length < this.cols) {
-            this.screen[i].push(this.defAttr);
+          while (this.screen[i][0].length < this.cols) {
+            this.screen[i][0].push(this.defAttr);
           }
         }
       } else if (old_cols > this.cols) {
         i = this.screen.length;
         while (i--) {
-          while (this.screen[i].length > this.cols) {
-            this.screen[i].pop();
+          while (this.screen[i][0].length > this.cols) {
+            this.screen[i][0].pop();
           }
         }
       }
@@ -1504,7 +1518,7 @@
         el = this.element;
         while (j++ < this.rows) {
           if (this.screen.length < this.rows) {
-            this.screen.push(this.blank_line());
+            this.screen.push([this.blank_line(), true]);
           }
           if (this.children.length < this.rows) {
             line = this.document.createElement("div");
@@ -1534,7 +1548,7 @@
       }
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
-      this.refresh(0, this.rows - 1);
+      this.refresh();
       return this.normal = null;
     };
 
@@ -1608,22 +1622,22 @@
 
     Terminal.prototype.eraseRight = function(x, y) {
       var line;
-      line = this.screen[y];
+      line = this.screen[y][0];
       while (x < this.cols) {
         line[x] = this.eraseAttr();
         x++;
       }
-      return this.updateRange(y);
+      return this.screen[y][1] = true;
     };
 
     Terminal.prototype.eraseLeft = function(x, y) {
       var line;
-      line = this.screen[y];
+      line = this.screen[y][0];
       x++;
       while (x--) {
         line[x] = this.eraseAttr();
       }
-      return this.updateRange(y);
+      return this.screen[y][1] = true;
     };
 
     Terminal.prototype.eraseLine = function(y) {
@@ -1671,7 +1685,7 @@
       var prevNode;
       if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
         this.screen.splice(this.scrollBottom, 1);
-        this.screen.splice(this.scrollTop, 0, this.blank_line(true));
+        this.screen.splice(this.scrollTop, 0, [this.blank_line(true), true]);
         this.maxRange();
       } else {
         prevNode = this.children[0].previousElementSibling;
@@ -1683,7 +1697,7 @@
           this.new_line();
         }
         this.screen.pop();
-        this.screen.unshift(this.blank_line());
+        this.screen.unshift([this.blank_line(), true]);
       }
       this.maxRange();
       return this.state = State.normal;
@@ -1919,7 +1933,7 @@
       j = this.x;
       results = [];
       while (param-- && j < this.cols) {
-        this.screen[row].splice(j++, 0, this.eraseAttr());
+        this.screen[row].splice(j++, 0, [this.eraseAttr(), true]);
         results.push(this.screen[row].pop());
       }
       return results;
@@ -1967,7 +1981,7 @@
         param = 1;
       }
       while (param--) {
-        this.screen.splice(this.y, 0, this.blank_line(true));
+        this.screen.splice(this.y, 0, [this.blank_line(true), true]);
         this.screen.splice(this.scrollBottom + 1, 1);
       }
       this.updateRange(this.y);
@@ -1982,7 +1996,7 @@
       }
       row = this.y;
       while (param--) {
-        this.screen.push(this.blank_line(true));
+        this.screen.push([this.blank_line(true), true]);
         this.screen.splice(this.y, 1);
       }
       this.updateRange(this.y);
@@ -1990,33 +2004,31 @@
     };
 
     Terminal.prototype.deleteChars = function(params) {
-      var param, results, row;
+      var param, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y;
-      results = [];
       while (param--) {
-        this.screen[row].splice(this.x, 1);
-        results.push(this.screen[row].push(this.eraseAttr()));
+        this.screen[row][0].splice(this.x, 1);
+        this.screen[row][0].push(this.eraseAttr());
       }
-      return results;
+      return this.screen[row][1] = true;
     };
 
     Terminal.prototype.eraseChars = function(params) {
-      var j, param, results, row;
+      var j, param, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y;
       j = this.x;
-      results = [];
       while (param-- && j < this.cols) {
-        results.push(this.screen[row][j++] = this.eraseAttr());
+        this.screen[row][0][j++] = this.eraseAttr();
       }
-      return results;
+      return this.screen[row][1] = true;
     };
 
     Terminal.prototype.charPosAbsolute = function(params) {
@@ -2277,7 +2289,7 @@
       param = params[0] || 1;
       while (param--) {
         this.screen.splice(this.scrollTop, 1);
-        this.screen.splice(this.scrollBottom, 0, this.blank_line());
+        this.screen.splice(this.scrollBottom, 0, [this.blank_line(), true]);
       }
       this.updateRange(this.scrollTop);
       return this.updateRange(this.scrollBottom);
@@ -2288,7 +2300,7 @@
       param = params[0] || 1;
       while (param--) {
         this.screen.splice(this.scrollBottom, 1);
-        this.screen.splice(this.scrollTop, 0, this.blank_line());
+        this.screen.splice(this.scrollTop, 0, [this.blank_line(), true]);
       }
       this.updateRange(this.scrollTop);
       return this.updateRange(this.scrollBottom);
@@ -2309,15 +2321,14 @@
     };
 
     Terminal.prototype.repeatPrecedingCharacter = function(params) {
-      var ch, line, param, results;
+      var ch, line, param;
       param = params[0] || 1;
-      line = this.screen[this.y];
+      line = this.screen[this.y][0];
       ch = line[this.x - 1] || this.defAttr;
-      results = [];
       while (param--) {
-        results.push(line[this.x++] = ch);
+        line[this.x++] = ch;
       }
-      return results;
+      return this.screen[this.y][1] = true;
     };
 
     Terminal.prototype.tabClear = function(params) {
@@ -2378,7 +2389,8 @@
       r = params[3];
       attr = params[4];
       while (t < b + 1) {
-        line = this.screen[t];
+        line = this.screen[t][0];
+        this.screen[t][1] = true;
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(attr, line[i].ch);
@@ -2418,7 +2430,8 @@
       b = params[3];
       r = params[4];
       while (t < b + 1) {
-        line = this.screen[t];
+        line = this.screen[t][0];
+        this.screen[t][1] = true;
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(line[i][0], String.fromCharCode(ch));
@@ -2442,7 +2455,8 @@
       b = params[2];
       r = params[3];
       while (t < b + 1) {
-        line = this.screen[t];
+        line = this.screen[t][0];
+        this.screen[t][1] = true;
         i = l;
         while (i < r) {
           line[i] = this.eraseAttr();
@@ -2467,12 +2481,12 @@
       while (param--) {
         i = 0;
         while (i < l) {
-          this.screen[i].splice(this.x + 1, 0, this.eraseAttr());
-          this.screen[i].pop();
+          this.screen[i][0].splice(this.x + 1, 0, this.eraseAttr());
+          this.screen[i][0].pop();
           i++;
         }
       }
-      return this.maxRange();
+      return this.screen[i][1] = true;
     };
 
     Terminal.prototype.deleteColumns = function() {
@@ -2482,12 +2496,12 @@
       while (param--) {
         i = 0;
         while (i < l) {
-          this.screen[i].splice(this.x, 1);
-          this.screen[i].push(this.eraseAttr());
+          this.screen[i][0].splice(this.x, 1);
+          this.screen[i][0].push(this.eraseAttr());
           i++;
         }
       }
-      return this.maxRange();
+      return this.screen[i][1] = true;
     };
 
     Terminal.prototype.charsets = {
