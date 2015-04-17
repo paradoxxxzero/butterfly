@@ -186,7 +186,7 @@ class Terminal
     erased
 
   focus: ->
-    @handler('\x1b[I') if @sendFocus
+    @send('\x1b[I') if @sendFocus
     @showCursor()
     @element.classList.add('focus')
     @element.classList.remove('blur')
@@ -194,7 +194,7 @@ class Terminal
   blur: ->
     @cursorState = 1
     @refresh(@y, @y)
-    @handler('\x1b[O') if @sendFocus
+    @send('\x1b[O') if @sendFocus
     @element.classList.add('blur')
     @element.classList.remove('focus')
 
@@ -271,13 +271,13 @@ class Terminal
         pos.y -= 32
         pos.x++
         pos.y++
-        @handler "\x1b[" + button + ";" + pos.x + ";" + pos.y + "M"
+        @send "\x1b[" + button + ";" + pos.x + ";" + pos.y + "M"
         return
 
       if @sgrMouse
         pos.x -= 32
         pos.y -= 32
-        @handler "\x1b[<" + (
+        @send "\x1b[<" + (
           if (button & 3) is 3 then button & ~3 else button
         ) + ";" + pos.x + ";" + pos.y + (
           if (button & 3) is 3 then "m" else "M"
@@ -288,7 +288,7 @@ class Terminal
       encode data, button
       encode data, pos.x
       encode data, pos.y
-      @handler "\x1b[M" + String.fromCharCode.apply(String, data)
+      @send "\x1b[M" + String.fromCharCode.apply(String, data)
 
     getButton = (ev) =>
       # two low bits:
@@ -1058,7 +1058,7 @@ class Terminal
                     @updateRange @y
 
                   when "PROMPT"
-                    @handler content
+                    @send content
 
                   when "TEXT"
                     l += content.length
@@ -1093,12 +1093,12 @@ class Terminal
                     console.error "Unknown DCS Pt: %s.", pt
                     pt = ""
 
-                @handler "\x1bP" + +valid + "$r" + pt + "\x1b\\"
+                @send "\x1bP" + +valid + "$r" + pt + "\x1b\\"
 
               when "+q"
                 pt = @currentParam
                 valid = false
-                @handler "\x1bP" + +valid + "+r" + pt + "\x1b\\"
+                @send "\x1bP" + +valid + "+r" + pt + "\x1b\\"
 
               else
                 console.error "Unknown DCS prefix: %s.", @prefix
@@ -1362,7 +1362,7 @@ class Terminal
     return true unless key
 
     @showCursor()
-    @handler(key)
+    @send(key)
     cancel ev
 
 
@@ -1404,7 +1404,7 @@ class Terminal
     key = String.fromCharCode(key)
 
     @showCursor()
-    @handler key
+    @send key
     false
 
   bell: (cls="bell")->
@@ -1540,7 +1540,7 @@ class Terminal
   isterm: (term) ->
     "#{@termName}".indexOf(term) is 0
 
-  handler: (data) ->
+  send: (data) ->
     @out data
 
   handleTitle: (title) ->
@@ -1869,16 +1869,16 @@ class Terminal
       switch params[0]
         when 5
           # status report
-          @handler "\x1b[0n"
+          @send "\x1b[0n"
         when 6
           # cursor position
-          @handler "\x1b[" + (@y + 1) + ";" + (@x + 1) + "R"
+          @send "\x1b[" + (@y + 1) + ";" + (@x + 1) + "R"
     else if @prefix is "?"
       # modern xterm doesnt seem to
       # respond to any of these except ?6, 6, and 5
       if params[0] is 6
         # cursor position
-        @handler "\x1b[?" + (@y + 1) + ";" + (@x + 1) + "R"
+        @send "\x1b[?" + (@y + 1) + ";" + (@x + 1) + "R"
 
 
   ## Additions ##
@@ -2037,22 +2037,22 @@ class Terminal
     return if params[0] > 0
     unless @prefix
       if @isterm("xterm") or @isterm("rxvt-unicode") or @isterm("screen")
-        @handler "\x1b[?1;2c"
-      else @handler "\x1b[?6c"    if @isterm("linux")
+        @send "\x1b[?1;2c"
+      else @send "\x1b[?6c"    if @isterm("linux")
 
     else if @prefix is ">"
       # xterm and urxvt
       # seem to spit this
       # out around ~370 times (?).
       if @isterm("xterm")
-        @handler "\x1b[>0;276;0c"
+        @send "\x1b[>0;276;0c"
       else if @isterm("rxvt-unicode")
-        @handler "\x1b[>85;95;0c"
+        @send "\x1b[>85;95;0c"
       else if @isterm("linux")
         # not supported by linux console.
         # linux console echoes parameters.
-        @handler params[0] + "c"
-      else @handler "\x1b[>83;40003;0c"    if @isterm("screen")
+        @send params[0] + "c"
+      else @send "\x1b[>83;40003;0c"    if @isterm("screen")
 
 
   # CSI Pm d
