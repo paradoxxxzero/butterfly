@@ -79,6 +79,7 @@ class Terminal
     while i--
       div = @document.createElement('div')
       div.className = 'line'
+      div.textContent = ' '
       @element.appendChild(div)
       @children.push(div)
 

@@ -19,17 +19,21 @@ html, body
   margin: 0
   padding: 0
   line-height: 1.2
+
+body
+  white-space: nowrap
   overflow-x: hidden
   overflow-y: scroll
-  white-space: nowrap
 
 ::-webkit-scrollbar
   background: $bg
   width: .75em
-  height: .75em
 
 ::-webkit-scrollbar-thumb
   background: rgba($fg, .1)
+
+::-webkit-scrollbar-thumb:hover
+  background: rgba($fg, .15)
 
 .terminal
   outline: none

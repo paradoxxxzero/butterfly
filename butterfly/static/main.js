@@ -166,6 +166,7 @@
       while (i--) {
         div = this.document.createElement('div');
         div.className = 'line';
+        div.textContent = ' ';
         this.element.appendChild(div);
         this.children.push(div);
       }

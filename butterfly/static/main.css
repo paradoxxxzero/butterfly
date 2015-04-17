@@ -3020,18 +3020,22 @@ html, body {
 html, body {
   margin: 0;
   padding: 0;
-  line-height: 1.2;
+  line-height: 1.2; }
+
+body {
+  white-space: nowrap;
   overflow-x: hidden;
-  overflow-y: scroll;
-  white-space: nowrap; }
+  overflow-y: scroll; }
 
 ::-webkit-scrollbar {
   background: #110f13;
-  width: .75em;
-  height: .75em; }
+  width: .75em; }
 
 ::-webkit-scrollbar-thumb {
   background: rgba(244, 234, 213, 0.1); }
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 234, 213, 0.15); }
 
 .terminal {
   outline: none; }
