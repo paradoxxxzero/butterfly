@@ -678,7 +678,7 @@
 
     Terminal.prototype.native_scroll_to = function(scroll) {
       if (scroll == null) {
-        scroll = Infinity;
+        scroll = 2000000000;
       }
       return window.scrollTo(0, scroll);
     };

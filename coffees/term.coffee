@@ -532,7 +532,7 @@ class Terminal
       @screen.push [@blank_line(), true]
       @shift++
 
-  native_scroll_to: (scroll=Infinity) ->
+  native_scroll_to: (scroll=2000000000) -> # ~ Max ff number
     window.scrollTo 0, scroll
 
   scroll_display: (disp) ->
