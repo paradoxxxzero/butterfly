@@ -176,6 +176,7 @@
       while (i--) {
         div = this.document.createElement('div');
         div.className = 'line';
+        div.textContent = ' ';
         this.element.appendChild(div);
         this.children.push(div);
       }
@@ -285,7 +286,7 @@
 
     Terminal.prototype.focus = function() {
       if (this.sendFocus) {
-        this.handler('\x1b[I');
+        this.send('\x1b[I');
       }
       this.showCursor();
       this.element.classList.add('focus');
@@ -296,7 +297,7 @@
       this.cursorState = 1;
       this.refresh(this.y, this.y);
       if (this.sendFocus) {
-        this.handler('\x1b[O');
+        this.send('\x1b[O');
       }
       this.element.classList.add('blur');
       return this.element.classList.remove('focus');
@@ -364,20 +365,20 @@
             pos.y -= 32;
             pos.x++;
             pos.y++;
-            _this.handler("\x1b[" + button + ";" + pos.x + ";" + pos.y + "M");
+            _this.send("\x1b[" + button + ";" + pos.x + ";" + pos.y + "M");
             return;
           }
           if (_this.sgrMouse) {
             pos.x -= 32;
             pos.y -= 32;
-            _this.handler("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
+            _this.send("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
             return;
           }
           data = [];
           encode(data, button);
           encode(data, pos.x);
           encode(data, pos.y);
-          return _this.handler("\x1b[M" + String.fromCharCode.apply(String, data));
+          return _this.send("\x1b[M" + String.fromCharCode.apply(String, data));
         };
       })(this);
       getButton = (function(_this) {
@@ -1135,7 +1136,7 @@
                       this.updateRange(this.y);
                       break;
                     case "PROMPT":
-                      this.handler(content);
+                      this.send(content);
                       break;
                     case "TEXT":
                       l += content.length;
@@ -1165,12 +1166,12 @@
                       console.error("Unknown DCS Pt: %s.", pt);
                       pt = "";
                   }
-                  this.handler("\x1bP" + +valid + "$r" + pt + "\x1b\\");
+                  this.send("\x1bP" + +valid + "$r" + pt + "\x1b\\");
                   break;
                 case "+q":
                   pt = this.currentParam;
                   valid = false;
-                  this.handler("\x1bP" + +valid + "+r" + pt + "\x1b\\");
+                  this.send("\x1bP" + +valid + "+r" + pt + "\x1b\\");
                   break;
                 default:
                   console.error("Unknown DCS prefix: %s.", this.prefix);
@@ -1419,7 +1420,7 @@
         return true;
       }
       this.showCursor();
-      this.handler(key);
+      this.send(key);
       return cancel(ev);
     };
 
@@ -1465,7 +1466,7 @@
       }
       key = String.fromCharCode(key);
       this.showCursor();
-      this.handler(key);
+      this.send(key);
       return false;
     };
 
@@ -1668,7 +1669,7 @@
       return ("" + this.termName).indexOf(term) === 0;
     };
 
-    Terminal.prototype.handler = function(data) {
+    Terminal.prototype.send = function(data) {
       return this.out(data);
     };
 
@@ -1912,13 +1913,13 @@
       if (!this.prefix) {
         switch (params[0]) {
           case 5:
-            return this.handler("\x1b[0n");
+            return this.send("\x1b[0n");
           case 6:
-            return this.handler("\x1b[" + (this.y + 1) + ";" + (this.x + 1) + "R");
+            return this.send("\x1b[" + (this.y + 1) + ";" + (this.x + 1) + "R");
         }
       } else if (this.prefix === "?") {
         if (params[0] === 6) {
-          return this.handler("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
+          return this.send("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
         }
       }
     };
@@ -2061,22 +2062,22 @@
       }
       if (!this.prefix) {
         if (this.isterm("xterm") || this.isterm("rxvt-unicode") || this.isterm("screen")) {
-          return this.handler("\x1b[?1;2c");
+          return this.send("\x1b[?1;2c");
         } else {
           if (this.isterm("linux")) {
-            return this.handler("\x1b[?6c");
+            return this.send("\x1b[?6c");
           }
         }
       } else if (this.prefix === ">") {
         if (this.isterm("xterm")) {
-          return this.handler("\x1b[>0;276;0c");
+          return this.send("\x1b[>0;276;0c");
         } else if (this.isterm("rxvt-unicode")) {
-          return this.handler("\x1b[>85;95;0c");
+          return this.send("\x1b[>85;95;0c");
         } else if (this.isterm("linux")) {
-          return this.handler(params[0] + "c");
+          return this.send(params[0] + "c");
         } else {
           if (this.isterm("screen")) {
-            return this.handler("\x1b[>83;40003;0c");
+            return this.send("\x1b[>83;40003;0c");
           }
         }
       }
