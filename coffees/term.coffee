@@ -73,15 +73,6 @@ class Terminal
     @rows = Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
-    @element.removeChild div
-
-    @html = {}
-    i = Math.max @rows - 1, 0
-    group = @document.createElement('div')
-    group.className = 'group'
-    group.innerHTML = ('<div class="line"> </div>' for a in [0..i]).join ''
-    @element.appendChild group
-    @children = Array.prototype.slice.call document.querySelectorAll('.line')
 
     @scrollback = 1000000
     @buff_size = 100000
@@ -331,15 +322,7 @@ class Terminal
     # mouse coordinates measured in cols/rows
     getCoords = (ev) =>
       x = ev.pageX
-      y = ev.pageY
-
-      # should probably check offsetParent
-      # but this is more portable
-      el = @element
-      while el and el isnt @document.documentElement
-        x -= el.offsetLeft
-        y -= el.offsetTop
-        el = if "offsetParent" of el then el.offsetParent else el.parentNode
+      y = ev.pageY - window.scrollY
 
       # convert to cols/rows
       w = @element.clientWidth
@@ -409,6 +392,10 @@ class Terminal
       attr = @cloneAttr @defAttr
       for i in [0..@cols - 1]
         data = line[i]
+        if data.html
+          out += data.html
+          continue
+
         ch = data.ch
         unless @equalAttr data, attr
           out += "</span>" unless @equalAttr attr, @defAttr
@@ -501,10 +488,6 @@ class Terminal
       @children = Array.prototype.slice.call(
         lines, -@rows)
 
-    for l, html of @html
-      @children[l].innerHTML = ''
-      @children[l].appendChild(html)
-    @html = {}
     @native_scroll_to()
 
   _cursorBlink: ->
@@ -1055,17 +1038,18 @@ class Terminal
                       console.log "HTML escapes are disabled"
                       break
 
-                    html = document.createElement 'div'
-                    html.classList.add 'inline-html'
-                    html.innerHTML = content
-                    @html[@y] = html
+                    attr = @cloneAttr @curAttr
+                    attr.html = (
+                      "<div class=\"inline-html\">#{content}</div>")
+                    @screen[@y][0][@x] = attr
                     @screen[@y][1] = true
 
                   when "IMAGE"
-                    html = document.createElement 'img'
-                    html.classList.add 'inline-image'
-                    html.src = "data:image;base64," + content
-                    @html[@y] = html
+                    attr = @cloneAttr @curAttr
+                    attr.html = (
+                      "<img class=\"inline-image\" src=\"data:image;base64,#{
+                        content}\" />")
+                    @screen[@y][0][@x] = attr
                     @screen[@y][1] = true
 
                   when "PROMPT"

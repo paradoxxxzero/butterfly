@@ -1,6 +1,6 @@
 {
   "name": "butterfly",
-  "version": "1.5.10",
+  "version": "2.0.0",
   "description": "A sleek web based terminal emulator",
   "repository": {
     "type": "git",

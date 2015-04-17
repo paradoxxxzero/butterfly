@@ -142,7 +142,7 @@
 
   Terminal = (function() {
     function Terminal(parent, out1, ctl1) {
-      var a, div, group, i, px;
+      var div, px;
       this.parent = parent;
       this.out = out1;
       this.ctl = ctl1 != null ? ctl1 : function() {};
@@ -164,21 +164,6 @@
       this.rows = Math.floor(window.innerHeight / this.char_size.height);
       px = window.innerHeight % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
-      this.element.removeChild(div);
-      this.html = {};
-      i = Math.max(this.rows - 1, 0);
-      group = this.document.createElement('div');
-      group.className = 'group';
-      group.innerHTML = ((function() {
-        var k, ref, results;
-        results = [];
-        for (a = k = 0, ref = i; 0 <= ref ? k <= ref : k >= ref; a = 0 <= ref ? ++k : --k) {
-          results.push('<div class="line"> </div>');
-        }
-        return results;
-      })()).join('');
-      this.element.appendChild(group);
-      this.children = Array.prototype.slice.call(document.querySelectorAll('.line'));
       this.scrollback = 1000000;
       this.buff_size = 100000;
       this.visualBell = 100;
@@ -411,15 +396,9 @@
       })(this);
       getCoords = (function(_this) {
         return function(ev) {
-          var el, h, w, x, y;
+          var h, w, x, y;
           x = ev.pageX;
-          y = ev.pageY;
-          el = _this.element;
-          while (el && el !== _this.document.documentElement) {
-            x -= el.offsetLeft;
-            y -= el.offsetTop;
-            el = "offsetParent" in el ? el.offsetParent : el.parentNode;
-          }
+          y = ev.pageY - window.scrollY;
           w = _this.element.clientWidth;
           h = window.innerHeight;
           x = Math.ceil((x / w) * _this.cols);
@@ -491,7 +470,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var attr, ch, classes, cursor, data, dirty, fg, group, html, i, j, k, l, len, len1, len2, len3, line, lines, m, new_out, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, ref6, styles, u, x;
+      var attr, ch, classes, cursor, data, dirty, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, new_out, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, styles, u, x;
       if (force == null) {
         force = false;
       }
@@ -516,6 +495,10 @@
         attr = this.cloneAttr(this.defAttr);
         for (i = o = 0, ref3 = this.cols - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; i = 0 <= ref3 ? ++o : --o) {
           data = line[i];
+          if (data.html) {
+            out += data.html;
+            continue;
+          }
           ch = data.ch;
           if (!this.equalAttr(data, attr)) {
             if (!this.equalAttr(attr, this.defAttr)) {
@@ -632,13 +615,6 @@
         }
         this.children = Array.prototype.slice.call(lines, -this.rows);
       }
-      ref6 = this.html;
-      for (l in ref6) {
-        html = ref6[l];
-        this.children[l].innerHTML = '';
-        this.children[l].appendChild(html);
-      }
-      this.html = {};
       return this.native_scroll_to();
     };
 
@@ -720,7 +696,7 @@
     };
 
     Terminal.prototype.write = function(data) {
-      var ch, content, cs, html, i, l, pt, ref, ref1, type, valid;
+      var attr, ch, content, cs, i, l, pt, ref, ref1, type, valid;
       i = 0;
       l = data.length;
       while (i < l) {
@@ -1146,17 +1122,15 @@
                         console.log("HTML escapes are disabled");
                         break;
                       }
-                      html = document.createElement('div');
-                      html.classList.add('inline-html');
-                      html.innerHTML = content;
-                      this.html[this.y] = html;
+                      attr = this.cloneAttr(this.curAttr);
+                      attr.html = "<div class=\"inline-html\">" + content + "</div>";
+                      this.screen[this.y][0][this.x] = attr;
                       this.screen[this.y][1] = true;
                       break;
                     case "IMAGE":
-                      html = document.createElement('img');
-                      html.classList.add('inline-image');
-                      html.src = "data:image;base64," + content;
-                      this.html[this.y] = html;
+                      attr = this.cloneAttr(this.curAttr);
+                      attr.html = "<img class=\"inline-image\" src=\"data:image;base64," + content + "\" />";
+                      this.screen[this.y][0][this.x] = attr;
                       this.screen[this.y][1] = true;
                       break;
                     case "PROMPT":
