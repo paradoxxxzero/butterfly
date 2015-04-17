@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 import sys
 import os
 rows, cols = map(int, os.popen('stty size', 'r').read().split())
