@@ -3108,4 +3108,5 @@ body {
   overflow: hidden; }
 
 .inline-image {
-  max-width: 100%; }
+  max-width: 100%;
+  max-height: 50vh; }
