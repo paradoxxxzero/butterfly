@@ -47,7 +47,6 @@ document.addEventListener 'DOMContentLoaded', ->
   ws.addEventListener 'error', ->
     console.log "WebSocket error", arguments
 
-  t_stop = null
   last_data = ''
   t_queue = null
 
@@ -55,24 +54,19 @@ document.addEventListener 'DOMContentLoaded', ->
   ws.addEventListener 'message', (e) ->
     clearTimeout t_queue if t_queue
     queue += e.data
-    t_queue = setTimeout treat, 1
+    if term.stop
+      queue = queue.slice -10 * 1024
+
+    if queue.length > term.buff_size
+      treat()
+    else
+      t_queue = setTimeout treat, 1
 
   treat = ->
-    if term.stop
-      last_data += queue
-      last_data = last_data.slice(-10 * 1024) # Keep last 10kb
-      if t_stop
-        clearTimeout t_stop if t_stop
-      t_stop = setTimeout ->
-        term.stop = false
-        term.element.classList.remove 'stopped'
-        term.write last_data
-        last_data = ''
-        t_stop = null
-      , 100
-      return
-
     term.write queue
+    if term.stop
+      term.stop = false
+      term.element.classList.remove 'stopped'
     queue = ''
 
   ws.addEventListener 'close', ->

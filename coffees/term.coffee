@@ -73,19 +73,20 @@ class Terminal
     @rows = Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
+    @element.removeChild div
 
     @html = {}
     i = Math.max @rows - 1, 0
-    while i--
-      div = @document.createElement('div')
-      div.className = 'line'
-      div.textContent = ' '
-      @element.appendChild(div)
-      @children.push(div)
+    group = @document.createElement('div')
+    group.className = 'group'
+    group.innerHTML = ('<div class="line"> </div>' for a in [0..i]).join ''
+    @element.appendChild group
+    @children = Array.prototype.slice.call document.querySelectorAll('.line')
 
-    @scrollback = 10000
+    @scrollback = 1000000
+    @buff_size = 100000
+
     @visualBell = 100
-    @shift = 0
     @convertEol = false
     @termName = 'xterm'
     @cursorBlink = true
@@ -167,6 +168,7 @@ class Terminal
     @prefix = ""
     @screen = []
     i = @rows
+    @shift = 0
     @screen.push [@blank_line(), true] while i--
     @setupStops()
     @skipNextKey = null
@@ -193,7 +195,8 @@ class Terminal
 
   blur: ->
     @cursorState = 1
-    @refresh(@y, @y)
+    @screen[@y + @shift][1] = true
+    @refresh()
     @send('\x1b[O') if @sendFocus
     @element.classList.add('blur')
     @element.classList.remove('focus')
@@ -389,13 +392,16 @@ class Terminal
         sendButton ev
         cancel ev
 
-  refresh: ->
+  refresh: (force=false) ->
+    for cursor in @element.querySelectorAll(".cursor")
+      cursor.parentNode.replaceChild(
+        @document.createTextNode(cursor.textContent), cursor)
     new_out = ''
     for [line, dirty], j in @screen
-      continue unless dirty
+      continue unless dirty or force
       out = ""
 
-      if j is @y and not @cursorHidden
+      if j is @y + @shift and not @cursorHidden
         x = @x
       else
         x = -Infinity
@@ -477,9 +483,23 @@ class Terminal
       @screen[j][1] = false
 
     if new_out isnt ''
-      @element.innerHTML += new_out
-      @children = Array.prototype.slice.call(@element.children, -@rows)
+      group = @document.createElement('div')
+      group.className = 'group'
+      group.innerHTML = new_out
+      @element.appendChild group
+      @screen = @screen.slice(-@rows)
+      @shift = 0
 
+      lines = document.querySelectorAll('.line')
+      if lines.length > @scrollback
+        for line in Array.prototype.slice.call(
+          lines, 0, lines.length - @scrollback)
+          line.remove()
+        for group in document.querySelectorAll('.group:empty')
+          group.remove()
+        lines = document.querySelectorAll('.line')
+      @children = Array.prototype.slice.call(
+        lines, -@rows)
 
     for l, html of @html
       @children[l].innerHTML = ''
@@ -500,7 +520,8 @@ class Terminal
   showCursor: ->
     unless @cursorState
       @cursorState = 1
-      @refresh @y, @y
+      @screen[@y + @shift][1] = true
+      @refresh()
 
 
   startBlink: ->
@@ -521,37 +542,18 @@ class Terminal
       # inner scroll
       @screen.splice @scrollBottom + 1, 0, [@blank_line(), true]
       @screen.splice @scrollTop, 1
-      @y
 
-      @updateRange @scrollTop
-      @updateRange @scrollBottom
+      for i in [@scrollTop..@scrollBottom]
+        @screen[i + @shift][1] = true
     else
-      # @screen.shift()
       @screen.push [@blank_line(), true]
       @shift++
-      # @refreshStart = Math.max(@refreshStart - 1, 0)
-      # @new_line()
 
-  native_scroll_to: (scroll=-1) ->
-    if scroll is -1
-      last = @children.slice(-1)[0]
-      if last? and last isnt ''
-        last.scrollIntoView()
-    else
-      window.scrollTo 0, scroll
+  native_scroll_to: (scroll=Infinity) ->
+    window.scrollTo 0, scroll
 
   scroll_display: (disp) ->
     @native_scroll_to window.scrollY + disp * @char_size.height
-
-  # new_line: ->
-  #   # div = @document.createElement('div')
-  #   # div.className = 'line'
-  #   # @element.appendChild(div)
-  #   while @element.childElementCount > @scrollback
-  #     @element.firstChild.remove()
-
-  #   @children.shift()
-  #   # @children.push('')
 
   next_line: ->
     @y++
@@ -560,9 +562,6 @@ class Terminal
       @scroll()
 
   write: (data) ->
-    # @refreshStart = @y
-    # @refreshEnd = @y
-
     i = 0
     l = data.length
     while i < l
@@ -609,22 +608,22 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @screen[@y][0][@x] = @cloneAttr @curAttr, '\u23CE'
-                  @screen[@y][1] = true
+                  @screen[@y + @shift][0][@x] = @cloneAttr @curAttr, '\u23CE'
+                  @screen[@y + @shift][1] = true
                   @x = 0
                   @next_line()
 
-                @screen[@y][0][@x] = @cloneAttr @curAttr, ch
-                @screen[@y][1][@x] = true
+                @screen[@y + @shift][0][@x] = @cloneAttr @curAttr, ch
+                @screen[@y + @shift][1] = true
                 @x++
                 if "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
-                    @screen[@y][0][@x - 1] = @cloneAttr @curAttr, " "
-                    @screen[@y][1] = true
+                    @screen[@y + @shift][0][@x - 1] = @cloneAttr @curAttr, " "
+                    @screen[@y + @shift][1] = true
                     break
 
-                  @screen[@y][0][@x] = @cloneAttr @curAttr, " "
-                  @screen[@y][1][@x] = true
+                  @screen[@y + @shift][0][@x] = @cloneAttr @curAttr, " "
+                  @screen[@y + @shift][1] = true
                   @x++
 
         when State.escaped
@@ -1060,14 +1059,14 @@ class Terminal
                     html.classList.add 'inline-html'
                     html.innerHTML = content
                     @html[@y] = html
-                    @updateRange @y
+                    @screen[@y][1] = true
 
                   when "IMAGE"
                     html = document.createElement 'img'
                     html.classList.add 'inline-image'
                     html.src = "data:image;base64," + content
                     @html[@y] = html
-                    @updateRange @y
+                    @screen[@y][1] = true
 
                   when "PROMPT"
                     @send content
@@ -1136,8 +1135,8 @@ class Terminal
             @state = State.normal
       i++
 
-    @updateRange @y
-    @refresh @refreshStart, @refreshEnd
+    @screen[@y][1] = true
+    @refresh()
 
   writeln: (data) ->
     @write "#{data}\r\n"
@@ -1478,21 +1477,13 @@ class Terminal
     @scrollTop = 0
     @scrollBottom = @rows - 1
 
-    @refresh()
+    @refresh(true)
 
     # it's a real nightmare trying
     # to resize the original
     # screen buffer. just set it
     # to null for now.
     @normal = null
-
-  updateRange: (y) ->
-    @refreshStart = y if y < @refreshStart
-    @refreshEnd = y if y > @refreshEnd
-
-  maxRange: ->
-    @refreshStart = 0
-    @refreshEnd = @rows - 1
 
   setupStops: (i) ->
     if i?
@@ -1519,20 +1510,18 @@ class Terminal
     if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
   eraseRight: (x, y) ->
-    line = @screen[y][0]
+    line = @screen[y + @shift][0]
     # xterm
 
     while x < @cols
       line[x] = @eraseAttr()
       x++
-    @screen[y][1] = true
+    @screen[y + @shift][1] = true
 
   eraseLeft: (x, y) ->
-    line = @screen[y][0]
-    # xterm
     x++
-    line[x] = @eraseAttr() while x--
-    @screen[y][1] = true
+    @screen[y + @shift][0][x] = @eraseAttr() while x--
+    @screen[y + @shift][1] = true
 
   eraseLine: (y) ->
     @eraseRight 0, y
@@ -1567,28 +1556,17 @@ class Terminal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
-      # inner scroll
-      @screen.splice @scrollBottom, 1
-      @screen.splice @scrollTop, 0, [@blank_line(true), true]
-      @maxRange()
-    else
-      prevNode = @children[0].previousElementSibling
-      if prevNode
-        @children.slice(-1)[0].remove()
-        @children.pop()
-        @children.unshift @children[0].previousElementSibling
-      else
-        @new_line()
-      @screen.pop()
-      @screen.unshift [@blank_line(), true]
-    @maxRange()
+    @screen.splice @scrollBottom, 1
+    @screen.splice @scrollTop, 0, [@blank_line(true), true]
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift][1] = true
+
     @state = State.normal
 
   # ESC c Full Reset (RIS).
   reset: ->
     @reset_vars()
-    @refresh 0, @rows - 1
+    @refresh(true)
 
   # ESC H Tab Set (HTS is 0x88).
   tabSet: ->
@@ -1904,8 +1882,8 @@ class Terminal
     j = @x
     # xterm
     while param-- and j < @cols
-      @screen[row].splice j++, 0, [@eraseAttr(), true]
-      @screen[row].pop()
+      @screen[row + @shift].splice j++, 0, [@eraseAttr(), true]
+      @screen[row + @shift].pop()
 
 
   # CSI Ps E
@@ -1945,40 +1923,42 @@ class Terminal
     param = 1 if param < 1
 
     while param--
-      @screen.splice @y, 0, [@blank_line(true), true]
+      @screen.splice @y + @shift, 0, [@blank_line(true), true]
       # blank_line(true) - xterm/linux behavior
-      @screen.splice @scrollBottom + 1, 1
+      @screen.splice @scrollBottom + 1 + @shift, 1
 
-    @updateRange @y
-    @updateRange @scrollBottom
+    for i in [@y + @shift..@screen.length - 1]
+      @screen[i][1] = true
 
   # CSI Ps M
   # Delete Ps Line(s) (default = 1) (DL).
   deleteLines: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y
 
     while param--
       # test: echo -e '\e[44m\e[1M\e[0m'
       # blank_line(true) - xterm/linux behavior
-      @screen.push [@blank_line(true), true]
-      @screen.splice @y, 1
+      @screen.splice @scrollBottom + @shift, 0, [@blank_line(true), true]
+      @screen.splice @y + @shift, 1
+      unless @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+        @children[@y + @shift].remove()
+        @children.splice @y + @shift, 1
 
-    @updateRange @y
-    @updateRange @scrollBottom
+    if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+      for i in [@y + @shift..@screen.length - 1]
+        @screen[i][1] = true
 
   # CSI Ps P
   # Delete Ps Character(s) (default = 1) (DCH).
   deleteChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y
-    # xterm
+
     while param--
-      @screen[row][0].splice @x, 1
-      @screen[row][0].push @eraseAttr()
-    @screen[row][1] = true
+      @screen[@y + @shift][0].splice @x, 1
+      @screen[@y + @shift][0].push @eraseAttr()
+    @screen[@y + @shift][1] = true
 
 
   # CSI Ps X
@@ -1986,11 +1966,10 @@ class Terminal
   eraseChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y
     j = @x
     # xterm
-    @screen[row][0][j++] = @eraseAttr() while param-- and j < @cols
-    @screen[row][1] = true
+    @screen[@y + @shift][0][j++] = @eraseAttr() while param-- and j < @cols
+    @screen[@y + @shift][1] = true
 
   # CSI Pm `    Character Position Absolute
   #     [column] (default = [row,1]) (HPA).
@@ -2246,9 +2225,10 @@ class Terminal
         when 1049, 47, 1047 # alt screen buffer
           unless @normal
             normal =
-              lines: @screen
+              screen: @screen
               x: @x
               y: @y
+              shift: @shift
               scrollTop: @scrollTop
               scrollBottom: @scrollBottom
               tabs: @tabs
@@ -2377,14 +2357,15 @@ class Terminal
           @cursorHidden = true
         when 1049, 47, 1047 # normal screen buffer - clearing it first
           if @normal
-            @screen = @normal.lines
+            @screen = @normal.screen
             @x = @normal.x
             @y = @normal.y
+            @shift = @normal.shift
             @scrollTop = @normal.scrollTop
             @scrollBottom = @normal.scrollBottom
             @tabs = @normal.tabs
             @normal = null
-            @refresh 0, @rows - 1
+            @refresh(true)
             @showCursor()
 
 
@@ -2429,8 +2410,8 @@ class Terminal
       @screen.splice @scrollTop, 1
       @screen.splice @scrollBottom, 0, [@blank_line(), true]
 
-    @updateRange @scrollTop
-    @updateRange @scrollBottom
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift][1] = true
 
 
   # CSI Ps T    Scroll down Ps lines (default = 1) (SD).
@@ -2440,8 +2421,8 @@ class Terminal
       @screen.splice @scrollBottom, 1
       @screen.splice @scrollTop, 0, [@blank_line(), true]
 
-    @updateRange @scrollTop
-    @updateRange @scrollBottom
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift][1] = true
 
 
   # CSI Ps ; Ps ; Ps ; Ps ; Ps T
@@ -2475,10 +2456,10 @@ class Terminal
   # CSI Ps b    Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
-    line = @screen[@y][0]
+    line = @screen[@y + @shift][0]
     ch = line[@x - 1] or @defAttr
     line[@x++] = ch while param--
-    @screen[@y][1] = true
+    @screen[@y + @shift][1] = true
 
   # CSI Ps g    Tab Clear (TBC).
   #         Ps = 0    -> Clear Current Column (default).
@@ -2657,9 +2638,6 @@ class Terminal
         i++
       t++
 
-    @updateRange params[0]
-    @updateRange params[2]
-
 
   # CSI ? Pm s
   #     Save DEC Private Mode Values.    Ps values are the same as for
@@ -2817,9 +2795,6 @@ class Terminal
         i++
       t++
 
-    @updateRange params[1]
-    @updateRange params[3]
-
 
   # CSI Ps ; Pu ' z
   #     Enable Locator Reporting (DECELR).
@@ -2854,10 +2829,6 @@ class Terminal
         line[i] = @eraseAttr()
         i++
       t++
-
-    @updateRange params[0]
-    @updateRange params[2]
-
 
   # CSI Pm ' {
   #     Select Locator Events (DECSLE).
