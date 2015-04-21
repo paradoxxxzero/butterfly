@@ -93,7 +93,7 @@ class Terminal
     addEventListener 'keypress', @keyPress.bind(@)
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
-    addEventListener 'resize', @resize.bind(@)
+    addEventListener 'resize', => @resize()
 
     # # Horrible Firefox paste workaround
     if typeof InstallTrigger isnt "undefined"
@@ -523,14 +523,22 @@ class Terminal
     # Use emulated scroll in alternate buffer or when scroll region is defined
     if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       # inner scroll
-      @screen.splice @scrollBottom + 1, 0, [@blank_line(), true]
-      @screen.splice @scrollTop, 1
+      @screen.splice @shift + @scrollBottom + 1, 0, [@blank_line(), true]
+      @screen.splice @shift + @scrollTop, 1
 
       for i in [@scrollTop..@scrollBottom]
         @screen[i + @shift][1] = true
     else
       @screen.push [@blank_line(), true]
       @shift++
+
+  unscroll: ->
+    @screen.splice @shift + @scrollTop , 0, [@blank_line(true), true]
+    @screen.splice @shift + @scrollBottom + 1, 1
+
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift][1] = true
+
 
   native_scroll_to: (scroll=2000000000) -> # ~ Max ff number
     window.scrollTo 0, scroll
@@ -543,6 +551,12 @@ class Terminal
     if @y > @scrollBottom
       @y--
       @scroll()
+
+  prev_line: ->
+    @y--
+    if @y < @scrollTop
+      @y++
+      @unscroll()
 
   write: (data) ->
     i = 0
@@ -559,7 +573,7 @@ class Terminal
 
             # '\n', '\v', '\f'
             when "\n", "\x0b", "\x0c"
-              @x = 0 if @convertEol
+              # @x = 0 if @convertEol
               @next_line()
 
             # '\r'
@@ -723,6 +737,22 @@ class Terminal
             when "#"
               @state = State.normal
               i++
+              num = data.charAt(i)
+              switch num
+                when "3" # DECDHL
+                  break
+                when "4" # DECDHL
+                  break
+                when "5" # DECSWL
+                  break
+                when "6" # DECDWL
+                  break
+                when "8" # DECALN
+                  for line in @screen
+                    line[1] = true
+                    for c in [0..line[0].length]
+                      line[0][c] = @cloneAttr @curAttr, "E"
+                  @x = @y = 0
 
             # ESC H Tab Set (HTS is 0x88).
             when "H"
@@ -1041,16 +1071,16 @@ class Terminal
                     attr = @cloneAttr @curAttr
                     attr.html = (
                       "<div class=\"inline-html\">#{content}</div>")
-                    @screen[@y][0][@x] = attr
-                    @screen[@y][1] = true
+                    @screen[@y + @shift][0][@x] = attr
+                    @screen[@y + @shift][1] = true
 
                   when "IMAGE"
                     attr = @cloneAttr @curAttr
                     attr.html = (
                       "<img class=\"inline-image\" src=\"data:image;base64,#{
                         content}\" />")
-                    @screen[@y][0][@x] = attr
-                    @screen[@y][1] = true
+                    @screen[@y + @shift][0][@x] = attr
+                    @screen[@y + @shift][1] = true
 
                   when "PROMPT"
                     @send content
@@ -1119,7 +1149,7 @@ class Terminal
             @state = State.normal
       i++
 
-    @screen[@y][1] = true
+    @screen[@y + @shift][1] = true
     @refresh()
 
   writeln: (data) ->
@@ -1409,16 +1439,16 @@ class Terminal
       @element.classList.remove cls
     ), @visualBell
 
-  resize: ->
+  resize: (x=null, y=null) ->
     old_cols = @cols
     old_rows = @rows
     @compute_char_size()
-    @cols = Math.floor(@element.clientWidth / @char_size.width)
-    @rows = Math.floor(window.innerHeight / @char_size.height)
+    @cols = x or Math.floor(@element.clientWidth / @char_size.width)
+    @rows = y or Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
     @element.style['padding-bottom'] = "#{px}px"
 
-    if old_cols == @cols and old_rows == @rows
+    if (not x and not y) and old_cols == @cols and old_rows == @rows
       return
 
     @ctl 'Resize', @cols, @rows
@@ -1468,6 +1498,7 @@ class Terminal
     # screen buffer. just set it
     # to null for now.
     @normal = null
+    @reset() if x or y
 
   setupStops: (i) ->
     if i?
@@ -1540,11 +1571,7 @@ class Terminal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    @screen.splice @scrollBottom, 1
-    @screen.splice @scrollTop, 0, [@blank_line(true), true]
-    for i in [@scrollTop..@scrollBottom]
-      @screen[i + @shift][1] = true
-
+    @prev_line()
     @state = State.normal
 
   # ESC c Full Reset (RIS).
@@ -2154,6 +2181,13 @@ class Terminal
         @setMode params[i]
         i++
       return
+    if not @prefix
+      switch params
+        when 4
+          @insertMode = true
+        when 20
+          @convertEol = true
+      return
     if @prefix is "?"
       switch params
         when 1
@@ -2309,6 +2343,13 @@ class Terminal
       while i < l
         @resetMode params[i]
         i++
+      return
+    if not @prefix
+      switch params
+        when 4
+          @insertMode = false
+        when 20
+          @convertEol = false
       return
 
     if @prefix is "?"
@@ -2615,8 +2656,8 @@ class Terminal
     r = params[3]
     attr = params[4]
     while t < b + 1
-      line = @screen[t][0]
-      @screen[t][1] = true
+      line = @screen[t + @shift][0]
+      @screen[t + @shift][1] = true
       i = l
       while i < r
         line[i] = @cloneAttr attr, line[i].ch
@@ -2772,8 +2813,8 @@ class Terminal
     b = params[3]
     r = params[4]
     while t < b + 1
-      line = @screen[t][0]
-      @screen[t][1] = true
+      line = @screen[t + @shift][0]
+      @screen[t + @shift][1] = true
       i = l
       while i < r
         line[i] = @cloneAttr line[i][0], String.fromCharCode(ch)
@@ -2807,8 +2848,8 @@ class Terminal
     b = params[2]
     r = params[3]
     while t < b + 1
-      line = @screen[t][0]
-      @screen[t][1] = true
+      line = @screen[t + @shift][0]
+      @screen[t + @shift][1] = true
       i = l
       while i < r
         line[i] = @eraseAttr()
@@ -2883,9 +2924,9 @@ class Terminal
   # NOTE: xterm doesn't enable this code by default.
   insertColumns: ->
     param = params[0]
-    l = @rows
+    l = @rows + @shift
     while param--
-      i = 0
+      i = @shift
       while i < l
         @screen[i][0].splice @x + 1, 0, @eraseAttr()
         @screen[i][0].pop()
@@ -2898,9 +2939,9 @@ class Terminal
   # NOTE: xterm doesn't enable this code by default.
   deleteColumns: ->
     param = params[0]
-    l = @rows
+    l = @rows + @shift
     while param--
-      i = 0
+      i = @shift
       while i < l
         @screen[i][0].splice @x, 1
         @screen[i][0].push @eraseAttr()

@@ -180,7 +180,11 @@
       addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));
-      addEventListener('resize', this.resize.bind(this));
+      addEventListener('resize', (function(_this) {
+        return function() {
+          return _this.resize();
+        };
+      })(this));
       if (typeof InstallTrigger !== "undefined") {
         this.body.contentEditable = 'true';
       }
@@ -663,8 +667,8 @@
     Terminal.prototype.scroll = function() {
       var i, k, ref, ref1, results;
       if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-        this.screen.splice(this.scrollBottom + 1, 0, [this.blank_line(), true]);
-        this.screen.splice(this.scrollTop, 1);
+        this.screen.splice(this.shift + this.scrollBottom + 1, 0, [this.blank_line(), true]);
+        this.screen.splice(this.shift + this.scrollTop, 1);
         results = [];
         for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
           results.push(this.screen[i + this.shift][1] = true);
@@ -674,6 +678,17 @@
         this.screen.push([this.blank_line(), true]);
         return this.shift++;
       }
+    };
+
+    Terminal.prototype.unscroll = function() {
+      var i, k, ref, ref1, results;
+      this.screen.splice(this.shift + this.scrollTop, 0, [this.blank_line(true), true]);
+      this.screen.splice(this.shift + this.scrollBottom + 1, 1);
+      results = [];
+      for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
+        results.push(this.screen[i + this.shift][1] = true);
+      }
+      return results;
     };
 
     Terminal.prototype.native_scroll_to = function(scroll) {
@@ -695,8 +710,16 @@
       }
     };
 
+    Terminal.prototype.prev_line = function() {
+      this.y--;
+      if (this.y < this.scrollTop) {
+        this.y++;
+        return this.unscroll();
+      }
+    };
+
     Terminal.prototype.write = function(data) {
-      var attr, ch, content, cs, i, l, pt, ref, ref1, type, valid;
+      var attr, c, ch, content, cs, i, k, l, len, line, m, num, pt, ref, ref1, ref2, ref3, type, valid;
       i = 0;
       l = data.length;
       while (i < l) {
@@ -710,9 +733,6 @@
               case "\n":
               case "\x0b":
               case "\x0c":
-                if (this.convertEol) {
-                  this.x = 0;
-                }
                 this.next_line();
                 break;
               case "\r":
@@ -858,6 +878,27 @@
               case "#":
                 this.state = State.normal;
                 i++;
+                num = data.charAt(i);
+                switch (num) {
+                  case "3":
+                    break;
+                  case "4":
+                    break;
+                  case "5":
+                    break;
+                  case "6":
+                    break;
+                  case "8":
+                    ref1 = this.screen;
+                    for (k = 0, len = ref1.length; k < len; k++) {
+                      line = ref1[k];
+                      line[1] = true;
+                      for (c = m = 0, ref2 = line[0].length; 0 <= ref2 ? m <= ref2 : m >= ref2; c = 0 <= ref2 ? ++m : --m) {
+                        line[0][c] = this.cloneAttr(this.curAttr, "E");
+                      }
+                    }
+                    this.x = this.y = 0;
+                }
                 break;
               case "H":
                 this.tabSet();
@@ -1111,7 +1152,7 @@
                     break;
                   }
                   pt = pt.slice(1);
-                  ref1 = pt.split('|', 2), type = ref1[0], content = ref1[1];
+                  ref3 = pt.split('|', 2), type = ref3[0], content = ref3[1];
                   if (!content) {
                     console.error("No type for inline DECUDK: " + pt);
                     break;
@@ -1124,14 +1165,14 @@
                       }
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<div class=\"inline-html\">" + content + "</div>";
-                      this.screen[this.y][0][this.x] = attr;
-                      this.screen[this.y][1] = true;
+                      this.screen[this.y + this.shift][0][this.x] = attr;
+                      this.screen[this.y + this.shift][1] = true;
                       break;
                     case "IMAGE":
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<img class=\"inline-image\" src=\"data:image;base64," + content + "\" />";
-                      this.screen[this.y][0][this.x] = attr;
-                      this.screen[this.y][1] = true;
+                      this.screen[this.y + this.shift][0][this.x] = attr;
+                      this.screen[this.y + this.shift][1] = true;
                       break;
                     case "PROMPT":
                       this.send(content);
@@ -1199,7 +1240,7 @@
         }
         i++;
       }
-      this.screen[this.y][1] = true;
+      this.screen[this.y + this.shift][1] = true;
       return this.refresh();
     };
 
@@ -1483,16 +1524,22 @@
       })(this)), this.visualBell);
     };
 
-    Terminal.prototype.resize = function() {
+    Terminal.prototype.resize = function(x, y) {
       var el, i, j, line, old_cols, old_rows, px;
+      if (x == null) {
+        x = null;
+      }
+      if (y == null) {
+        y = null;
+      }
       old_cols = this.cols;
       old_rows = this.rows;
       this.compute_char_size();
-      this.cols = Math.floor(this.element.clientWidth / this.char_size.width);
-      this.rows = Math.floor(window.innerHeight / this.char_size.height);
+      this.cols = x || Math.floor(this.element.clientWidth / this.char_size.width);
+      this.rows = y || Math.floor(window.innerHeight / this.char_size.height);
       px = window.innerHeight % this.char_size.height;
       this.element.style['padding-bottom'] = px + "px";
-      if (old_cols === this.cols && old_rows === this.rows) {
+      if ((!x && !y) && old_cols === this.cols && old_rows === this.rows) {
         return;
       }
       this.ctl('Resize', this.cols, this.rows);
@@ -1548,7 +1595,10 @@
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
       this.refresh(true);
-      return this.normal = null;
+      this.normal = null;
+      if (x || y) {
+        return this.reset();
+      }
     };
 
     Terminal.prototype.setupStops = function(i) {
@@ -1665,12 +1715,7 @@
     };
 
     Terminal.prototype.reverseIndex = function() {
-      var i, k, ref, ref1;
-      this.screen.splice(this.scrollBottom, 1);
-      this.screen.splice(this.scrollTop, 0, [this.blank_line(true), true]);
-      for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-        this.screen[i + this.shift][1] = true;
-      }
+      this.prev_line();
       return this.state = State.normal;
     };
 
@@ -2113,6 +2158,16 @@
         }
         return;
       }
+      if (!this.prefix) {
+        switch (params) {
+          case 4:
+            this.insertMode = true;
+            break;
+          case 20:
+            this.convertEol = true;
+        }
+        return;
+      }
       if (this.prefix === "?") {
         switch (params) {
           case 1:
@@ -2179,6 +2234,16 @@
         while (i < l) {
           this.resetMode(params[i]);
           i++;
+        }
+        return;
+      }
+      if (!this.prefix) {
+        switch (params) {
+          case 4:
+            this.insertMode = false;
+            break;
+          case 20:
+            this.convertEol = false;
         }
         return;
       }
@@ -2377,8 +2442,8 @@
       attr = params[4];
       results = [];
       while (t < b + 1) {
-        line = this.screen[t][0];
-        this.screen[t][1] = true;
+        line = this.screen[t + this.shift][0];
+        this.screen[t + this.shift][1] = true;
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(attr, line[i].ch);
@@ -2418,8 +2483,8 @@
       r = params[4];
       results = [];
       while (t < b + 1) {
-        line = this.screen[t][0];
-        this.screen[t][1] = true;
+        line = this.screen[t + this.shift][0];
+        this.screen[t + this.shift][1] = true;
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(line[i][0], String.fromCharCode(ch));
@@ -2443,8 +2508,8 @@
       r = params[3];
       results = [];
       while (t < b + 1) {
-        line = this.screen[t][0];
-        this.screen[t][1] = true;
+        line = this.screen[t + this.shift][0];
+        this.screen[t + this.shift][1] = true;
         i = l;
         while (i < r) {
           line[i] = this.eraseAttr();
@@ -2464,9 +2529,9 @@
     Terminal.prototype.insertColumns = function() {
       var i, l, param;
       param = params[0];
-      l = this.rows;
+      l = this.rows + this.shift;
       while (param--) {
-        i = 0;
+        i = this.shift;
         while (i < l) {
           this.screen[i][0].splice(this.x + 1, 0, this.eraseAttr());
           this.screen[i][0].pop();
@@ -2479,9 +2544,9 @@
     Terminal.prototype.deleteColumns = function() {
       var i, l, param;
       param = params[0];
-      l = this.rows;
+      l = this.rows + this.shift;
       while (param--) {
-        i = 0;
+        i = this.shift;
         while (i < l) {
           this.screen[i][0].splice(this.x, 1);
           this.screen[i][0].push(this.eraseAttr());
