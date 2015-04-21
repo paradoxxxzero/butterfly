@@ -1866,8 +1866,9 @@ class Terminal
     j = @x
     # xterm
     while param-- and j < @cols
-      @screen[row + @shift].splice j++, 0, [@eraseAttr(), true]
-      @screen[row + @shift].pop()
+      @screen[row + @shift][0].splice j++, 0, [@eraseAttr(), true]
+      @screen[row + @shift][0].pop()
+    @screen[row + @shift][1] = true
 
 
   # CSI Ps E

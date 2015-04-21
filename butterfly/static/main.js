@@ -1895,19 +1895,18 @@
     };
 
     Terminal.prototype.insertChars = function(params) {
-      var j, param, results, row;
+      var j, param, row;
       param = params[0];
       if (param < 1) {
         param = 1;
       }
       row = this.y;
       j = this.x;
-      results = [];
       while (param-- && j < this.cols) {
-        this.screen[row + this.shift].splice(j++, 0, [this.eraseAttr(), true]);
-        results.push(this.screen[row + this.shift].pop());
+        this.screen[row + this.shift][0].splice(j++, 0, [this.eraseAttr(), true]);
+        this.screen[row + this.shift][0].pop();
       }
-      return results;
+      return this.screen[row + this.shift][1] = true;
     };
 
     Terminal.prototype.cursorNextLine = function(params) {
