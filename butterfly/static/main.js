@@ -149,6 +149,7 @@
       this.document = this.parent.ownerDocument;
       this.body = this.document.getElementsByTagName('body')[0];
       this.html_escapes_enabled = this.body.getAttribute('data-allow-html') === 'yes';
+      this.force_width = this.body.getAttribute('data-force-unicode-width') === 'yes';
       this.element = this.document.createElement('div');
       this.element.className = 'terminal focus';
       this.element.style.outline = 'none';
@@ -474,7 +475,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var attr, ch, classes, cursor, data, dirty, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, new_out, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, styles, u, x;
+      var attr, ch, classes, cursor, data, dirty, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, new_out, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x;
       if (force == null) {
         force = false;
       }
@@ -497,10 +498,15 @@
           x = -Infinity;
         }
         attr = this.cloneAttr(this.defAttr);
+        skipnext = false;
         for (i = o = 0, ref3 = this.cols - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; i = 0 <= ref3 ? ++o : --o) {
           data = line[i];
           if (data.html) {
             out += data.html;
+            continue;
+          }
+          if (skipnext) {
+            skipnext = false;
             continue;
           }
           ch = data.ch;
@@ -573,11 +579,13 @@
                   out += '<span class="nbsp">\u2007</span>';
                 } else if (ch <= " ") {
                   out += "&nbsp;";
-                } else {
-                  if (("\uff00" < ch && ch < "\uffef")) {
-                    i++;
-                  }
+                } else if (!this.force_width || ch <= "~") {
                   out += ch;
+                } else if (("\uff00" < ch && ch < "\uffef")) {
+                  skipnext = true;
+                  out += "<span style=\"display: inline-block; width: " + (2 * this.char_size.width) + "px\">" + ch + "</span>";
+                } else {
+                  out += "<span style=\"display: inline-block; width: " + this.char_size.width + "px\">" + ch + "</span>";
                 }
             }
           }
@@ -769,7 +777,7 @@
                   this.screen[this.y + this.shift][0][this.x] = this.cloneAttr(this.curAttr, ch);
                   this.screen[this.y + this.shift][1] = true;
                   this.x++;
-                  if (("\uff00" < ch && ch < "\uffef")) {
+                  if (this.force_width && ("\uff00" < ch && ch < "\uffef")) {
                     if (this.cols < 2 || this.x >= this.cols) {
                       this.screen[this.y + this.shift][0][this.x - 1] = this.cloneAttr(this.curAttr, " ");
                       this.screen[this.y + this.shift][1] = true;

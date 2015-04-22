@@ -52,6 +52,8 @@ class Terminal
     @document = @parent.ownerDocument
     @body = @document.getElementsByTagName('body')[0]
     @html_escapes_enabled = @body.getAttribute('data-allow-html') is 'yes'
+    @force_width = @body.getAttribute(
+      'data-force-unicode-width') is 'yes'
 
     # Main terminal element
     @element = @document.createElement('div')
@@ -390,10 +392,14 @@ class Terminal
         x = -Infinity
 
       attr = @cloneAttr @defAttr
+      skipnext = false
       for i in [0..@cols - 1]
         data = line[i]
         if data.html
           out += data.html
+          continue
+        if skipnext
+          skipnext = false
           continue
 
         ch = data.ch
@@ -457,9 +463,16 @@ class Terminal
                 out += '<span class="nbsp">\u2007</span>'
               else if ch <= " "
                 out += "&nbsp;"
-              else
-                i++ if "\uff00" < ch < "\uffef"
+              else if not @force_width or ch <= "~" # Ascii chars
                 out += ch
+              else if "\uff00" < ch < "\uffef"
+                skipnext = true
+                out += "<span style=\"display: inline-block;
+                  width: #{2 * @char_size.width}px\">#{ch}</span>"
+              else
+                out += "<span style=\"display: inline-block;
+                  width: #{@char_size.width}px\">#{ch}</span>"
+
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
@@ -613,7 +626,7 @@ class Terminal
                 @screen[@y + @shift][0][@x] = @cloneAttr @curAttr, ch
                 @screen[@y + @shift][1] = true
                 @x++
-                if "\uff00" < ch < "\uffef"
+                if @force_width and "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
                     @screen[@y + @shift][0][@x - 1] = @cloneAttr @curAttr, " "
                     @screen[@y + @shift][1] = true

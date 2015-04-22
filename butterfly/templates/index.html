@@ -14,7 +14,8 @@
   </head>
 
   <body spellcheck="false"
-        data-allow-html="{{ 'yes' if options.allow_html_escapes else 'no' }}">
+        data-allow-html="{{ 'yes' if options.allow_html_escapes else 'no' }}"
+        data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}">
     <script src="{{ static_url('main.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
     <script src="{{ static_url('ext.%sjs' % (
