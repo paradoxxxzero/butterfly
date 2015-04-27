@@ -19,7 +19,7 @@ $fg: #fff !default
 $shadow: 6px !default
 $shadow-alpha: .5 !default
 
-.terminal
+body
   text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
   transition: 200ms
   transform-origin: bottom
@@ -68,3 +68,10 @@ $shadow-alpha: .5 !default
   &.stopped
     -webkit-filter: brightness(50%)
     filter: brightness(50%)
+
+  &.locked
+    &::-webkit-scrollbar-thumb
+      background: rgba(red, .7)
+
+    &::-webkit-scrollbar-thumb:hover
+      background: rgba(red, .8)

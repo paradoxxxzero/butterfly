@@ -150,21 +150,19 @@
       this.body = this.document.getElementsByTagName('body')[0];
       this.html_escapes_enabled = this.body.getAttribute('data-allow-html') === 'yes';
       this.force_width = this.body.getAttribute('data-force-unicode-width') === 'yes';
-      this.element = this.document.createElement('div');
-      this.element.className = 'terminal focus';
-      this.element.style.outline = 'none';
-      this.element.setAttribute('tabindex', 0);
-      this.element.setAttribute('spellcheck', 'false');
-      this.parent.insertBefore(this.element, this.parent.firstChild);
+      this.body.className = 'terminal focus';
+      this.body.style.outline = 'none';
+      this.body.setAttribute('tabindex', 0);
+      this.body.setAttribute('spellcheck', 'false');
       div = this.document.createElement('div');
       div.className = 'line';
-      this.element.appendChild(div);
+      this.body.appendChild(div);
       this.children = [div];
       this.compute_char_size();
-      this.cols = Math.floor(this.element.clientWidth / this.char_size.width);
+      this.cols = Math.floor(this.body.clientWidth / this.char_size.width);
       this.rows = Math.floor(window.innerHeight / this.char_size.height);
       px = window.innerHeight % this.char_size.height;
-      this.element.style['padding-bottom'] = px + "px";
+      this.body.style['padding-bottom'] = px + "px";
       this.scrollback = 1000000;
       this.buff_size = 100000;
       this.visualBell = 100;
@@ -222,6 +220,7 @@
       this.queue = '';
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
+      this.scrollLock = false;
       this.applicationKeypad = false;
       this.applicationCursor = false;
       this.originMode = false;
@@ -279,8 +278,8 @@
         this.send('\x1b[I');
       }
       this.showCursor();
-      this.element.classList.add('focus');
-      return this.element.classList.remove('blur');
+      this.body.classList.add('focus');
+      return this.body.classList.remove('blur');
     };
 
     Terminal.prototype.blur = function() {
@@ -290,8 +289,8 @@
       if (this.sendFocus) {
         this.send('\x1b[O');
       }
-      this.element.classList.add('blur');
-      return this.element.classList.remove('focus');
+      this.body.classList.add('blur');
+      return this.body.classList.remove('focus');
     };
 
     Terminal.prototype.initmouse = function() {
@@ -404,7 +403,7 @@
           var h, w, x, y;
           x = ev.pageX;
           y = ev.pageY - window.scrollY;
-          w = _this.element.clientWidth;
+          w = _this.body.clientWidth;
           h = window.innerHeight;
           x = Math.ceil((x / w) * _this.cols);
           y = Math.ceil((y / h) * _this.rows);
@@ -479,7 +478,7 @@
       if (force == null) {
         force = false;
       }
-      ref = this.element.querySelectorAll(".cursor");
+      ref = this.body.querySelectorAll(".cursor");
       for (k = 0, len = ref.length; k < len; k++) {
         cursor = ref[k];
         cursor.parentNode.replaceChild(this.document.createTextNode(cursor.textContent), cursor);
@@ -608,7 +607,7 @@
         group = this.document.createElement('div');
         group.className = 'group';
         group.innerHTML = new_out;
-        this.element.appendChild(group);
+        this.body.appendChild(group);
         this.screen = this.screen.slice(-this.rows);
         this.shift = 0;
         lines = document.querySelectorAll('.line');
@@ -627,13 +626,15 @@
         }
         this.children = Array.prototype.slice.call(lines, -this.rows);
       }
-      return this.native_scroll_to();
+      if (!this.scrollLock) {
+        return this.native_scroll_to();
+      }
     };
 
     Terminal.prototype._cursorBlink = function() {
       var cursor;
       this.cursorState ^= 1;
-      cursor = this.element.querySelector(".cursor");
+      cursor = this.body.querySelector(".cursor");
       if (!cursor) {
         return;
       }
@@ -1269,12 +1270,12 @@
       }
       if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {
         this.skipNextKey = true;
-        this.element.classList.add('skip');
+        this.body.classList.add('skip');
         return cancel(ev);
       }
       if (this.skipNextKey) {
         this.skipNextKey = false;
-        this.element.classList.remove('skip');
+        this.body.classList.remove('skip');
         return true;
       }
       switch (ev.keyCode) {
@@ -1409,6 +1410,14 @@
         case 123:
           key = "\x1b[24~";
           break;
+        case 145:
+          this.scrollLock = !this.scrollLock;
+          if (this.scrollLock) {
+            this.body.classList.add('locked');
+          } else {
+            this.body.classList.remove('locked');
+          }
+          return cancel(ev);
         default:
           if (ev.ctrlKey) {
             if (ev.keyCode >= 65 && ev.keyCode <= 90) {
@@ -1421,7 +1430,7 @@
                       clearTimeout(id);
                     }
                   }
-                  this.element.classList.add('stopped');
+                  this.body.classList.add('stopped');
                   this.stop = true;
                 } else if (this.stop) {
                   return true;
@@ -1524,10 +1533,10 @@
       if (!this.visualBell) {
         return;
       }
-      this.element.classList.add(cls);
+      this.body.classList.add(cls);
       return this.t_bell = setTimeout(((function(_this) {
         return function() {
-          return _this.element.classList.remove(cls);
+          return _this.body.classList.remove(cls);
         };
       })(this)), this.visualBell);
     };
@@ -1543,10 +1552,10 @@
       old_cols = this.cols;
       old_rows = this.rows;
       this.compute_char_size();
-      this.cols = x || Math.floor(this.element.clientWidth / this.char_size.width);
+      this.cols = x || Math.floor(this.body.clientWidth / this.char_size.width);
       this.rows = y || Math.floor(window.innerHeight / this.char_size.height);
       px = window.innerHeight % this.char_size.height;
-      this.element.style['padding-bottom'] = px + "px";
+      this.body.style['padding-bottom'] = px + "px";
       if ((!x && !y) && old_cols === this.cols && old_rows === this.rows) {
         return;
       }
@@ -1569,7 +1578,7 @@
       this.setupStops(old_cols);
       j = old_rows;
       if (j < this.rows) {
-        el = this.element;
+        el = this.body;
         while (j++ < this.rows) {
           if (this.screen.length < this.rows) {
             this.screen.push([this.blank_line(), true]);
@@ -2202,7 +2211,7 @@
             this.vt200Mouse = params === 1000;
             this.normalMouse = params > 1000;
             this.mouseEvents = true;
-            return this.element.style.cursor = 'pointer';
+            return this.body.style.cursor = 'pointer';
           case 1004:
             return this.sendFocus = true;
           case 1005:
@@ -2278,7 +2287,7 @@
             this.vt200Mouse = false;
             this.normalMouse = false;
             this.mouseEvents = false;
-            return this.element.style.cursor = "";
+            return this.body.style.cursor = "";
           case 1004:
             return this.sendFocus = false;
           case 1005:

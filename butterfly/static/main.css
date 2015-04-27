@@ -76,26 +76,26 @@ body {
 /* GNU General Public License for more details. */
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-.terminal {
+body {
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   transition: 200ms;
   transform-origin: bottom; }
-  .terminal.bell {
+  body.bell {
     -webkit-filter: blur(2px);
     filter: blur(2px); }
-  .terminal.skip {
+  body.skip {
     -webkit-filter: sepia(1);
     filter: sepia(1); }
-  .terminal.selection {
+  body.selection {
     -webkit-filter: saturate(2);
     filter: saturate(2); }
-  .terminal.alarm {
+  body.alarm {
     -webkit-filter: hue-rotate(150deg);
     filter: hue-rotate(150deg); }
-  .terminal.dead {
+  body.dead {
     -webkit-filter: grayscale(1);
     filter: grayscale(1); }
-    .terminal.dead:after {
+    body.dead:after {
       content: "CLOSED";
       font-size: 15em;
       display: flex;
@@ -109,13 +109,17 @@ body {
       transform: rotate(-45deg);
       opacity: .2;
       font-weight: 900; }
-  .terminal.copied {
+  body.copied {
     transform: scale(1.05); }
-  .terminal.pasted {
+  body.pasted {
     transform: scale(.95); }
-  .terminal.stopped {
+  body.stopped {
     -webkit-filter: brightness(50%);
     filter: brightness(50%); }
+  body.locked::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 0, 0.7); }
+  body.locked::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 0, 0, 0.8); }
 
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
@@ -3026,16 +3030,13 @@ body {
   white-space: nowrap;
   overflow-x: hidden;
   overflow-y: scroll; }
-
-::-webkit-scrollbar {
-  background: #110f13;
-  width: .75em; }
-
-::-webkit-scrollbar-thumb {
-  background: rgba(244, 234, 213, 0.1); }
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(244, 234, 213, 0.15); }
+  body::-webkit-scrollbar {
+    background: #110f13;
+    width: .75em; }
+  body::-webkit-scrollbar-thumb {
+    background: rgba(244, 234, 213, 0.1); }
+  body::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 234, 213, 0.15); }
 
 .terminal {
   outline: none; }

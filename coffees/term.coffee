@@ -56,25 +56,22 @@ class Terminal
       'data-force-unicode-width') is 'yes'
 
     # Main terminal element
-    @element = @document.createElement('div')
-    @element.className = 'terminal focus'
-    @element.style.outline = 'none'
-    @element.setAttribute 'tabindex', 0
-    @element.setAttribute 'spellcheck', 'false'
-
-    @parent.insertBefore @element, @parent.firstChild
+    @body.className = 'terminal focus'
+    @body.style.outline = 'none'
+    @body.setAttribute 'tabindex', 0
+    @body.setAttribute 'spellcheck', 'false'
 
     # Adding one line to compute char size
     div = @document.createElement('div')
     div.className = 'line'
-    @element.appendChild(div)
+    @body.appendChild(div)
     @children = [div]
 
     @compute_char_size()
-    @cols = Math.floor(@element.clientWidth / @char_size.width)
+    @cols = Math.floor(@body.clientWidth / @char_size.width)
     @rows = Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
-    @element.style['padding-bottom'] = "#{px}px"
+    @body.style['padding-bottom'] = "#{px}px"
 
     @scrollback = 1000000
     @buff_size = 100000
@@ -130,6 +127,7 @@ class Terminal
 
     @scrollTop = 0
     @scrollBottom = @rows - 1
+    @scrollLock = false
 
     # modes
     @applicationKeypad = false
@@ -183,16 +181,16 @@ class Terminal
   focus: ->
     @send('\x1b[I') if @sendFocus
     @showCursor()
-    @element.classList.add('focus')
-    @element.classList.remove('blur')
+    @body.classList.add('focus')
+    @body.classList.remove('blur')
 
   blur: ->
     @cursorState = 1
     @screen[@y + @shift][1] = true
     @refresh()
     @send('\x1b[O') if @sendFocus
-    @element.classList.add('blur')
-    @element.classList.remove('focus')
+    @body.classList.add('blur')
+    @body.classList.remove('focus')
 
   # XTerm mouse events
   # http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
@@ -327,7 +325,7 @@ class Terminal
       y = ev.pageY - window.scrollY
 
       # convert to cols/rows
-      w = @element.clientWidth
+      w = @body.clientWidth
       h = window.innerHeight
       x = Math.ceil((x / w) * @cols)
       y = Math.ceil((y / h) * @rows)
@@ -378,7 +376,7 @@ class Terminal
         cancel ev
 
   refresh: (force=false) ->
-    for cursor in @element.querySelectorAll(".cursor")
+    for cursor in @body.querySelectorAll(".cursor")
       cursor.parentNode.replaceChild(
         @document.createTextNode(cursor.textContent), cursor)
     new_out = ''
@@ -486,7 +484,7 @@ class Terminal
       group = @document.createElement('div')
       group.className = 'group'
       group.innerHTML = new_out
-      @element.appendChild group
+      @body.appendChild group
       @screen = @screen.slice(-@rows)
       @shift = 0
 
@@ -501,11 +499,11 @@ class Terminal
       @children = Array.prototype.slice.call(
         lines, -@rows)
 
-    @native_scroll_to()
+    @native_scroll_to() unless @scrollLock
 
   _cursorBlink: ->
     @cursorState ^= 1
-    cursor = @element.querySelector(".cursor")
+    cursor = @body.querySelector(".cursor")
     return unless cursor
     if cursor.classList.contains("reverse-video")
       cursor.classList.remove "reverse-video"
@@ -1186,12 +1184,12 @@ class Terminal
     # May be redundant with keyPrefix
     if ev.altKey and ev.keyCode is 90 and not @skipNextKey
       @skipNextKey = true
-      @element.classList.add('skip')
+      @body.classList.add('skip')
       return cancel(ev)
 
     if @skipNextKey
       @skipNextKey = false
-      @element.classList.remove('skip')
+      @body.classList.remove('skip')
       return true
 
     switch ev.keyCode
@@ -1341,6 +1339,15 @@ class Terminal
       when 123
         key = "\x1b[24~"
 
+      # Scroll lock
+      when 145
+        @scrollLock = ! @scrollLock
+        if @scrollLock
+          @body.classList.add 'locked'
+        else
+          @body.classList.remove 'locked'
+        return cancel(ev)
+
       else
         # a-z and space
         if ev.ctrlKey
@@ -1351,7 +1358,7 @@ class Terminal
                 id = (setTimeout ->)
                 (clearTimeout id if id not in [
                   @t_bell, @t_queue, @t_blink]) while id--
-                @element.classList.add 'stopped'
+                @body.classList.add 'stopped'
                 @stop = true
               else if @stop
                 return true
@@ -1447,19 +1454,19 @@ class Terminal
 
   bell: (cls="bell")->
     return unless @visualBell
-    @element.classList.add cls
+    @body.classList.add cls
     @t_bell = setTimeout (=>
-      @element.classList.remove cls
+      @body.classList.remove cls
     ), @visualBell
 
   resize: (x=null, y=null) ->
     old_cols = @cols
     old_rows = @rows
     @compute_char_size()
-    @cols = x or Math.floor(@element.clientWidth / @char_size.width)
+    @cols = x or Math.floor(@body.clientWidth / @char_size.width)
     @rows = y or Math.floor(window.innerHeight / @char_size.height)
     px = window.innerHeight % @char_size.height
-    @element.style['padding-bottom'] = "#{px}px"
+    @body.style['padding-bottom'] = "#{px}px"
 
     if (not x and not y) and old_cols == @cols and old_rows == @rows
       return
@@ -1482,7 +1489,7 @@ class Terminal
     # resize rows
     j = old_rows
     if j < @rows
-      el = @element
+      el = @body
       while j++ < @rows
         @screen.push [@blank_line(), true] if @screen.length < @rows
         if @children.length < @rows
@@ -2229,7 +2236,7 @@ class Terminal
           @vt200Mouse = params is 1000
           @normalMouse = params > 1000
           @mouseEvents = true
-          @element.style.cursor = 'pointer'
+          @body.style.cursor = 'pointer'
         when 1004 # send focusin/focusout events
           # focusin: ^[[I
           # focusout: ^[[O
@@ -2383,7 +2390,7 @@ class Terminal
           @vt200Mouse = false
           @normalMouse = false
           @mouseEvents = false
-          @element.style.cursor = ""
+          @body.style.cursor = ""
         when 1004 # send focusin/focusout events
           @sendFocus = false
         when 1005 # utf8 ext mode mouse
