@@ -6,7 +6,7 @@
     var alarm;
     alarm = function(data) {
       var note;
-      butterfly.element.classList.remove('alarm');
+      butterfly.body.classList.remove('alarm');
       note = "New activity on butterfly terminal [" + butterfly.title + "]";
       if (notification) {
         new Notification(note, {
@@ -19,7 +19,7 @@
       return butterfly.ws.removeEventListener('message', alarm);
     };
     butterfly.ws.addEventListener('message', alarm);
-    return butterfly.element.classList.add('alarm');
+    return butterfly.body.classList.add('alarm');
   };
 
   cancel = function(ev) {
@@ -33,7 +33,7 @@
     return false;
   };
 
-  addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function(e) {
     if (!(e.altKey && e.keyCode === 65)) {
       return true;
     }
@@ -122,7 +122,7 @@
 
   Selection = (function() {
     function Selection() {
-      butterfly.element.classList.add('selection');
+      butterfly.body.classList.add('selection');
       this.selection = getSelection();
     }
 
@@ -160,7 +160,7 @@
     };
 
     Selection.prototype.destroy = function() {
-      butterfly.element.classList.remove('selection');
+      butterfly.body.classList.remove('selection');
       return this.clear();
     };
 

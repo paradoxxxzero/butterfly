@@ -1,6 +1,6 @@
 set_alarm = (notification) ->
   alarm = (data) ->
-    butterfly.element.classList.remove 'alarm'
+    butterfly.body.classList.remove 'alarm'
     note = "New activity on butterfly terminal [#{ butterfly.title }]"
 
     if notification
@@ -14,7 +14,7 @@ set_alarm = (notification) ->
     butterfly.ws.removeEventListener 'message', alarm
 
   butterfly.ws.addEventListener 'message', alarm
-  butterfly.element.classList.add 'alarm'
+  butterfly.body.classList.add 'alarm'
 
 
 cancel = (ev) ->
@@ -24,7 +24,7 @@ cancel = (ev) ->
   false
 
 
-addEventListener 'keydown', (e) ->
+document.addEventListener 'keydown', (e) ->
   return true unless e.altKey and e.keyCode is 65
 
   if Notification and Notification.permission is 'default'

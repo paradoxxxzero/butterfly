@@ -60,7 +60,7 @@
       term.write(queue);
       if (term.stop) {
         term.stop = false;
-        term.element.classList.remove('stopped');
+        term.body.classList.remove('stopped');
       }
       return queue = '';
     };
@@ -69,7 +69,7 @@
       setTimeout(function() {
         term.write('Closed');
         term.skipNextKey = true;
-        return term.element.classList.add('dead');
+        return term.body.classList.add('dead');
       }, 1);
       quit = true;
       if ((new Date()).getTime() - open_ts > 60 * 1000) {

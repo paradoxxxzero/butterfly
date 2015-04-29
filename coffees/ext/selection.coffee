@@ -44,7 +44,7 @@ next_leaf = (node) ->
 
 class Selection
   constructor: ->
-    butterfly.element.classList.add('selection')
+    butterfly.body.classList.add('selection')
     @selection = getSelection()
 
   reset: ->
@@ -74,7 +74,7 @@ class Selection
     @selection.removeAllRanges()
 
   destroy: ->
-    butterfly.element.classList.remove('selection')
+    butterfly.body.classList.remove('selection')
     @clear()
 
   text: ->

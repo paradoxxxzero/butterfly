@@ -66,7 +66,7 @@ document.addEventListener 'DOMContentLoaded', ->
     term.write queue
     if term.stop
       term.stop = false
-      term.element.classList.remove 'stopped'
+      term.body.classList.remove 'stopped'
     queue = ''
 
   ws.addEventListener 'close', ->
@@ -75,7 +75,7 @@ document.addEventListener 'DOMContentLoaded', ->
       term.write 'Closed'
       # Allow quick reload
       term.skipNextKey = true
-      term.element.classList.add('dead')
+      term.body.classList.add('dead')
     , 1
     quit = true
     # Don't autoclose if websocket didn't last 1 minute
