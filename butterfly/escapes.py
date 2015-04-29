@@ -9,8 +9,8 @@ def html():
 
 
 @contextmanager
-def image():
-    print('\x1bP;IMAGE|')
+def image(mime='image'):
+    print('\x1bP;IMAGE|%s;' % mime)
     yield
     print('\x1bP')
 

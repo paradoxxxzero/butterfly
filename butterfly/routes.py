@@ -71,6 +71,8 @@ B                   `         '
 R              Y                   Y               AFrom:R
               !                   !                  G%sX
 
+For more information type: $ butterfly_help
+
 '''
         .replace('G', '\x1b[3%d;1m' % (
             1 if tornado.options.options.unsecure else 2))

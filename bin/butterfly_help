@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+from butterfly.escapes import image
+import os
+import base64
+
+print("Welcome to the butterfly help.")
+with image('image/png'):
+    with open(
+            os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                '../butterfly/static/images/favicon.png'), 'rb') as i:
+        print(base64.b64encode(i.read()).decode('ascii'))
+print("""
+Butterfly is a xterm compliant terminal built with python and javascript.
+
+Terminal functionalities:
+[Alt] + [a]             : Set an alarm which sends a notification when a modification is detected.
+[Ctrl] + [Shift] + [Up] : Trigger visual selection mode. Hitting [Enter] inserts the selection in the prompt.
+[ScrollLock]            : Lock the scrolling to the current position. Press again to release.
+[Alt] + [z]             : Escape: don't catch the next pressed key. Useful for using native search for example. ([Alt] + [z] then [Ctrl] + [f]).
+[Ctrl] + [c] <<hold>>   : Cut the output when [Ctrl] + [c] is not enough.
+""")

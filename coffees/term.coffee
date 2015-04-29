@@ -1086,10 +1086,11 @@ class Terminal
                     @screen[@y + @shift][1] = true
 
                   when "IMAGE"
+                    [mime, b64] = content.split(';', 2)
                     attr = @cloneAttr @curAttr
                     attr.html = (
-                      "<img class=\"inline-image\" src=\"data:image;base64,#{
-                        content}\" />")
+                      "<img class=\"inline-image\" src=\"data:#{mime};base64,#{
+                        b64}\" />")
                     @screen[@y + @shift][0][@x] = attr
                     @screen[@y + @shift][1] = true
 
