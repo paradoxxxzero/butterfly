@@ -18,7 +18,11 @@
 
 import os
 import pwd
+import time
+import sys
+import struct
 from logging import getLogger
+from collections import namedtuple
 import subprocess
 import re
 
@@ -222,3 +226,117 @@ def get_socket_env(inode):
                                         key, val = keyval.split('=', 1)
                                         env[key] = val
                                 return env
+
+
+utmp_struct = struct.Struct('hi32s4s32s256shhiii4i20s')
+
+
+if sys.version_info[0] == 2:
+    b = lambda x: x
+else:
+    def b(x):
+        if isinstance(x, str):
+            return x.encode('utf-8')
+        return x
+
+
+def get_utmp_file():
+    for file in (
+            '/var/run/utmp',
+            '/var/adm/utmp',
+            '/var/adm/utmpx',
+            '/etc/utmp',
+            '/etc/utmpx',
+            '/var/run/utx.active'):
+        if os.path.exists(file):
+            return file
+
+
+def get_wtmp_file():
+    for file in (
+            '/var/log/wtmp',
+            '/var/adm/wtmp',
+            '/var/adm/wtmpx',
+            '/var/run/utx.log'):
+        if os.path.exists(file):
+            return file
+
+UTmp = namedtuple(
+            'UTmp',
+            ['type', 'pid', 'line', 'id', 'user', 'host',
+             'exit0', 'exit1', 'session',
+             'sec', 'usec', 'addr0', 'addr1', 'addr2', 'addr3', 'unused'])
+
+
+def utmp_line(type, pid, fd, user, host, ts):
+    return UTmp(
+        type,  # Type, 7 : user process
+        pid,  # pid
+        b('pts/%d' % fd),  # line
+        b('/%d' % fd),  # id
+        b(user),  # user
+        b(host),  # host
+        0,  # exit 0
+        0,  # exit 1
+        0,  # session
+        int(ts),  # sec
+        int(10 ** 6 * (ts - int(ts))),  # usec
+        0,  # addr 0
+        0,  # addr 1
+        0,  # addr 2
+        0,  # addr 3
+        b('')  # unused
+    )
+
+
+def add_user_info(fd, pid, user, host):
+    utmp = utmp_line(7, pid, fd, user, host, time.time())
+    for kind, file in {
+            'utmp': get_utmp_file(),
+            'wtmp': get_wtmp_file()}.items():
+        if not file:
+            continue
+        try:
+            with open(file, 'rb+') as f:
+                s = f.read(utmp_struct.size)
+                while s:
+                    entry = UTmp(*utmp_struct.unpack(s))
+                    if kind == 'utmp' and entry.id.rstrip(b'\0') == utmp.id:
+                        # Same id recycling
+                        f.seek(f.tell() - utmp_struct.size)
+                        f.write(utmp_struct.pack(*utmp))
+                        break
+                    s = f.read(utmp_struct.size)
+                else:
+                    f.write(utmp_struct.pack(*utmp))
+        except Exception:
+            log.warning('Unable to write utmp info to ' + file, exc_info=True)
+
+
+def rm_user_info(fd, pid, user):
+    import traceback
+    log.warning(traceback.format_stack())
+    utmp = utmp_line(8, pid, fd, user, '', time.time())
+    for kind, file in {
+            'utmp': get_utmp_file(),
+            'wtmp': get_wtmp_file()}.items():
+        if not file:
+            continue
+        try:
+            with open(file, 'rb+') as f:
+                s = f.read(utmp_struct.size)
+                while s:
+                    entry = UTmp(*utmp_struct.unpack(s))
+                    if kind == 'utmp' and entry.id.rstrip(b'\0') == utmp.id:
+                        log.warning('Found Writing ' + str(utmp) + ' ' + kind)
+                        # Same id closing
+                        f.seek(f.tell() - utmp_struct.size)
+                        f.write(utmp_struct.pack(*utmp))
+                        break
+                    s = f.read(utmp_struct.size)
+                else:
+                    log.warning('Else Writing ' + str(utmp) + ' ' + kind)
+                    f.write(utmp_struct.pack(*utmp))
+
+        except Exception:
+            log.warning('Unable to update utmp info to ' + file, exc_info=True)

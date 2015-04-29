@@ -125,13 +125,14 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     terminals = set()
 
     def pty(self):
+        self.determine_user()
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
             self.shell()
         else:
             self.communicate()
 
-    def shell(self):
+    def determine_user(self):
         if self.callee is None and (
                 tornado.options.options.unsecure and
                 tornado.options.options.login):
@@ -149,6 +150,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
         assert self.callee is not None
 
+    def shell(self):
         try:
             os.chdir(self.path or self.callee.dir)
         except:
@@ -231,6 +233,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def communicate(self):
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
+
+        utils.add_user_info(
+            self.fd, self.pid,
+            self.callee.name, self.request.headers['Host'])
 
         def utf8_error(e):
             self.log.error(e)
@@ -330,10 +336,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if events & ioloop.ERROR:
             self.log.info('Error on fd %d, closing' % fd)
             # Terminated
-            self.on_close()
             self.close()
 
     def on_close(self):
+        utils.rm_user_info(self.fd, self.pid, self.callee.name)
         if self.fd is not None:
             self.log.info('Closing fd %d' % self.fd)
 
