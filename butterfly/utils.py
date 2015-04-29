@@ -314,8 +314,6 @@ def add_user_info(fd, pid, user, host):
 
 
 def rm_user_info(fd, pid, user):
-    import traceback
-    log.warning(traceback.format_stack())
     utmp = utmp_line(8, pid, fd, user, '', time.time())
     for kind, file in {
             'utmp': get_utmp_file(),
@@ -328,14 +326,12 @@ def rm_user_info(fd, pid, user):
                 while s:
                     entry = UTmp(*utmp_struct.unpack(s))
                     if kind == 'utmp' and entry.id.rstrip(b'\0') == utmp.id:
-                        log.warning('Found Writing ' + str(utmp) + ' ' + kind)
                         # Same id closing
                         f.seek(f.tell() - utmp_struct.size)
                         f.write(utmp_struct.pack(*utmp))
                         break
                     s = f.read(utmp_struct.size)
                 else:
-                    log.warning('Else Writing ' + str(utmp) + ' ' + kind)
                     f.write(utmp_struct.pack(*utmp))
 
         except Exception:
