@@ -46,7 +46,7 @@ def get_style():
             os.path.dirname(__file__), 'sass')
         try:
             import sass
-        except:
+        except Exception:
             log.error('You must install libsass to use sass '
                       '(pip install libsass)')
             return
@@ -124,9 +124,14 @@ class Socket(object):
         sn = socket.getsockname()
         self.local_addr = sn[0]
         self.local_port = sn[1]
-        pn = socket.getpeername()
-        self.remote_addr = pn[0]
-        self.remote_port = pn[1]
+        try:
+            pn = socket.getpeername()
+            self.remote_addr = pn[0]
+            self.remote_port = pn[1]
+        except Exception:
+            log.debug("Can't get peer name", exc_info=True)
+            self.remote_addr = '???'
+            self.remote_port = 0
         self.user = None
         self.env = {}
 
@@ -188,7 +193,7 @@ def get_procfs_socket_line(port):
             if line.split()[1] == '0100007F:%X' % port:
                 # We got the socket
                 return line.split()
-    except:
+    except Exception:
         log.debug('getting socket inet4 line fail', exc_info=True)
 
     try:
@@ -200,7 +205,7 @@ def get_procfs_socket_line(port):
                     '00000000000000000000000001000000:%X' % port):
                 # We got the socket
                 return line.split()
-    except:
+    except Exception:
         log.debug('getting socket inet6 line fail', exc_info=True)
 
 
@@ -268,12 +273,12 @@ UTmp = namedtuple(
              'sec', 'usec', 'addr0', 'addr1', 'addr2', 'addr3', 'unused'])
 
 
-def utmp_line(type, pid, fd, user, host, ts):
+def utmp_line(id, type, pid, fd, user, host, ts):
     return UTmp(
         type,  # Type, 7 : user process
         pid,  # pid
-        b('pts/%d' % fd),  # line
-        b('/%d' % fd),  # id
+        b(fd),  # line
+        b(id),  # id
         b(user),  # user
         b(host),  # host
         0,  # exit 0
@@ -289,12 +294,12 @@ def utmp_line(type, pid, fd, user, host, ts):
     )
 
 
-def add_user_info(fd, pid, user, host):
+def add_user_info(id, fd, pid, user, host):
     # Freebsd format is not yet supported.
     # Please submit PR
     if sys.platform != 'linux':
         return
-    utmp = utmp_line(7, pid, fd, user, host, time.time())
+    utmp = utmp_line(id, 7, pid, fd, user, host, time.time())
     for kind, file in {
             'utmp': get_utmp_file(),
             'wtmp': get_wtmp_file()}.items():
@@ -305,7 +310,7 @@ def add_user_info(fd, pid, user, host):
                 s = f.read(utmp_struct.size)
                 while s:
                     entry = UTmp(*utmp_struct.unpack(s))
-                    if kind == 'utmp' and entry.id.rstrip(b'\0') == utmp.id:
+                    if kind == 'utmp' and entry.id == utmp.id:
                         # Same id recycling
                         f.seek(f.tell() - utmp_struct.size)
                         f.write(utmp_struct.pack(*utmp))
@@ -314,13 +319,13 @@ def add_user_info(fd, pid, user, host):
                 else:
                     f.write(utmp_struct.pack(*utmp))
         except Exception:
-            log.info('Unable to write utmp info to ' + file, exc_info=True)
+            log.debug('Unable to write utmp info to ' + file, exc_info=True)
 
 
-def rm_user_info(fd, pid, user):
+def rm_user_info(id, pid):
     if sys.platform != 'linux':
         return
-    utmp = utmp_line(8, pid, fd, user, '', time.time())
+    utmp = utmp_line(id, 8, pid, '', '', '', time.time())
     for kind, file in {
             'utmp': get_utmp_file(),
             'wtmp': get_wtmp_file()}.items():
@@ -331,17 +336,23 @@ def rm_user_info(fd, pid, user):
                 s = f.read(utmp_struct.size)
                 while s:
                     entry = UTmp(*utmp_struct.unpack(s))
-                    if kind == 'utmp' and entry.id.rstrip(b'\0') == utmp.id:
-                        # Same id closing
-                        f.seek(f.tell() - utmp_struct.size)
-                        f.write(utmp_struct.pack(*utmp))
-                        break
+                    if entry.id == utmp.id:
+                        if kind == 'utmp':
+                            # Same id closing
+                            f.seek(f.tell() - utmp_struct.size)
+                            f.write(utmp_struct.pack(*utmp))
+                            break
+                        else:
+                            utmp = utmp_line(
+                                id, 8, pid, entry.line, entry.user, '',
+                                time.time())
+
                     s = f.read(utmp_struct.size)
                 else:
                     f.write(utmp_struct.pack(*utmp))
 
         except Exception:
-            log.info('Unable to update utmp info to ' + file, exc_info=True)
+            log.debug('Unable to update utmp info to ' + file, exc_info=True)
 
 
 class AnsiColors(object):

@@ -20,6 +20,8 @@ import pty
 import os
 import io
 import struct
+import string
+import random
 import fcntl
 import termios
 import tornado.web
@@ -89,9 +91,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     terminals = set()
 
     def pty(self):
-        self.determine_user()
+        # Make a "unique" id in 4 bytes
+        self.uid = ''.join(
+            random.choice(
+                string.ascii_lowercase + string.ascii_uppercase +
+                string.digits)
+            for _ in range(4))
+
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
+            self.determine_user()
             self.shell()
         else:
             self.communicate()
@@ -101,10 +110,18 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 tornado.options.options.unsecure and
                 tornado.options.options.login):
             # If callee is now known and we have unsecure connection
-            user = input('login: ')
+            user = ''
+            while user == '':
+                try:
+                    user = input('login: ')
+                except (KeyboardInterrupt, EOFError):
+                    self.log.debug("Errorin login input", exc_info=True)
+                    pass
+
             try:
                 self.callee = utils.User(name=user)
-            except:
+            except Exception:
+                self.log.debug("Can't switch to user %s" % user, exc_info=True)
                 self.callee = utils.User(name='nobody')
         elif (tornado.options.options.unsecure and not
               tornado.options.options.login):
@@ -117,8 +134,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     def shell(self):
         try:
             os.chdir(self.path or self.callee.dir)
-        except:
-            pass
+        except Exception:
+            self.log.debug(
+                "Can't chdir to %s" % (self.path or self.callee.dir),
+                exc_info=True)
 
         env = os.environ
         # If local and local user is the same as login user
@@ -134,6 +153,23 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             tornado.options.options.host, tornado.options.options.port)
         env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
             os.path.dirname(__file__), 'bin')), env.get("PATH"))
+
+        try:
+            tty = os.ttyname(0).replace('/dev/', '')
+        except Exception:
+            self.log.debug("Can't get ttyname", exc_info=True)
+            tty = ''
+
+        if self.caller != self.callee:
+            try:
+                os.chown(os.ttyname(0), self.callee.uid, -1)
+            except Exception:
+                self.log.debug("Can't chown ttyname", exc_info=True)
+
+        utils.add_user_info(
+            self.uid,
+            tty, os.getpid(),
+            self.callee.name, self.request.headers['Host'])
 
         if not tornado.options.options.unsecure or (
                 self.socket.local and
@@ -154,9 +190,11 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     os.initgroups(self.callee.name, self.callee.gid)
                     os.setgid(self.callee.gid)
                     os.setuid(self.callee.uid)
-                except:
-                    print('The server must be run as root '
-                          'if you want to log as different user\n')
+                except Exception:
+                    self.log.error(
+                        'The server must be run as root '
+                        'if you want to log as different user\n',
+                        exc_info=True)
                     sys.exit(1)
 
             if tornado.options.options.cmd:
@@ -197,10 +235,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def communicate(self):
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
-
-        utils.add_user_info(
-            self.fd, self.pid,
-            self.callee.name, self.request.headers['Host'])
 
         def utf8_error(e):
             self.log.error(e)
@@ -249,6 +283,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 try:
                     self.callee = utils.User(name=self.user)
                 except LookupError:
+                    self.log.debug(
+                        "Can't switch to user %s" % self.user, exc_info=True)
                     self.callee = None
 
             # If no user where given and we are local, keep the same user
@@ -324,7 +360,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.log.info('pid is 0')
             return
 
-        utils.rm_user_info(self.fd, self.pid, self.callee.name)
+        utils.rm_user_info(self.uid, self.pid)
 
         try:
             ioloop.remove_handler(self.fd)
