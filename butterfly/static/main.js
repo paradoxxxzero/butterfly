@@ -2329,7 +2329,7 @@
               this.scrollBottom = this.normal.scrollBottom;
               this.tabs = this.normal.tabs;
               this.normal = null;
-              this.refresh(true);
+              this.reset();
               return this.showCursor();
             }
         }

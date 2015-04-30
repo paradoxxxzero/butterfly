@@ -2421,7 +2421,7 @@ class Terminal
             @scrollBottom = @normal.scrollBottom
             @tabs = @normal.tabs
             @normal = null
-            @refresh(true)
+            @reset()
             @showCursor()
 
 
