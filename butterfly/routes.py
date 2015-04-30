@@ -133,7 +133,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             "s" if not tornado.options.options.unsecure else "",
             tornado.options.options.host, tornado.options.options.port)
         env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '..', 'bin')), env.get("PATH"))
+            os.path.dirname(__file__), 'bin')), env.get("PATH"))
 
         if not tornado.options.options.unsecure or (
                 self.socket.local and

@@ -77,7 +77,6 @@ body {
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 body {
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   transition: 200ms;
   transform-origin: bottom; }
   body.bell {
@@ -109,10 +108,6 @@ body {
       transform: rotate(-45deg);
       opacity: .2;
       font-weight: 900; }
-  body.copied {
-    transform: scale(1.05); }
-  body.pasted {
-    transform: scale(.95); }
   body.stopped {
     -webkit-filter: brightness(50%);
     filter: brightness(50%); }
@@ -120,6 +115,14 @@ body {
     background: rgba(255, 0, 0, 0.7); }
   body.locked::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 0, 0, 0.8); }
+
+body {
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5); }
+
+body.copied {
+  transform: scale(1.05); }
+body.pasted {
+  transform: scale(.95); }
 
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */

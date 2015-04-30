@@ -15,12 +15,7 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-$fg: #fff !default
-$shadow: 6px !default
-$shadow-alpha: .5 !default
-
 body
-  text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
   transition: 200ms
   transform-origin: bottom
 
@@ -58,12 +53,6 @@ body
       transform: rotate(-45deg)
       opacity: .2
       font-weight: 900
-
-  &.copied
-    transform: scale(1.05)
-
-  &.pasted
-    transform: scale(.95)
 
   &.stopped
     -webkit-filter: brightness(50%)

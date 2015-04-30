@@ -33,6 +33,7 @@ options = dict(
             'static/main.css',
             'static/*.min.js',
             'templates/index.html',
+            'bin/*',
             'templates/motd'
         ]
     },
