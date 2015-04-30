@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from butterfly.escapes import image
+from butterfly.utils import ansi_colors
 import os
 import base64
 
-print("Welcome to the butterfly help.")
+print(ansi_colors.white + "Welcome to the butterfly help." + ansi_colors.reset)
 with image('image/png'):
     with open(
             os.path.join(
@@ -13,10 +14,20 @@ with image('image/png'):
 print("""
 Butterfly is a xterm compliant terminal built with python and javascript.
 
-Terminal functionalities:
-[Alt] + [a]             : Set an alarm which sends a notification when a modification is detected.
-[Ctrl] + [Shift] + [Up] : Trigger visual selection mode. Hitting [Enter] inserts the selection in the prompt.
-[ScrollLock]            : Lock the scrolling to the current position. Press again to release.
-[Alt] + [z]             : Escape: don't catch the next pressed key. Useful for using native search for example. ([Alt] + [z] then [Ctrl] + [f]).
-[Ctrl] + [c] <<hold>>   : Cut the output when [Ctrl] + [c] is not enough.
-""")
+{title}Terminal functionalities:{reset}
+  {strong}[Alt] + [a]             : {reset}Set an alarm which sends a notification when a modification is detected.
+  {strong}[Ctrl] + [Shift] + [Up] : {reset}Trigger visual selection mode. Hitting [Enter] inserts the selection in the prompt.
+  {strong}[ScrollLock]            : {reset}Lock the scrolling to the current position. Press again to release.
+  {strong}[Alt] + [z]             : {reset}Escape: don't catch the next pressed key. Useful for using native search for example. ([Alt] + [z] then [Ctrl] + [f]).
+  {strong}[Ctrl] + [c] <<hold>>   : {reset}Cut the output when [Ctrl] + [c] is not enough.
+
+{title}Butterfly programs:{reset}
+  {strong}bcat  : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
+  {strong}bopen : {reset}Open a new terminal at specified location.
+  {strong}b16M  : {reset}Test the 16M colors support in terminal.
+  {strong}bhr   : {reset}Put a html hr. This is a test and needs --allow-html-escapes flag.
+  {strong}bcal  : {reset}Display current month using html. This is a test and needs --allow-html-escapes flag.
+""".format(
+    title=ansi_colors.light_blue,
+    strong=ansi_colors.white,
+    reset=ansi_colors.reset))

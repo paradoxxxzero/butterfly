@@ -32,7 +32,8 @@ options = dict(
             'static/images/favicon.png',
             'static/main.css',
             'static/*.min.js',
-            'templates/index.html'
+            'templates/index.html',
+            'templates/motd'
         ]
     },
     classifiers=[

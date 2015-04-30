@@ -290,6 +290,10 @@ def utmp_line(type, pid, fd, user, host, ts):
 
 
 def add_user_info(fd, pid, user, host):
+    # Freebsd format is not yet supported.
+    # Please submit PR
+    if sys.platform != 'linux':
+        return
     utmp = utmp_line(7, pid, fd, user, host, time.time())
     for kind, file in {
             'utmp': get_utmp_file(),
@@ -310,10 +314,12 @@ def add_user_info(fd, pid, user, host):
                 else:
                     f.write(utmp_struct.pack(*utmp))
         except Exception:
-            log.warning('Unable to write utmp info to ' + file, exc_info=True)
+            log.info('Unable to write utmp info to ' + file, exc_info=True)
 
 
 def rm_user_info(fd, pid, user):
+    if sys.platform != 'linux':
+        return
     utmp = utmp_line(8, pid, fd, user, '', time.time())
     for kind, file in {
             'utmp': get_utmp_file(),
@@ -335,4 +341,32 @@ def rm_user_info(fd, pid, user):
                     f.write(utmp_struct.pack(*utmp))
 
         except Exception:
-            log.warning('Unable to update utmp info to ' + file, exc_info=True)
+            log.info('Unable to update utmp info to ' + file, exc_info=True)
+
+
+class AnsiColors(object):
+    colors = {
+        'black': 30,
+        'red': 31,
+        'green': 32,
+        'yellow': 33,
+        'blue': 34,
+        'magenta': 35,
+        'cyan': 36,
+        'white': 37
+    }
+
+    def __getattr__(self, key):
+        bold = True
+        if key.startswith('light_'):
+            bold = False
+            key = key[len('light_'):]
+        if key in self.colors:
+            return '\x1b[%d%sm' % (
+                self.colors[key],
+                ';1' if bold else '')
+        if key == 'reset':
+            return '\x1b[0m'
+        return ''
+
+ansi_colors = AnsiColors()

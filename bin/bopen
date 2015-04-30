@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+import os
+import webbrowser
+import argparse
+
+parser = argparse.ArgumentParser(description='Butterfly tab opener.')
+parser.add_argument(
+    'location',
+    default=os.getcwd(),
+    help='Directory to open the new tab in. (Defaults to current)')
+args = parser.parse_args()
+
+webbrowser.open('%swd%s' % (os.getenv('LOCATION'), args.location))

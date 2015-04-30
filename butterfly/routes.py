@@ -49,44 +49,6 @@ def u(s):
     return s
 
 
-def motd(socket):
-    return (
-'''
-B                   `         '
-   ;,,,             `       '             ,,,;
-   `Y888888bo.       :     :       .od888888Y'
-     8888888888b.     :   :     .d8888888888
-     88888Y'  `Y8b.   `   '   .d8Y'  `Y88888
-    j88888  R.db.B  Yb. '   ' .dY  R.db.B  88888k
-      `888  RY88YB    `b ( ) d'    RY88YB  888'
-       888b  R'"B        ,',        R"'B  d888
-      j888888bd8gf"'   ':'   `"?g8bd888888k
-        R'Y'B   .8'     d' 'b     '8.   R'Y'X
-         R!B   .8' RdbB  d'; ;`b  RdbB '8.   R!B
-            d88  R`'B  8 ; ; 8  R`'B  88b             Rbutterfly Zv %sB
-           d888b   .g8 ',' 8g.   d888b
-          :888888888Y'     'Y888888888:           AConnecting to:B
-          '! 8888888'       `8888888 !'              G%sB
-             '8Y  R`Y         Y'B  Y8'
-R              Y                   Y               AFrom:R
-              !                   !                  G%sX
-
-For more information type: $ butterfly_help
-
-'''
-        .replace('G', '\x1b[3%d;1m' % (
-            1 if tornado.options.options.unsecure else 2))
-        .replace('B', '\x1b[34;1m')
-        .replace('R', '\x1b[37;1m')
-        .replace('Z', '\x1b[33;1m')
-        .replace('A', '\x1b[37;0m')
-        .replace('X', '\x1b[0m')
-        .replace('\n', '\r\n')
-        % (__version__,
-           '%s:%d' % (socket.local_addr, socket.local_port),
-           '%s:%d' % (socket.remote_addr, socket.remote_port)))
-
-
 @url(r'/(?:user/(.+))?/?(?:wd/(.+))?')
 class Index(Route):
     def get(self, user, path):
@@ -260,6 +222,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     def open(self, user, path):
         self.fd = None
+        self.closed = False
         if self.request.headers['Origin'] not in (
                 'http://%s' % self.request.headers['Host'],
                 'https://%s' % self.request.headers['Host']):
@@ -304,7 +267,16 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
         TermWebSocket.terminals.add(self)
 
-        self.write_message(motd(self.socket))
+        motd = (self.render_string(
+            tornado.options.options.motd,
+            butterfly=self,
+            version=__version__,
+            opts=tornado.options.options,
+            colors=utils.ansi_colors)
+                .decode('utf-8')
+                .replace('\r', '')
+                .replace('\n', '\r\n'))
+        self.write_message(motd)
         self.pty()
 
     def on_message(self, message):
@@ -318,7 +290,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
             self.log.info('SIZE (%d, %d)' % (cols, rows))
         elif message[0] == 'S':
-            self.log.info('WRIT<%r' % message)
+            self.log.debug('WRIT<%r' % message)
             self.writer.write(message[1:])
             self.writer.flush()
 
@@ -329,7 +301,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             except IOError:
                 read = ''
 
-            self.log.info('READ>%r' % read)
+            self.log.debug('READ>%r' % read)
             if read and len(read) != 0 and self.ws_connection:
                 self.write_message(read.decode('utf-8', 'replace'))
             else:
@@ -338,16 +310,21 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if events & ioloop.ERROR:
             self.log.info('Error on fd %d, closing' % fd)
             # Terminated
+            self.on_close()
             self.close()
 
     def on_close(self):
-        utils.rm_user_info(self.fd, self.pid, self.callee.name)
+        if self.closed:
+            return
+        self.closed = True
         if self.fd is not None:
             self.log.info('Closing fd %d' % self.fd)
 
         if getattr(self, 'pid', 0) == 0:
             self.log.info('pid is 0')
             return
+
+        utils.rm_user_info(self.fd, self.pid, self.callee.name)
 
         try:
             ioloop.remove_handler(self.fd)
