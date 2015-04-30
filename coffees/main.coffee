@@ -17,7 +17,7 @@
 
 cols = rows = null
 quit = false
-open_ts = (new Date()).getTime()
+openTs = (new Date()).getTime()
 
 $ = document.querySelectorAll.bind(document)
 
@@ -32,22 +32,22 @@ document.addEventListener 'DOMContentLoaded', ->
       ws.send 'R' + params
 
   if location.protocol == 'https:'
-    ws_url = 'wss://'
+    wsUrl = 'wss://'
   else
-    ws_url = 'ws://'
+    wsUrl = 'ws://'
 
-  ws_url += document.location.host + '/ws' + location.pathname
-  ws = new WebSocket ws_url
+  wsUrl += document.location.host + '/ws' + location.pathname
+  ws = new WebSocket wsUrl
 
   ws.addEventListener 'open', ->
     console.log "WebSocket open", arguments
     ws.send 'R' + term.cols + ',' + term.rows
-    open_ts = (new Date()).getTime()
+    openTs = (new Date()).getTime()
 
   ws.addEventListener 'error', ->
     console.log "WebSocket error", arguments
 
-  last_data = ''
+  lastData = ''
   t_queue = null
 
   queue = ''
@@ -57,7 +57,7 @@ document.addEventListener 'DOMContentLoaded', ->
     if term.stop
       queue = queue.slice -10 * 1024
 
-    if queue.length > term.buff_size
+    if queue.length > term.buffSize
       treat()
     else
       t_queue = setTimeout treat, 1
@@ -79,7 +79,7 @@ document.addEventListener 'DOMContentLoaded', ->
     , 1
     quit = true
     # Don't autoclose if websocket didn't last 1 minute
-    if (new Date()).getTime() - open_ts > 60 * 1000
+    if (new Date()).getTime() - openTs > 60 * 1000
       open('','_self').close()
 
   term = new Terminal document.body, send, ctl

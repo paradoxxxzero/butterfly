@@ -1,4 +1,4 @@
-set_alarm = (notification) ->
+setAlarm = (notification) ->
   alarm = (data) ->
     butterfly.body.classList.remove 'alarm'
     note = "New activity on butterfly terminal [#{ butterfly.title }]"
@@ -29,8 +29,8 @@ document.addEventListener 'keydown', (e) ->
 
   if Notification and Notification.permission is 'default'
     Notification.requestPermission ->
-      set_alarm(Notification.permission is 'granted')
+      setAlarm(Notification.permission is 'granted')
   else
-    set_alarm(Notification.permission is 'granted')
+    setAlarm(Notification.permission is 'granted')
 
   cancel(e)
