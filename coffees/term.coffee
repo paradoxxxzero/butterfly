@@ -45,7 +45,6 @@ State =
   dcs: s++
   ignore: s++
 
-
 class Terminal
   constructor: (@parent, @out, @ctl=->) ->
     # Global elements
@@ -384,6 +383,18 @@ class Terminal
         sendButton ev
         cancel ev
 
+  linkify: (t) ->
+    # http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
+    urlPattern = (
+      /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim)
+    pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim
+    emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim
+    (part
+      .replace(urlPattern, '<a href="$&">$&</a>')
+      .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
+      .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'
+    ) for part in t.split('&nbsp;')).join('&nbsp;')
+
   refresh: (force=false) ->
     for cursor in @body.querySelectorAll(".cursor")
       cursor.parentNode.replaceChild(
@@ -483,6 +494,7 @@ class Terminal
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
+      out = @linkify(out) unless j is @y + @shift
       if @children[j]
         @children[j].innerHTML = out
       else

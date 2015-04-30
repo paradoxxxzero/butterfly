@@ -483,6 +483,23 @@
       })(this));
     };
 
+    Terminal.prototype.linkify = function(t) {
+      var emailAddressPattern, part, pseudoUrlPattern, urlPattern;
+      urlPattern = /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim;
+      pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+      emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim;
+      return ((function() {
+        var k, len, ref, results;
+        ref = t.split('&nbsp;');
+        results = [];
+        for (k = 0, len = ref.length; k < len; k++) {
+          part = ref[k];
+          results.push(part.replace(urlPattern, '<a href="$&">$&</a>').replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>').replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'));
+        }
+        return results;
+      })()).join('&nbsp;');
+    };
+
     Terminal.prototype.refresh = function(force) {
       var attr, ch, classes, cursor, data, dirty, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x;
       if (force == null) {
@@ -605,6 +622,9 @@
         }
         if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
+        }
+        if (j !== this.y + this.shift) {
+          out = this.linkify(out);
         }
         if (this.children[j]) {
           this.children[j].innerHTML = out;
