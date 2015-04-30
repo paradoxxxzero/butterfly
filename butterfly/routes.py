@@ -271,7 +271,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.set_nodelay(True)
         self.log.info('Websocket opened %r' % self.socket)
         self.path = path
-        self.user = user.decode('utf-8') if user else None
+        self.user = user if user else None
         self.caller = self.callee = None
 
         # If local we have the user connecting
