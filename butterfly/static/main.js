@@ -313,13 +313,8 @@
         if (!pos) {
           return;
         }
-        sendEvent(button, pos);
-        switch (ev.type) {
-          case "mousedown":
-            return pressed = button;
-          case "mouseup":
-            return pressed = 32;
-        }
+        sendEvent(button, pos, ev.type);
+        return pressed = button;
       };
       sendMove = function(ev) {
         var button, pos;
@@ -329,7 +324,7 @@
           return;
         }
         button += 32;
-        return sendEvent(button, pos);
+        return sendEvent(button, pos, ev.type);
       };
       encode = (function(_this) {
         return function(data, ch) {
@@ -358,7 +353,7 @@
         };
       })(this);
       sendEvent = (function(_this) {
-        return function(button, pos) {
+        return function(button, pos, type) {
           var data;
           if (_this.urxvtMouse) {
             pos.x -= 32;
@@ -371,7 +366,8 @@
           if (_this.sgrMouse) {
             pos.x -= 32;
             pos.y -= 32;
-            _this.send("\x1b[<" + ((button & 3) === 3 ? button & ~3 : button) + ";" + pos.x + ";" + pos.y + ((button & 3) === 3 ? "m" : "M"));
+            button -= 32;
+            _this.send("\x1b[<" + button + ";" + pos.x + ";" + pos.y + (type === "mouseup" ? "m" : "M"));
             return;
           }
           data = [];
@@ -454,15 +450,11 @@
           }
           sendButton(ev);
           sm = sendMove.bind(_this);
-          if (_this.normalMouse) {
-            addEventListener("mousemove", sm);
-          }
+          addEventListener("mousemove", sm);
           if (!_this.x10Mouse) {
             addEventListener("mouseup", up = function(ev) {
               sendButton(ev);
-              if (_this.normalMouse) {
-                removeEventListener("mousemove", sm);
-              }
+              removeEventListener("mousemove", sm);
               removeEventListener("mouseup", up);
               return cancel(ev);
             });

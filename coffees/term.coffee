@@ -221,15 +221,8 @@ class Terminal
       pos = getCoords(ev)
       return unless pos
 
-      sendEvent button, pos
-      switch ev.type
-        when "mousedown"
-          pressed = button
-
-        when "mouseup"
-          # keep it at the left
-          # button, just in case.
-          pressed = 32
+      sendEvent button, pos, ev.type
+      pressed = button
 
     # motion example of a left click:
     # ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
@@ -241,7 +234,7 @@ class Terminal
       # buttons marked as motions
       # are incremented by 32
       button += 32
-      sendEvent button, pos
+      sendEvent button, pos, ev.type
 
     # encode button and
     # position to characters
@@ -266,7 +259,7 @@ class Terminal
     # sgr: ^[[ Cb ; Cx ; Cy M/m
     # vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
     # locator: CSI P e ; P b ; P r ; P c ; P p & w
-    sendEvent = (button, pos) =>
+    sendEvent = (button, pos, type) =>
 
       if @urxvtMouse
         pos.x -= 32
@@ -279,10 +272,9 @@ class Terminal
       if @sgrMouse
         pos.x -= 32
         pos.y -= 32
-        @send "\x1b[<" + (
-          if (button & 3) is 3 then button & ~3 else button
-        ) + ";" + pos.x + ";" + pos.y + (
-          if (button & 3) is 3 then "m" else "M"
+        button -= 32
+        @send "\x1b[<" + button + ";" + pos.x + ";" + pos.y + (
+          if type is "mouseup" then "m" else "M"
         )
         return
 
@@ -366,13 +358,13 @@ class Terminal
 
       # fix for odd bug
       sm = sendMove.bind(this)
-      addEventListener "mousemove", sm if @normalMouse
+      addEventListener "mousemove", sm
 
       # x10 compatibility mode can't send button releases
       unless @x10Mouse
-        addEventListener "mouseup", up = (ev)  =>
+        addEventListener "mouseup", up = (ev) ->
           sendButton ev
-          removeEventListener "mousemove", sm if @normalMouse
+          removeEventListener "mousemove", sm
           removeEventListener "mouseup", up
           cancel ev
       cancel ev
