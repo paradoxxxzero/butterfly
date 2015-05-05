@@ -750,7 +750,7 @@
     };
 
     Terminal.prototype.write = function(data) {
-      var attr, b64, c, ch, content, cs, i, k, l, len, line, m, mime, num, pt, ref, ref1, ref2, ref3, ref4, type, valid;
+      var attr, b64, c, ch, content, cs, i, k, l, len, line, m, mime, num, pt, ref, ref1, ref2, ref3, type, valid;
       i = 0;
       l = data.length;
       while (i < l) {
@@ -1196,7 +1196,14 @@
                       this.screen[this.y + this.shift][1] = true;
                       break;
                     case "IMAGE":
-                      ref4 = content.split(';', 2), mime = ref4[0], b64 = ref4[1];
+                      content = encodeURI(content);
+                      if (content.indexOf(';')) {
+                        mime = content.slice(0, content.indexOf(';'));
+                        b64 = content.slice(content.indexOf(';') + 1);
+                      } else {
+                        mime = 'image';
+                        b64 = content;
+                      }
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<img class=\"inline-image\" src=\"data:" + mime + ";base64," + b64 + "\" />";
                       this.screen[this.y + this.shift][0][this.x] = attr;
