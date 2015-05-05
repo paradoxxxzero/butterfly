@@ -1095,7 +1095,15 @@ class Terminal
                     @screen[@y + @shift][1] = true
 
                   when "IMAGE"
-                    [mime, b64] = content.split(';', 2)
+                    # Prevent injection
+                    content = encodeURI content
+
+                    if content.indexOf(';')
+                      mime = content.slice(0, content.indexOf(';'))
+                      b64 = content.slice(content.indexOf(';') + 1)
+                    else
+                      mime = 'image'
+                      b64 = content
                     attr = @cloneAttr @curAttr
                     attr.html = (
                       "<img class=\"inline-image\" src=\"data:#{mime};base64,#{
