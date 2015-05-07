@@ -119,12 +119,12 @@ class Terminal
 
   putChar: (c) ->
     if @insertMode
-      @screen[@y + @shift][0].splice(@x, 0, @cloneAttr @curAttr, c)
-      @screen[@y + @shift][0].pop()
+      @screen[@y + @shift].chars.splice(@x, 0, @cloneAttr @curAttr, c)
+      @screen[@y + @shift].chars.pop()
     else
-      @screen[@y + @shift][0][@x] = @cloneAttr @curAttr, c
+      @screen[@y + @shift].chars[@x] = @cloneAttr @curAttr, c
 
-    @screen[@y + @shift][1] = true
+    @screen[@y + @shift].dirty = true
 
   resetVars: ->
     @x = 0
@@ -168,7 +168,7 @@ class Terminal
     @screen = []
     i = @rows
     @shift = 0
-    @screen.push [@blankLine(), true] while i--
+    @screen.push @blankLine() while i--
     @setupStops()
     @skipNextKey = null
 
@@ -194,7 +194,7 @@ class Terminal
 
   blur: ->
     @cursorState = 1
-    @screen[@y + @shift][1] = true
+    @screen[@y + @shift].dirty = true
     @refresh()
     @send('\x1b[O') if @sendFocus
     @body.classList.add('blur')
@@ -392,8 +392,8 @@ class Terminal
       cursor.parentNode.replaceChild(
         @document.createTextNode(cursor.textContent), cursor)
     newOut = ''
-    for [line, dirty], j in @screen
-      continue unless dirty or force
+    for line, j in @screen
+      continue unless line.dirty or force
       out = ""
 
       if j is @y + @shift and not @cursorHidden
@@ -404,7 +404,7 @@ class Terminal
       attr = @cloneAttr @defAttr
       skipnext = false
       for i in [0..@cols - 1]
-        data = line[i]
+        data = line.chars[i]
         if data.html
           out += data.html
           continue
@@ -487,11 +487,12 @@ class Terminal
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
       out = @linkify(out) unless j is @y + @shift
+      out += '\u23CE' if line.wrap
       if @children[j]
         @children[j].innerHTML = out
       else
         newOut += "<div class=\"line\">#{out}</div>"
-      @screen[j][1] = false
+      @screen[j].dirty = false
 
     if newOut isnt ''
       group = @document.createElement('div')
@@ -527,7 +528,7 @@ class Terminal
   showCursor: ->
     unless @cursorState
       @cursorState = 1
-      @screen[@y + @shift][1] = true
+      @screen[@y + @shift].dirty = true
       @refresh()
 
 
@@ -547,21 +548,21 @@ class Terminal
     # Use emulated scroll in alternate buffer or when scroll region is defined
     if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       # inner scroll
-      @screen.splice @shift + @scrollBottom + 1, 0, [@blankLine(), true]
+      @screen.splice @shift + @scrollBottom + 1, 0, @blankLine()
       @screen.splice @shift + @scrollTop, 1
 
       for i in [@scrollTop..@scrollBottom]
-        @screen[i + @shift][1] = true
+        @screen[i + @shift].dirty = true
     else
-      @screen.push [@blankLine(), true]
+      @screen.push @blankLine()
       @shift++
 
   unscroll: ->
-    @screen.splice @shift + @scrollTop , 0, [@blankLine(true), true]
+    @screen.splice @shift + @scrollTop , 0, @blankLine(true)
     @screen.splice @shift + @scrollBottom + 1, 1
 
     for i in [@scrollTop..@scrollBottom]
-      @screen[i + @shift][1] = true
+      @screen[i + @shift].dirty = true
 
 
   nativeScrollTo: (scroll=2000000000) -> # ~ Max ff number
@@ -629,7 +630,7 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @putChar '\u23CE'
+                  @screen[@y + @shift].wrap = true
                   @x = 0
                   @nextLine()
 
@@ -769,9 +770,9 @@ class Terminal
                   break
                 when "8" # DECALN
                   for line in @screen
-                    line[1] = true
-                    for c in [0..line[0].length]
-                      line[0][c] = @cloneAttr @curAttr, "E"
+                    line.dirty = true
+                    for c in [0..line.chars.length]
+                      line.chars[c] = @cloneAttr @curAttr, "E"
                   @x = @y = 0
 
             # ESC H Tab Set (HTS is 0x88).
@@ -1091,8 +1092,9 @@ class Terminal
                     attr = @cloneAttr @curAttr
                     attr.html = (
                       "<div class=\"inline-html\">#{content}</div>")
-                    @screen[@y + @shift][0][@x] = attr
-                    @screen[@y + @shift][1] = true
+                    @screen[@y + @shift].chars[@x] = attr
+                    @screen[@y + @shift].dirty = true
+                    @screen[@y + @shift].wrap = false
 
                   when "IMAGE"
                     # Prevent injection
@@ -1108,8 +1110,9 @@ class Terminal
                     attr.html = (
                       "<img class=\"inline-image\" src=\"data:#{mime};base64,#{
                         b64}\" />")
-                    @screen[@y + @shift][0][@x] = attr
-                    @screen[@y + @shift][1] = true
+                    @screen[@y + @shift].chars[@x] = attr
+                    @screen[@y + @shift].dirty = true
+                    @screen[@y + @shift].wrap = false
 
                   when "PROMPT"
                     @send content
@@ -1178,7 +1181,7 @@ class Terminal
             @state = State.normal
       i++
 
-    @screen[@y + @shift][1] = true
+    @screen[@y + @shift].dirty = true
     @refresh()
 
   writeln: (data) ->
@@ -1496,11 +1499,13 @@ class Terminal
       # does xterm use the default attr?
       i = @screen.length
       while i--
-        @screen[i][0].push @defAttr while @screen[i][0].length < @cols
+        @screen[i].chars.push @defAttr while @screen[i].chars.length < @cols
+        @screen[i].wrap = false
+
     else if oldCols > @cols
       i = @screen.length
       while i--
-        @screen[i][0].pop() while @screen[i][0].length > @cols
+        @screen[i].chars.pop() while @screen[i].chars.length > @cols
 
     @setupStops oldCols
 
@@ -1509,7 +1514,7 @@ class Terminal
     if j < @rows
       el = @body
       while j++ < @rows
-        @screen.push [@blankLine(), true] if @screen.length < @rows
+        @screen.push @blankLine() if @screen.length < @rows
         if @children.length < @rows
           line = @document.createElement("div")
           line.className = 'line'
@@ -1563,18 +1568,20 @@ class Terminal
     if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
   eraseRight: (x, y) ->
-    line = @screen[y + @shift][0]
+    line = @screen[y + @shift].chars
     # xterm
 
     while x < @cols
       line[x] = @eraseAttr()
       x++
-    @screen[y + @shift][1] = true
+    @screen[y + @shift].dirty = true
+    @screen[y + @shift].wrap = false
 
   eraseLeft: (x, y) ->
     x++
-    @screen[y + @shift][0][x] = @eraseAttr() while x--
-    @screen[y + @shift][1] = true
+    @screen[y + @shift].chars[x] = @eraseAttr() while x--
+    @screen[y + @shift].dirty = true
+    @screen[y + @shift].wrap = false
 
   eraseLine: (y) ->
     @eraseRight 0, y
@@ -1583,10 +1590,13 @@ class Terminal
     attr = (if cur then @eraseAttr() else @defAttr)
     line = []
     i = 0
-    while i < @cols + 1
+    while i < @cols
       line[i] = attr
       i++
-    line
+
+    chars: line
+    dirty: true
+    wrap: false
 
   ch: (cur) ->
     if cur then @eraseAttr() else @defAttr
@@ -1931,9 +1941,9 @@ class Terminal
     j = @x
     # xterm
     while param-- and j < @cols
-      @screen[row + @shift][0].splice j++, 0, [@eraseAttr(), true]
-      @screen[row + @shift][0].pop()
-    @screen[row + @shift][1] = true
+      @screen[row + @shift].chars.splice j++, 0, [@eraseAttr(), true]
+      @screen[row + @shift].chars.pop()
+    @screen[row + @shift].dirty = true
 
 
   # CSI Ps E
@@ -1973,12 +1983,12 @@ class Terminal
     param = 1 if param < 1
 
     while param--
-      @screen.splice @y + @shift, 0, [@blankLine(true), true]
+      @screen.splice @y + @shift, 0, @blankLine(true)
       # blankLine(true) - xterm/linux behavior
       @screen.splice @scrollBottom + 1 + @shift, 1
 
     for i in [@y + @shift..@screen.length - 1]
-      @screen[i][1] = true
+      @screen[i].dirty = true
 
   # CSI Ps M
   # Delete Ps Line(s) (default = 1) (DL).
@@ -1989,7 +1999,7 @@ class Terminal
     while param--
       # test: echo -e '\e[44m\e[1M\e[0m'
       # blankLine(true) - xterm/linux behavior
-      @screen.splice @scrollBottom + @shift, 0, [@blankLine(true), true]
+      @screen.splice @scrollBottom + @shift, 0, @blankLine(true)
       @screen.splice @y + @shift, 1
       unless @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
         @children[@y + @shift].remove()
@@ -1997,7 +2007,7 @@ class Terminal
 
     if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       for i in [@y + @shift..@screen.length - 1]
-        @screen[i][1] = true
+        @screen[i].dirty = true
 
   # CSI Ps P
   # Delete Ps Character(s) (default = 1) (DCH).
@@ -2006,10 +2016,10 @@ class Terminal
     param = 1 if param < 1
 
     while param--
-      @screen[@y + @shift][0].splice @x, 1
-      @screen[@y + @shift][0].push @eraseAttr()
-    @screen[@y + @shift][1] = true
-
+      @screen[@y + @shift].chars.splice @x, 1
+      @screen[@y + @shift].chars.push @eraseAttr()
+    @screen[@y + @shift].dirty = true
+    @screen[@y + @shift].wrap = false
 
   # CSI Ps X
   # Erase Ps Character(s) (default = 1) (ECH).
@@ -2018,8 +2028,9 @@ class Terminal
     param = 1 if param < 1
     j = @x
     # xterm
-    @screen[@y + @shift][0][j++] = @eraseAttr() while param-- and j < @cols
-    @screen[@y + @shift][1] = true
+    @screen[@y + @shift].chars[j++] = @eraseAttr() while param-- and j < @cols
+    @screen[@y + @shift].dirty = true
+    @screen[@y + @shift].wrap = false
 
   # CSI Pm `    Character Position Absolute
   #     [column] (default = [row,1]) (HPA).
@@ -2472,10 +2483,10 @@ class Terminal
     param = params[0] or 1
     while param--
       @screen.splice @scrollTop, 1
-      @screen.splice @scrollBottom, 0, [@blankLine(), true]
+      @screen.splice @scrollBottom, 0, @blankLine()
 
     for i in [@scrollTop..@scrollBottom]
-      @screen[i + @shift][1] = true
+      @screen[i + @shift].dirty = true
 
 
   # CSI Ps T    Scroll down Ps lines (default = 1) (SD).
@@ -2483,10 +2494,10 @@ class Terminal
     param = params[0] or 1
     while param--
       @screen.splice @scrollBottom, 1
-      @screen.splice @scrollTop, 0, [@blankLine(), true]
+      @screen.splice @scrollTop, 0, @blankLine()
 
     for i in [@scrollTop..@scrollBottom]
-      @screen[i + @shift][1] = true
+      @screen[i + @shift].dirty = true
 
 
   # CSI Ps ; Ps ; Ps ; Ps ; Ps T
@@ -2520,10 +2531,10 @@ class Terminal
   # CSI Ps b    Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
-    line = @screen[@y + @shift][0]
+    line = @screen[@y + @shift].chars
     ch = line[@x - 1] or @defAttr
     line[@x++] = ch while param--
-    @screen[@y + @shift][1] = true
+    @screen[@y + @shift].dirty = true
 
   # CSI Ps g    Tab Clear (TBC).
   #         Ps = 0    -> Clear Current Column (default).
@@ -2694,8 +2705,8 @@ class Terminal
     r = params[3]
     attr = params[4]
     while t < b + 1
-      line = @screen[t + @shift][0]
-      @screen[t + @shift][1] = true
+      line = @screen[t + @shift].chars
+      @screen[t + @shift].dirty = true
       i = l
       while i < r
         line[i] = @cloneAttr attr, line[i].ch
@@ -2851,8 +2862,8 @@ class Terminal
     b = params[3]
     r = params[4]
     while t < b + 1
-      line = @screen[t + @shift][0]
-      @screen[t + @shift][1] = true
+      line = @screen[t + @shift].chars
+      @screen[t + @shift].dirty = true
       i = l
       while i < r
         line[i] = @cloneAttr line[i][0], String.fromCharCode(ch)
@@ -2886,8 +2897,8 @@ class Terminal
     b = params[2]
     r = params[3]
     while t < b + 1
-      line = @screen[t + @shift][0]
-      @screen[t + @shift][1] = true
+      line = @screen[t + @shift].chars
+      @screen[t + @shift].dirty = true
       i = l
       while i < r
         line[i] = @eraseAttr()
@@ -2966,10 +2977,10 @@ class Terminal
     while param--
       i = @shift
       while i < l
-        @screen[i][0].splice @x + 1, 0, @eraseAttr()
-        @screen[i][0].pop()
+        @screen[i].chars.splice @x + 1, 0, @eraseAttr()
+        @screen[i].chars.pop()
+        @screen[i].dirty = true
         i++
-    @screen[i][1] = true
 
 
   # CSI P m SP ~
@@ -2981,10 +2992,11 @@ class Terminal
     while param--
       i = @shift
       while i < l
-        @screen[i][0].splice @x, 1
-        @screen[i][0].push @eraseAttr()
+        @screen[i].chars.splice @x, 1
+        @screen[i].chars.push @eraseAttr()
+        @screen[i].dirty = true
+        @screen[i].wrap = false
         i++
-    @screen[i][1] = true
 
   # DEC Special Character and Line Drawing Set.
   # http://vt100.net/docs/vt102-ug/table5-13.html

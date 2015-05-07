@@ -213,12 +213,12 @@
 
     Terminal.prototype.putChar = function(c) {
       if (this.insertMode) {
-        this.screen[this.y + this.shift][0].splice(this.x, 0, this.cloneAttr(this.curAttr, c));
-        this.screen[this.y + this.shift][0].pop();
+        this.screen[this.y + this.shift].chars.splice(this.x, 0, this.cloneAttr(this.curAttr, c));
+        this.screen[this.y + this.shift].chars.pop();
       } else {
-        this.screen[this.y + this.shift][0][this.x] = this.cloneAttr(this.curAttr, c);
+        this.screen[this.y + this.shift].chars[this.x] = this.cloneAttr(this.curAttr, c);
       }
-      return this.screen[this.y + this.shift][1] = true;
+      return this.screen[this.y + this.shift].dirty = true;
     };
 
     Terminal.prototype.resetVars = function() {
@@ -258,7 +258,7 @@
       i = this.rows;
       this.shift = 0;
       while (i--) {
-        this.screen.push([this.blankLine(), true]);
+        this.screen.push(this.blankLine());
       }
       this.setupStops();
       return this.skipNextKey = null;
@@ -294,7 +294,7 @@
 
     Terminal.prototype.blur = function() {
       this.cursorState = 1;
-      this.screen[this.y + this.shift][1] = true;
+      this.screen[this.y + this.shift].dirty = true;
       this.refresh();
       if (this.sendFocus) {
         this.send('\x1b[O');
@@ -493,7 +493,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var attr, ch, classes, cursor, data, dirty, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x;
+      var attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, skipnext, styles, u, x;
       if (force == null) {
         force = false;
       }
@@ -505,8 +505,8 @@
       newOut = '';
       ref1 = this.screen;
       for (j = m = 0, len1 = ref1.length; m < len1; j = ++m) {
-        ref2 = ref1[j], line = ref2[0], dirty = ref2[1];
-        if (!(dirty || force)) {
+        line = ref1[j];
+        if (!(line.dirty || force)) {
           continue;
         }
         out = "";
@@ -517,8 +517,8 @@
         }
         attr = this.cloneAttr(this.defAttr);
         skipnext = false;
-        for (i = o = 0, ref3 = this.cols - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; i = 0 <= ref3 ? ++o : --o) {
-          data = line[i];
+        for (i = o = 0, ref2 = this.cols - 1; 0 <= ref2 ? o <= ref2 : o >= ref2; i = 0 <= ref2 ? ++o : --o) {
+          data = line.chars[i];
           if (data.html) {
             out += data.html;
             continue;
@@ -618,12 +618,15 @@
         if (j !== this.y + this.shift) {
           out = this.linkify(out);
         }
+        if (line.wrap) {
+          out += '\u23CE';
+        }
         if (this.children[j]) {
           this.children[j].innerHTML = out;
         } else {
           newOut += "<div class=\"line\">" + out + "</div>";
         }
-        this.screen[j][1] = false;
+        this.screen[j].dirty = false;
       }
       if (newOut !== '') {
         group = this.document.createElement('div');
@@ -634,14 +637,14 @@
         this.shift = 0;
         lines = document.querySelectorAll('.line');
         if (lines.length > this.scrollback) {
-          ref4 = Array.prototype.slice.call(lines, 0, lines.length - this.scrollback);
-          for (q = 0, len2 = ref4.length; q < len2; q++) {
-            line = ref4[q];
+          ref3 = Array.prototype.slice.call(lines, 0, lines.length - this.scrollback);
+          for (q = 0, len2 = ref3.length; q < len2; q++) {
+            line = ref3[q];
             line.remove();
           }
-          ref5 = document.querySelectorAll('.group:empty');
-          for (u = 0, len3 = ref5.length; u < len3; u++) {
-            group = ref5[u];
+          ref4 = document.querySelectorAll('.group:empty');
+          for (u = 0, len3 = ref4.length; u < len3; u++) {
+            group = ref4[u];
             group.remove();
           }
           lines = document.querySelectorAll('.line');
@@ -670,7 +673,7 @@
     Terminal.prototype.showCursor = function() {
       if (!this.cursorState) {
         this.cursorState = 1;
-        this.screen[this.y + this.shift][1] = true;
+        this.screen[this.y + this.shift].dirty = true;
         return this.refresh();
       }
     };
@@ -698,26 +701,26 @@
     Terminal.prototype.scroll = function() {
       var i, k, ref, ref1, results;
       if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
-        this.screen.splice(this.shift + this.scrollBottom + 1, 0, [this.blankLine(), true]);
+        this.screen.splice(this.shift + this.scrollBottom + 1, 0, this.blankLine());
         this.screen.splice(this.shift + this.scrollTop, 1);
         results = [];
         for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-          results.push(this.screen[i + this.shift][1] = true);
+          results.push(this.screen[i + this.shift].dirty = true);
         }
         return results;
       } else {
-        this.screen.push([this.blankLine(), true]);
+        this.screen.push(this.blankLine());
         return this.shift++;
       }
     };
 
     Terminal.prototype.unscroll = function() {
       var i, k, ref, ref1, results;
-      this.screen.splice(this.shift + this.scrollTop, 0, [this.blankLine(true), true]);
+      this.screen.splice(this.shift + this.scrollTop, 0, this.blankLine(true));
       this.screen.splice(this.shift + this.scrollBottom + 1, 1);
       results = [];
       for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-        results.push(this.screen[i + this.shift][1] = true);
+        results.push(this.screen[i + this.shift].dirty = true);
       }
       return results;
     };
@@ -792,7 +795,7 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.putChar('\u23CE');
+                    this.screen[this.y + this.shift].wrap = true;
                     this.x = 0;
                     this.nextLine();
                   }
@@ -919,9 +922,9 @@
                     ref1 = this.screen;
                     for (k = 0, len = ref1.length; k < len; k++) {
                       line = ref1[k];
-                      line[1] = true;
-                      for (c = m = 0, ref2 = line[0].length; 0 <= ref2 ? m <= ref2 : m >= ref2; c = 0 <= ref2 ? ++m : --m) {
-                        line[0][c] = this.cloneAttr(this.curAttr, "E");
+                      line.dirty = true;
+                      for (c = m = 0, ref2 = line.chars.length; 0 <= ref2 ? m <= ref2 : m >= ref2; c = 0 <= ref2 ? ++m : --m) {
+                        line.chars[c] = this.cloneAttr(this.curAttr, "E");
                       }
                     }
                     this.x = this.y = 0;
@@ -1192,8 +1195,9 @@
                       }
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<div class=\"inline-html\">" + content + "</div>";
-                      this.screen[this.y + this.shift][0][this.x] = attr;
-                      this.screen[this.y + this.shift][1] = true;
+                      this.screen[this.y + this.shift].chars[this.x] = attr;
+                      this.screen[this.y + this.shift].dirty = true;
+                      this.screen[this.y + this.shift].wrap = false;
                       break;
                     case "IMAGE":
                       content = encodeURI(content);
@@ -1206,8 +1210,9 @@
                       }
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<img class=\"inline-image\" src=\"data:" + mime + ";base64," + b64 + "\" />";
-                      this.screen[this.y + this.shift][0][this.x] = attr;
-                      this.screen[this.y + this.shift][1] = true;
+                      this.screen[this.y + this.shift].chars[this.x] = attr;
+                      this.screen[this.y + this.shift].dirty = true;
+                      this.screen[this.y + this.shift].wrap = false;
                       break;
                     case "PROMPT":
                       this.send(content);
@@ -1275,7 +1280,7 @@
         }
         i++;
       }
-      this.screen[this.y + this.shift][1] = true;
+      this.screen[this.y + this.shift].dirty = true;
       return this.refresh();
     };
 
@@ -1589,15 +1594,16 @@
       if (oldCols < this.cols) {
         i = this.screen.length;
         while (i--) {
-          while (this.screen[i][0].length < this.cols) {
-            this.screen[i][0].push(this.defAttr);
+          while (this.screen[i].chars.length < this.cols) {
+            this.screen[i].chars.push(this.defAttr);
           }
+          this.screen[i].wrap = false;
         }
       } else if (oldCols > this.cols) {
         i = this.screen.length;
         while (i--) {
-          while (this.screen[i][0].length > this.cols) {
-            this.screen[i][0].pop();
+          while (this.screen[i].chars.length > this.cols) {
+            this.screen[i].chars.pop();
           }
         }
       }
@@ -1607,7 +1613,7 @@
         el = this.body;
         while (j++ < this.rows) {
           if (this.screen.length < this.rows) {
-            this.screen.push([this.blankLine(), true]);
+            this.screen.push(this.blankLine());
           }
           if (this.children.length < this.rows) {
             line = this.document.createElement("div");
@@ -1700,20 +1706,22 @@
 
     Terminal.prototype.eraseRight = function(x, y) {
       var line;
-      line = this.screen[y + this.shift][0];
+      line = this.screen[y + this.shift].chars;
       while (x < this.cols) {
         line[x] = this.eraseAttr();
         x++;
       }
-      return this.screen[y + this.shift][1] = true;
+      this.screen[y + this.shift].dirty = true;
+      return this.screen[y + this.shift].wrap = false;
     };
 
     Terminal.prototype.eraseLeft = function(x, y) {
       x++;
       while (x--) {
-        this.screen[y + this.shift][0][x] = this.eraseAttr();
+        this.screen[y + this.shift].chars[x] = this.eraseAttr();
       }
-      return this.screen[y + this.shift][1] = true;
+      this.screen[y + this.shift].dirty = true;
+      return this.screen[y + this.shift].wrap = false;
     };
 
     Terminal.prototype.eraseLine = function(y) {
@@ -1725,11 +1733,15 @@
       attr = (cur ? this.eraseAttr() : this.defAttr);
       line = [];
       i = 0;
-      while (i < this.cols + 1) {
+      while (i < this.cols) {
         line[i] = attr;
         i++;
       }
-      return line;
+      return {
+        chars: line,
+        dirty: true,
+        wrap: false
+      };
     };
 
     Terminal.prototype.ch = function(cur) {
@@ -1991,10 +2003,10 @@
       row = this.y;
       j = this.x;
       while (param-- && j < this.cols) {
-        this.screen[row + this.shift][0].splice(j++, 0, [this.eraseAttr(), true]);
-        this.screen[row + this.shift][0].pop();
+        this.screen[row + this.shift].chars.splice(j++, 0, [this.eraseAttr(), true]);
+        this.screen[row + this.shift].chars.pop();
       }
-      return this.screen[row + this.shift][1] = true;
+      return this.screen[row + this.shift].dirty = true;
     };
 
     Terminal.prototype.cursorNextLine = function(params) {
@@ -2039,12 +2051,12 @@
         param = 1;
       }
       while (param--) {
-        this.screen.splice(this.y + this.shift, 0, [this.blankLine(true), true]);
+        this.screen.splice(this.y + this.shift, 0, this.blankLine(true));
         this.screen.splice(this.scrollBottom + 1 + this.shift, 1);
       }
       results = [];
       for (i = k = ref = this.y + this.shift, ref1 = this.screen.length - 1; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-        results.push(this.screen[i][1] = true);
+        results.push(this.screen[i].dirty = true);
       }
       return results;
     };
@@ -2056,7 +2068,7 @@
         param = 1;
       }
       while (param--) {
-        this.screen.splice(this.scrollBottom + this.shift, 0, [this.blankLine(true), true]);
+        this.screen.splice(this.scrollBottom + this.shift, 0, this.blankLine(true));
         this.screen.splice(this.y + this.shift, 1);
         if (!(this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1)) {
           this.children[this.y + this.shift].remove();
@@ -2066,7 +2078,7 @@
       if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
         results = [];
         for (i = k = ref = this.y + this.shift, ref1 = this.screen.length - 1; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-          results.push(this.screen[i][1] = true);
+          results.push(this.screen[i].dirty = true);
         }
         return results;
       }
@@ -2079,10 +2091,11 @@
         param = 1;
       }
       while (param--) {
-        this.screen[this.y + this.shift][0].splice(this.x, 1);
-        this.screen[this.y + this.shift][0].push(this.eraseAttr());
+        this.screen[this.y + this.shift].chars.splice(this.x, 1);
+        this.screen[this.y + this.shift].chars.push(this.eraseAttr());
       }
-      return this.screen[this.y + this.shift][1] = true;
+      this.screen[this.y + this.shift].dirty = true;
+      return this.screen[this.y + this.shift].wrap = false;
     };
 
     Terminal.prototype.eraseChars = function(params) {
@@ -2093,9 +2106,10 @@
       }
       j = this.x;
       while (param-- && j < this.cols) {
-        this.screen[this.y + this.shift][0][j++] = this.eraseAttr();
+        this.screen[this.y + this.shift].chars[j++] = this.eraseAttr();
       }
-      return this.screen[this.y + this.shift][1] = true;
+      this.screen[this.y + this.shift].dirty = true;
+      return this.screen[this.y + this.shift].wrap = false;
     };
 
     Terminal.prototype.charPosAbsolute = function(params) {
@@ -2378,11 +2392,11 @@
       param = params[0] || 1;
       while (param--) {
         this.screen.splice(this.scrollTop, 1);
-        this.screen.splice(this.scrollBottom, 0, [this.blankLine(), true]);
+        this.screen.splice(this.scrollBottom, 0, this.blankLine());
       }
       results = [];
       for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-        results.push(this.screen[i + this.shift][1] = true);
+        results.push(this.screen[i + this.shift].dirty = true);
       }
       return results;
     };
@@ -2392,11 +2406,11 @@
       param = params[0] || 1;
       while (param--) {
         this.screen.splice(this.scrollBottom, 1);
-        this.screen.splice(this.scrollTop, 0, [this.blankLine(), true]);
+        this.screen.splice(this.scrollTop, 0, this.blankLine());
       }
       results = [];
       for (i = k = ref = this.scrollTop, ref1 = this.scrollBottom; ref <= ref1 ? k <= ref1 : k >= ref1; i = ref <= ref1 ? ++k : --k) {
-        results.push(this.screen[i + this.shift][1] = true);
+        results.push(this.screen[i + this.shift].dirty = true);
       }
       return results;
     };
@@ -2418,12 +2432,12 @@
     Terminal.prototype.repeatPrecedingCharacter = function(params) {
       var ch, line, param;
       param = params[0] || 1;
-      line = this.screen[this.y + this.shift][0];
+      line = this.screen[this.y + this.shift].chars;
       ch = line[this.x - 1] || this.defAttr;
       while (param--) {
         line[this.x++] = ch;
       }
-      return this.screen[this.y + this.shift][1] = true;
+      return this.screen[this.y + this.shift].dirty = true;
     };
 
     Terminal.prototype.tabClear = function(params) {
@@ -2485,8 +2499,8 @@
       attr = params[4];
       results = [];
       while (t < b + 1) {
-        line = this.screen[t + this.shift][0];
-        this.screen[t + this.shift][1] = true;
+        line = this.screen[t + this.shift].chars;
+        this.screen[t + this.shift].dirty = true;
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(attr, line[i].ch);
@@ -2526,8 +2540,8 @@
       r = params[4];
       results = [];
       while (t < b + 1) {
-        line = this.screen[t + this.shift][0];
-        this.screen[t + this.shift][1] = true;
+        line = this.screen[t + this.shift].chars;
+        this.screen[t + this.shift].dirty = true;
         i = l;
         while (i < r) {
           line[i] = this.cloneAttr(line[i][0], String.fromCharCode(ch));
@@ -2551,8 +2565,8 @@
       r = params[3];
       results = [];
       while (t < b + 1) {
-        line = this.screen[t + this.shift][0];
-        this.screen[t + this.shift][1] = true;
+        line = this.screen[t + this.shift].chars;
+        this.screen[t + this.shift].dirty = true;
         i = l;
         while (i < r) {
           line[i] = this.eraseAttr();
@@ -2570,33 +2584,48 @@
     Terminal.prototype.requestLocatorPosition = function(params) {};
 
     Terminal.prototype.insertColumns = function() {
-      var i, l, param;
+      var i, l, param, results;
       param = params[0];
       l = this.rows + this.shift;
+      results = [];
       while (param--) {
         i = this.shift;
-        while (i < l) {
-          this.screen[i][0].splice(this.x + 1, 0, this.eraseAttr());
-          this.screen[i][0].pop();
-          i++;
-        }
+        results.push((function() {
+          var results1;
+          results1 = [];
+          while (i < l) {
+            this.screen[i].chars.splice(this.x + 1, 0, this.eraseAttr());
+            this.screen[i].chars.pop();
+            this.screen[i].dirty = true;
+            results1.push(i++);
+          }
+          return results1;
+        }).call(this));
       }
-      return this.screen[i][1] = true;
+      return results;
     };
 
     Terminal.prototype.deleteColumns = function() {
-      var i, l, param;
+      var i, l, param, results;
       param = params[0];
       l = this.rows + this.shift;
+      results = [];
       while (param--) {
         i = this.shift;
-        while (i < l) {
-          this.screen[i][0].splice(this.x, 1);
-          this.screen[i][0].push(this.eraseAttr());
-          i++;
-        }
+        results.push((function() {
+          var results1;
+          results1 = [];
+          while (i < l) {
+            this.screen[i].chars.splice(this.x, 1);
+            this.screen[i].chars.push(this.eraseAttr());
+            this.screen[i].dirty = true;
+            this.screen[i].wrap = false;
+            results1.push(i++);
+          }
+          return results1;
+        }).call(this));
       }
-      return this.screen[i][1] = true;
+      return results;
     };
 
     Terminal.prototype.charsets = {
