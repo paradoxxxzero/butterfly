@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '1.5.10'
+__version__ = '2.0.0'
 
 
 import os
@@ -43,12 +43,12 @@ class Route(tornado.web.RequestHandler):
     def log(self):
         return log
 
+# Imported from executable
+if hasattr(tornado.options.options, 'debug'):
+    application = tornado.web.Application(
+        static_path=os.path.join(os.path.dirname(__file__), "static"),
+        template_path=os.path.join(os.path.dirname(__file__), "templates"),
+        debug=tornado.options.options.debug
+    )
 
-application = tornado.web.Application(
-    static_path=os.path.join(os.path.dirname(__file__), "static"),
-    template_path=os.path.join(os.path.dirname(__file__), "templates"),
-    debug=tornado.options.options.debug
-)
-
-
-import butterfly.routes
+    import butterfly.routes

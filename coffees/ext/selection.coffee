@@ -22,7 +22,7 @@ cancel = (ev) ->
   ev.cancelBubble = true
   false
 
-previous_leaf = (node) ->
+previousLeaf = (node) ->
   previous = node.previousSibling
   if not previous
     previous = node.parentNode.previousSibling
@@ -32,26 +32,26 @@ previous_leaf = (node) ->
     previous = previous.lastChild
   previous
 
-next_leaf = (node) ->
+nextLeaf = (node) ->
   next = node.nextSibling
   if not next
     next = node.parentNode.nextSibling
   if not next
     next = node.parentNode.parentNode.nextSibling
-  while next.firstChild
+  while next?.firstChild
     next = next.firstChild
   next
 
 class Selection
   constructor: ->
-    butterfly.element.classList.add('selection')
+    butterfly.body.classList.add('selection')
     @selection = getSelection()
 
   reset: ->
     @selection = getSelection()
-    fake_range = document.createRange()
-    fake_range.setStart(@selection.anchorNode, @selection.anchorOffset)
-    fake_range.setEnd(@selection.focusNode, @selection.focusOffset)
+    fakeRange = document.createRange()
+    fakeRange.setStart(@selection.anchorNode, @selection.anchorOffset)
+    fakeRange.setEnd(@selection.focusNode, @selection.focusOffset)
     @start =
       node: @selection.anchorNode
       offset: @selection.anchorOffset
@@ -59,26 +59,26 @@ class Selection
       node: @selection.focusNode
       offset: @selection.focusOffset
 
-    if fake_range.collapsed
+    if fakeRange.collapsed
       [@start, @end] = [@end, @start]
 
-    @start_line = @start.node
-    while not @start_line.classList or 'line' not in @start_line.classList
-      @start_line = @start_line.parentNode
+    @startLine = @start.node
+    while not @startLine.classList or 'line' not in @startLine.classList
+      @startLine = @startLine.parentNode
 
-    @end_line = @end.node
-    while not @end_line.classList or 'line' not in @end_line.classList
-      @end_line = @end_line.parentNode
+    @endLine = @end.node
+    while not @endLine.classList or 'line' not in @endLine.classList
+      @endLine = @endLine.parentNode
 
   clear: ->
     @selection.removeAllRanges()
 
   destroy: ->
-    butterfly.element.classList.remove('selection')
+    butterfly.body.classList.remove('selection')
     @clear()
 
   text: ->
-    @selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/, ' ')
+    @selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ')
 
   up: ->
     @go -1
@@ -87,14 +87,14 @@ class Selection
     @go +1
 
   go: (n) ->
-    index = butterfly.children.indexOf(@start_line) + n
+    index = butterfly.children.indexOf(@startLine) + n
     return unless 0 <= index < butterfly.children.length
 
     until butterfly.children[index].textContent.match /\S/
       index += n
       return unless 0 <= index < butterfly.children.length
 
-    @select_line index
+    @selectLine index
 
   apply: ->
     @clear()
@@ -103,42 +103,42 @@ class Selection
     range.setEnd @end.node, @end.offset
     @selection.addRange range
 
-  select_line: (index) ->
+  selectLine: (index) ->
     line = butterfly.children[index]
-    line_start =
+    lineStart =
       node: line.firstChild
       offset: 0
 
-    line_end =
+    lineEnd =
       node: line.lastChild
       offset: line.lastChild.textContent.length
 
-    @start = @walk line_start, /\S/
-    @end = @walk line_end, /\S/, true
+    @start = @walk lineStart, /\S/
+    @end = @walk lineEnd, /\S/, true
 
   collapsed: (start, end) ->
-    fake_range = document.createRange()
-    fake_range.setStart(start.node, start.offset)
-    fake_range.setEnd(end.node, end.offset)
-    fake_range.collapsed
+    fakeRange = document.createRange()
+    fakeRange.setStart(start.node, start.offset)
+    fakeRange.setEnd(end.node, end.offset)
+    fakeRange.collapsed
 
-  shrink_right: ->
+  shrinkRight: ->
     node = @walk @end, /\s/, true
     end = @walk node, /\S/, true
     if not @collapsed(@start, end)
       @end = end
 
-  shrink_left: ->
+  shrinkLeft: ->
     node = @walk @start, /\s/
     start = @walk node, /\S/
     if not @collapsed(start, @end)
       @start = start
 
-  expand_right: ->
+  expandRight: ->
     node = @walk @end, /\S/
     @end = @walk node, /\s/
 
-  expand_left: ->
+  expandLeft: ->
     node = @walk @start, /\S/, true
     @start = @walk node, /\s/, true
 
@@ -155,7 +155,7 @@ class Selection
         while i > 0
           if text[--i].match til
             return node: node, offset: i + 1
-        node = previous_leaf node
+        node = previousLeaf node
         text = node.textContent
         i = text.length
     else
@@ -163,12 +163,11 @@ class Selection
         while i < text.length
           if text[i++].match til
             return node: node, offset: i - 1
-        node = next_leaf node
+        node = nextLeaf node
         text = node.textContent
         i = 0
 
     return needle
-
 
 document.addEventListener 'keydown', (e) ->
   return true if e.keyCode in [16..19]
@@ -176,7 +175,7 @@ document.addEventListener 'keydown', (e) ->
   # Paste natural selection too if shiftkey
   if e.shiftKey and e.keyCode is 13 and
       not selection and not getSelection().isCollapsed
-    butterfly.handler getSelection().toString()
+    butterfly.send getSelection().toString()
     getSelection().removeAllRanges()
     return cancel e
 
@@ -190,13 +189,13 @@ document.addEventListener 'keydown', (e) ->
       else if e.keyCode == 40
         selection.down()
     else if e.keyCode == 39
-      selection.shrink_left()
+      selection.shrinkLeft()
     else if e.keyCode == 38
-      selection.expand_left()
+      selection.expandLeft()
     else if e.keyCode == 37
-      selection.shrink_right()
+      selection.shrinkRight()
     else if e.keyCode == 40
-      selection.expand_right()
+      selection.expandRight()
     else
       return cancel e
 
@@ -206,7 +205,7 @@ document.addEventListener 'keydown', (e) ->
   # Start selection mode with shift up
   if not selection and e.ctrlKey and e.shiftKey and e.keyCode == 38
     selection = new Selection()
-    selection.select_line butterfly.y - 1
+    selection.selectLine butterfly.y - 1
     selection.apply()
     return cancel e
   true
@@ -216,7 +215,7 @@ document.addEventListener 'keyup', (e) ->
 
   if selection
     if e.keyCode == 13
-      butterfly.handler selection.text()
+      butterfly.send selection.text()
       selection.destroy()
       selection = null
       return cancel e
@@ -236,11 +235,10 @@ document.addEventListener 'dblclick', (e) ->
   range.setEnd(sel.focusNode, sel.focusOffset)
   if range.collapsed
     sel.removeAllRanges()
-    new_range = document.createRange()
-    new_range.setStart(sel.focusNode, sel.focusOffset)
-    new_range.setEnd(sel.anchorNode, sel.anchorOffset)
-    sel.addRange(new_range)
-  range.detach()
+    newRange = document.createRange()
+    newRange.setStart(sel.focusNode, sel.focusOffset)
+    newRange.setEnd(sel.anchorNode, sel.anchorOffset)
+    sel.addRange(newRange)
 
   until sel.toString().match(/\s/) or not sel.toString()
     sel.modify 'extend', 'forward', 'character'

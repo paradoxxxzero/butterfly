@@ -16,15 +16,24 @@
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 html, body
-  height: 100%
   margin: 0
   padding: 0
   line-height: 1.2
 
-#wrapper
-  height: 100%
-  overflow: hidden
+body
   white-space: nowrap
+  overflow-x: hidden
+  overflow-y: scroll
+
+  &::-webkit-scrollbar
+    background: $bg
+    width: .75em
+
+  &::-webkit-scrollbar-thumb
+    background: rgba($fg, .1)
+
+  &::-webkit-scrollbar-thumb:hover
+    background: rgba($fg, .15)
 
 .terminal
   outline: none

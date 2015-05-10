@@ -15,13 +15,9 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-$fg: #fff !default
-$shadow: 6px !default
-$shadow-alpha: .5 !default
-
-.terminal
-  text-shadow: 0 0 $shadow rgba($fg, $shadow-alpha)
+body
   transition: 200ms
+  transform-origin: bottom
 
   &.bell
     -webkit-filter: blur(2px)
@@ -32,16 +28,16 @@ $shadow-alpha: .5 !default
     filter: sepia(1)
 
   &.selection
-    -webkit-filter: unquote("saturate(2)")
-    filter: unquote("saturate(2)")
+    -webkit-filter: saturate(2)
+    filter: saturate(2)
 
   &.alarm
     -webkit-filter: hue-rotate(150deg)
     filter: hue-rotate(150deg)
 
   &.dead
-    -webkit-filter: unquote("grayscale(1)")
-    filter: unquote("grayscale(1)")
+    -webkit-filter: grayscale(1)
+    filter: grayscale(1)
 
     &:after
       content: "CLOSED"
@@ -57,3 +53,14 @@ $shadow-alpha: .5 !default
       transform: rotate(-45deg)
       opacity: .2
       font-weight: 900
+
+  &.stopped
+    -webkit-filter: brightness(50%)
+    filter: brightness(50%)
+
+  &.locked
+    &::-webkit-scrollbar-thumb
+      background: rgba(red, .7)
+
+    &::-webkit-scrollbar-thumb:hover
+      background: rgba(red, .8)

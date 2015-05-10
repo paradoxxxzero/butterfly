@@ -21,6 +21,7 @@ import tornado.options
 import tornado.ioloop
 import tornado.httpserver
 import tornado_systemd
+import logging
 import uuid
 import ssl
 import getpass
@@ -29,32 +30,42 @@ import stat
 import socket
 import sys
 
-
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("more", default=False,
                        help="Debug mode with more verbosity")
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
+tornado.options.define("motd", default='motd', help="Path to the motd file.")
 tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("allow_html_escapes", default=False,
+                       help="Allow use of HTML escapes. "
+                       "Really unsafe as it is now.")
+tornado.options.define("force_unicode_width",
+                       default=False,
+                       help="Force all unicode characters to the same width."
+                       "Useful for avoiding layout mess.")
 tornado.options.define("login", default=True,
                        help="Use login screen at start")
 tornado.options.define("ssl_version", default=None,
                        help="SSL protocol version")
 tornado.options.define("generate_certs", default=False,
                        help="Generate butterfly certificates")
+tornado.options.define("generate_current_user_pkcs", default=False,
+                       help="Generate current user pfx for client "
+                       "authentication")
 tornado.options.define("generate_user_pkcs", default='',
-                       help="Generate user pfx for client authentication")
+                       help="Generate user pfx for client authentication "
+                       "(Must be root to create for another user)")
 tornado.options.define("unminified", default=False,
                        help="Use the unminified js (for development only)")
 
 tornado.options.parse_command_line()
 
 
-import logging
 for logger in ('tornado.access', 'tornado.application',
                'tornado.general', 'butterfly'):
     level = logging.WARNING
@@ -156,13 +167,29 @@ if tornado.options.options.generate_certs:
     sys.exit(0)
 
 
-if tornado.options.options.generate_user_pkcs:
+if (tornado.options.options.generate_current_user_pkcs or
+        tornado.options.options.generate_user_pkcs):
+    from butterfly import utils
+    try:
+        current_user = utils.User()
+    except Exception:
+        current_user = None
+
     from OpenSSL import crypto
     if not all(map(os.path.exists, [ca, ca_key])):
         print('Please generate certificates using --generate-certs before')
         sys.exit(1)
 
-    user = tornado.options.options.generate_user_pkcs
+    if tornado.options.options.generate_current_user_pkcs:
+        user = current_user.name
+    else:
+        user = tornado.options.options.generate_user_pkcs
+
+    if user != current_user.name and current_user.uid != 0:
+        print('Cannot create certificate for another user with '
+              'current privileges.')
+        sys.exit(1)
+
     ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, read(ca))
     ca_pk = crypto.load_privatekey(crypto.FILETYPE_PEM, read(ca_key))
 

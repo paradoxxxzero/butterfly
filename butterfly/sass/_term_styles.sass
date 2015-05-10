@@ -25,8 +25,19 @@ $bg: #000 !default
 .underline
   text-decoration: underline
 
+/* Not supported, emulated
+/* .blink
+/*   text-decoration: blink
 .blink
-  text-decoration: blink
+  animation: blink 1s ease-in-out infinite
+
+@keyframes blink
+  0%
+    opacity: 1
+  50%
+    opacity: 0
+  100%
+    opacity: 1
 
 .invisible
   visibility: hidden
@@ -41,3 +52,13 @@ $bg: #000 !default
 .nbsp
   @extend .underline
   @extend .fg-color-1
+
+.inline-html
+  overflow: hidden
+
+.inline-image
+  max-width: 100%
+  max-height: 50vh
+
+a
+  color: inherit

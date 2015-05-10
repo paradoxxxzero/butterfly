@@ -17,7 +17,7 @@
 
 cols = rows = null
 quit = false
-open_ts = (new Date()).getTime()
+openTs = (new Date()).getTime()
 
 $ = document.querySelectorAll.bind(document)
 
@@ -32,25 +32,42 @@ document.addEventListener 'DOMContentLoaded', ->
       ws.send 'R' + params
 
   if location.protocol == 'https:'
-    ws_url = 'wss://'
+    wsUrl = 'wss://'
   else
-    ws_url = 'ws://'
+    wsUrl = 'ws://'
 
-  ws_url += document.location.host + '/ws' + location.pathname
-  ws = new WebSocket ws_url
+  wsUrl += document.location.host + '/ws' + location.pathname
+  ws = new WebSocket wsUrl
 
   ws.addEventListener 'open', ->
     console.log "WebSocket open", arguments
     ws.send 'R' + term.cols + ',' + term.rows
-    open_ts = (new Date()).getTime()
+    openTs = (new Date()).getTime()
 
   ws.addEventListener 'error', ->
     console.log "WebSocket error", arguments
 
+  lastData = ''
+  t_queue = null
+
+  queue = ''
   ws.addEventListener 'message', (e) ->
-    setTimeout ->
-      term.write e.data
-    , 1
+    clearTimeout t_queue if t_queue
+    queue += e.data
+    if term.stop
+      queue = queue.slice -10 * 1024
+
+    if queue.length > term.buffSize
+      treat()
+    else
+      t_queue = setTimeout treat, 1
+
+  treat = ->
+    term.write queue
+    if term.stop
+      term.stop = false
+      term.body.classList.remove 'stopped'
+    queue = ''
 
   ws.addEventListener 'close', ->
     console.log "WebSocket closed", arguments
@@ -58,37 +75,42 @@ document.addEventListener 'DOMContentLoaded', ->
       term.write 'Closed'
       # Allow quick reload
       term.skipNextKey = true
-      term.element.classList.add('dead')
+      term.body.classList.add('dead')
     , 1
     quit = true
     # Don't autoclose if websocket didn't last 1 minute
-    if (new Date()).getTime() - open_ts > 60 * 1000
+    if (new Date()).getTime() - openTs > 60 * 1000
       open('','_self').close()
 
-  term = new Terminal $('#wrapper')[0], send, ctl
+  term = new Terminal document.body, send, ctl
   addEventListener 'beforeunload', ->
     if not quit
       'This will exit the terminal session'
 
-  bench = (n=100000000) ->
+  term.ws = ws
+  window.butterfly = term
+
+
+  window.bench = (n=100000000) ->
     rnd = ''
     while rnd.length < n
       rnd += Math.random().toString(36).substring(2)
 
-    t0 = (new Date()).getTime()
+    console.time('bench')
+    console.profile('bench')
     term.write rnd
-    console.log "#{n} chars in #{(new Date()).getTime() - t0} ms"
+    console.profileEnd()
+    console.timeEnd('bench')
 
 
-  cbench = (n=100000000) ->
+  window.cbench = (n=100000000) ->
     rnd = ''
     while rnd.length < n
       rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
       rnd += Math.random().toString(36).substring(2)
 
-    t0 = (new Date()).getTime()
+    console.time('cbench')
+    console.profile('cbench')
     term.write rnd
-    console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
-
-  term.ws = ws
-  window.butterfly = term
+    console.profileEnd()
+    console.timeEnd('cbench')

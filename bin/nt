@@ -1,4 +1,0 @@
-#!/usr/bin/env python
-import os
-import webbrowser
-webbrowser.open('%swd%s' % (os.getenv('LOCATION'), os.getcwd()))

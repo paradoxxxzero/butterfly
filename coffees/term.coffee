@@ -45,55 +45,44 @@ State =
   dcs: s++
   ignore: s++
 
-
 class Terminal
   constructor: (@parent, @out, @ctl=->) ->
     # Global elements
-    @context = @parent.ownerDocument.defaultView
     @document = @parent.ownerDocument
     @body = @document.getElementsByTagName('body')[0]
+    @htmlEscapesEnabled = @body.getAttribute('data-allow-html') is 'yes'
+    @forceWidth = @body.getAttribute(
+      'data-force-unicode-width') is 'yes'
 
     # Main terminal element
-    @element = @document.createElement('div')
-    @element.className = 'terminal focus'
-    @element.style.outline = 'none'
-    @element.setAttribute 'tabindex', 0
-    @element.setAttribute 'spellcheck', 'false'
-
-    @parent.appendChild(@element)
+    @body.className = 'terminal focus'
+    @body.style.outline = 'none'
+    @body.setAttribute 'tabindex', 0
+    @body.setAttribute 'spellcheck', 'false'
 
     # Adding one line to compute char size
     div = @document.createElement('div')
     div.className = 'line'
-    @element.appendChild(div)
+    @body.appendChild(div)
     @children = [div]
 
-    @compute_char_size()
-    div.style.height = @char_size.height + 'px'
-    term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width)
-    @rows = Math.floor(term_size.height / @char_size.height)
+    @computeCharSize()
+    @cols = Math.floor(@body.clientWidth / @charSize.width)
+    @rows = Math.floor(window.innerHeight / @charSize.height)
+    px = window.innerHeight % @charSize.height
+    @body.style['padding-bottom'] = "#{px}px"
 
-    i = @rows - 1
-    while i--
-      div = @document.createElement('div')
-      div.style.height = @char_size.height + 'px'
-      div.className = 'line'
-      @element.appendChild(div)
-      @children.push(div)
+    @scrollback = 1000000
+    @buffSize = 100000
 
-    @scrollback = 100000
     @visualBell = 100
-
     @convertEol = false
     @termName = 'xterm'
     @cursorBlink = true
     @cursorState = 0
-    @last_cc = 0
-    @reset_vars()
-
-    # Draw screen
-    @refresh 0, @rows - 1
+    @stop = false
+    @lastcc = 0
+    @resetVars()
 
     @focus()
 
@@ -102,31 +91,51 @@ class Terminal
     addEventListener 'keypress', @keyPress.bind(@)
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
-    addEventListener 'paste', @paste.bind(@)
-    addEventListener 'resize', @resize.bind(@)
+    addEventListener 'resize', => @resize()
 
-    # Horrible Firefox paste workaround
+    # # Horrible Firefox paste workaround
     if typeof InstallTrigger isnt "undefined"
-      @element.contentEditable = 'true'
-      @element.addEventListener "mouseup", ->
-        sel = getSelection().getRangeAt(0)
-        if sel.startOffset is sel.endOffset
-          getSelection().removeAllRanges()
+      @body.contentEditable = 'true'
 
     @initmouse()
 
     setTimeout(@resize.bind(@), 100)
 
-  reset_vars: ->
-    @ybase = 0
-    @ydisp = 0
+  cloneAttr: (a, char=null) ->
+    bg: a.bg
+    fg: a.fg
+    ch: unless char is null then char else a.ch
+    bold: a.bold
+    underline: a.underline
+    blink: a.blink
+    inverse: a.inverse
+    invisible: a.invisible
+
+  equalAttr: (a, b) ->
+    # Not testing char
+    (a.bg is b.bg and a.fg is b.fg and a.bold is b.bold and
+     a.underline is b.underline and a.blink is b.blink and
+      a.inverse is b.inverse and a.invisible is b.invisible)
+
+  putChar: (c) ->
+    if @insertMode
+      @screen[@y + @shift].chars.splice(@x, 0, @cloneAttr @curAttr, c)
+      @screen[@y + @shift].chars.pop()
+    else
+      @screen[@y + @shift].chars[@x] = @cloneAttr @curAttr, c
+
+    @screen[@y + @shift].dirty = true
+
+  resetVars: ->
     @x = 0
     @y = 0
     @cursorHidden = false
     @state = State.normal
     @queue = ''
+
     @scrollTop = 0
     @scrollBottom = @rows - 1
+    @scrollLock = false
 
     # modes
     @applicationKeypad = false
@@ -142,48 +151,54 @@ class Terminal
     @charsets = [null]
 
     # stream
-    @defAttr = (0 << 18) | (257 << 9) | (256 << 0)
-    @curAttr = @defAttr
+    @defAttr =
+      bg: 256
+      fg: 257
+      ch: " "
+      bold: false
+      underline: false
+      blink: false
+      inverse: false
+      invisible: false
+
+    @curAttr = @cloneAttr @defAttr
     @params = []
     @currentParam = 0
     @prefix = ""
-    @lines = []
+    @screen = []
     i = @rows
-    @lines.push @blankLine() while i--
+    @shift = 0
+    @screen.push @blankLine() while i--
     @setupStops()
     @skipNextKey = null
 
-  compute_char_size: ->
-    test_span = document.createElement('span')
-    test_span.textContent = '0123456789'
-    @children[0].appendChild(test_span)
-    @char_size =
-      width: test_span.getBoundingClientRect().width / 10
+  computeCharSize: ->
+    testSpan = document.createElement('span')
+    testSpan.textContent = '0123456789'
+    @children[0].appendChild(testSpan)
+    @charSize =
+      width: testSpan.getBoundingClientRect().width / 10
       height: @children[0].getBoundingClientRect().height
-    @children[0].removeChild(test_span)
+    @children[0].removeChild(testSpan)
 
   eraseAttr: ->
-    (@defAttr & ~0x1ff) | (@curAttr & 0x1ff)
+    erased = @cloneAttr @defAttr
+    erased.bg = @curAttr.bg
+    erased
 
   focus: ->
     @send('\x1b[I') if @sendFocus
     @showCursor()
-    @element.classList.add('focus')
-    @element.classList.remove('blur')
+    @body.classList.add('focus')
+    @body.classList.remove('blur')
 
   blur: ->
     @cursorState = 1
-    @refresh(@y, @y)
+    @screen[@y + @shift].dirty = true
+    @refresh()
     @send('\x1b[O') if @sendFocus
-    @element.classList.add('blur')
-    @element.classList.remove('focus')
-
-  paste: (ev) ->
-    if ev.clipboardData
-      @send ev.clipboardData.getData('text/plain')
-    else if @context.clipboardData
-      @send @context.clipboardData.getData('Text')
-    cancel(ev)
+    @body.classList.add('blur')
+    @body.classList.remove('focus')
 
   # XTerm mouse events
   # http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
@@ -202,19 +217,12 @@ class Terminal
     sendButton = (ev) ->
       # get the xterm-style button
       button = getButton(ev)
-
       # get mouse coordinates
       pos = getCoords(ev)
       return unless pos
-      sendEvent button, pos
-      switch ev.type
-        when "mousedown"
-          pressed = button
 
-        when "mouseup"
-          # keep it at the left
-          # button, just in case.
-          pressed = 32
+      sendEvent button, pos, ev.type
+      pressed = button
 
     # motion example of a left click:
     # ^[[M 3<^[[M@4<^[[M@5<^[[M@6<^[[M@7<^[[M#7<
@@ -226,7 +234,7 @@ class Terminal
       # buttons marked as motions
       # are incremented by 32
       button += 32
-      sendEvent button, pos
+      sendEvent button, pos, ev.type
 
     # encode button and
     # position to characters
@@ -251,7 +259,7 @@ class Terminal
     # sgr: ^[[ Cb ; Cx ; Cy M/m
     # vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
     # locator: CSI P e ; P b ; P r ; P c ; P p & w
-    sendEvent = (button, pos) =>
+    sendEvent = (button, pos, type) =>
 
       if @urxvtMouse
         pos.x -= 32
@@ -264,10 +272,9 @@ class Terminal
       if @sgrMouse
         pos.x -= 32
         pos.y -= 32
-        @send "\x1b[<" + (
-          if (button & 3) is 3 then button & ~3 else button
-        ) + ";" + pos.x + ";" + pos.y + (
-          if (button & 3) is 3 then "m" else "M"
+        button -= 32
+        @send "\x1b[<" + button + ";" + pos.x + ";" + pos.y + (
+          if type is "mouseup" then "m" else "M"
         )
         return
 
@@ -315,19 +322,11 @@ class Terminal
     # mouse coordinates measured in cols/rows
     getCoords = (ev) =>
       x = ev.pageX
-      y = ev.pageY
-
-      # should probably check offsetParent
-      # but this is more portable
-      el = @element
-      while el and el isnt @document.documentElement
-        x -= el.offsetLeft
-        y -= el.offsetTop
-        el = if "offsetParent" of el then el.offsetParent else el.parentNode
+      y = ev.pageY - window.scrollY
 
       # convert to cols/rows
-      w = @element.clientWidth
-      h = @element.clientHeight
+      w = @body.clientWidth
+      h = window.innerHeight
       x = Math.ceil((x / w) * @cols)
       y = Math.ceil((y / h) * @rows)
 
@@ -347,6 +346,10 @@ class Terminal
       y: y
       type: ev.type
 
+    addEventListener "contextmenu", (ev) =>
+      return unless @mouseEvents
+      cancel ev
+
     addEventListener "mousedown", (ev) =>
       return unless @mouseEvents
 
@@ -354,22 +357,14 @@ class Terminal
       sendButton ev
 
       # fix for odd bug
-      #if (@vt200Mouse && !@normalMouse) {
-      if @vt200Mouse
-        sendButton
-          __proto__: ev
-          type: "mouseup"
-
-        return cancel(ev)
-
       sm = sendMove.bind(this)
-      addEventListener "mousemove", sm if @normalMouse
+      addEventListener "mousemove", sm
 
       # x10 compatibility mode can't send button releases
       unless @x10Mouse
-        addEventListener "mouseup", up = (ev) =>
+        addEventListener "mouseup", up = (ev) ->
           sendButton ev
-          removeEventListener "mousemove", sm if @normalMouse
+          removeEventListener "mousemove", sm
           removeEventListener "mouseup", up
           cancel ev
       cancel ev
@@ -378,65 +373,86 @@ class Terminal
       if @mouseEvents
         return if @x10Mouse
         sendButton ev
-      else
-        return if @applicationKeypad
-        @scrollDisp if ev.deltaY > 0 then 5 else -5
-      cancel ev
+        cancel ev
 
+  linkify: (t) ->
+    # http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
+    urlPattern = (
+      /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim)
+    pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim
+    emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim
+    (part
+      .replace(urlPattern, '<a href="$&">$&</a>')
+      .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
+      .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'
+    ) for part in t.split('&nbsp;')).join('&nbsp;')
 
-  refresh: (start, end) ->
-    if end - start >= @rows / 3
-      parent = @element.parentNode
-      parent?.removeChild @element
-
-    width = @cols
-    y = start
-
-    if end >= @lines.length
-      end = @lines.length - 1
-
-    while y <= end
-      row = y + @ydisp
-      line = @lines[row]
+  refresh: (force=false) ->
+    for cursor in @body.querySelectorAll(".cursor")
+      cursor.parentNode.replaceChild(
+        @document.createTextNode(cursor.textContent), cursor)
+    newOut = ''
+    for line, j in @screen
+      continue unless line.dirty or force
       out = ""
 
-      if y is @y and (@ydisp is @ybase or @selectMode) and not @cursorHidden
+      if j is @y + @shift and not @cursorHidden
         x = @x
       else
         x = -Infinity
 
-      attr = @defAttr
-      i = 0
-      while i < width
-        data = line[i][0]
-        ch = line[i][1]
-        if data isnt attr
-          out += "</span>" if attr isnt @defAttr
-          if data isnt @defAttr
+      attr = @cloneAttr @defAttr
+      skipnext = false
+      for i in [0..@cols - 1]
+        data = line.chars[i]
+        if data.html
+          out += data.html
+          continue
+        if skipnext
+          skipnext = false
+          continue
+
+        ch = data.ch
+        unless @equalAttr data, attr
+          out += "</span>" unless @equalAttr attr, @defAttr
+          unless @equalAttr data, @defAttr
             classes = []
+            styles = []
             out += "<span "
-            bg = data & 0x1ff
-            fg = (data >> 9) & 0x1ff
-            flags = data >> 18
 
             # bold
-            classes.push "bold" if flags & 1
+            classes.push "bold" if data.bold
             # underline
-            classes.push "underline" if flags & 2
+            classes.push "underline" if data.underline
             # blink
-            classes.push "blink" if flags & 4
+            classes.push "blink" if data.blink
             # inverse
-            classes.push "reverse-video" if flags & 8
+            classes.push "reverse-video" if data.inverse
             # invisible
-            classes.push "invisible" if flags & 16
+            classes.push "invisible" if data.invisible
 
-            fg += 8 if flags & 1 and fg < 8
-            classes.push "bg-color-" + bg
-            classes.push "fg-color-" + fg
+            if typeof data.fg is 'number'
+              fg = data.fg
+              if data.bold and fg < 8
+                fg += 8
+              classes.push "fg-color-" + fg
+
+            if typeof data.fg is 'string'
+              styles.push "color: " + data.fg
+
+            if typeof data.bg is 'number'
+              classes.push "bg-color-" + data.bg
+
+            if typeof data.bg is 'string'
+              styles.push "background-color: " + data.bg
 
             out += "class=\""
             out += classes.join(" ")
-            out += "\">"
+            out += "\""
+            if styles.length
+              out += " style=\"" + styles.join("; ") + "\""
+            out += ">"
+
         out += "<span class=\"" + (
           if @cursorState then "reverse-video " else ""
         ) + "cursor\">" if i is x
@@ -457,22 +473,51 @@ class Terminal
                 out += '<span class="nbsp">\u2007</span>'
               else if ch <= " "
                 out += "&nbsp;"
-              else
-                i++ if "\uff00" < ch < "\uffef"
+              else if not @forceWidth or ch <= "~" # Ascii chars
                 out += ch
+              else if "\uff00" < ch < "\uffef"
+                skipnext = true
+                out += "<span style=\"display: inline-block;
+                  width: #{2 * @charSize.width}px\">#{ch}</span>"
+              else
+                out += "<span style=\"display: inline-block;
+                  width: #{@charSize.width}px\">#{ch}</span>"
+
         out += "</span>" if i is x
         attr = data
-        i++
-      out += "</span>" if attr isnt @defAttr
-      @children[y].innerHTML = out
-      y++
+      out += "</span>" unless @equalAttr attr, @defAttr
+      out = @linkify(out) unless j is @y + @shift
+      out += '\u23CE' if line.wrap
+      if @children[j]
+        @children[j].innerHTML = out
+      else
+        newOut += "<div class=\"line\">#{out}</div>"
+      @screen[j].dirty = false
 
-    parent?.appendChild @element
+    if newOut isnt ''
+      group = @document.createElement('div')
+      group.className = 'group'
+      group.innerHTML = newOut
+      @body.appendChild group
+      @screen = @screen.slice(-@rows)
+      @shift = 0
 
+      lines = document.querySelectorAll('.line')
+      if lines.length > @scrollback
+        for line in Array.prototype.slice.call(
+          lines, 0, lines.length - @scrollback)
+          line.remove()
+        for group in document.querySelectorAll('.group:empty')
+          group.remove()
+        lines = document.querySelectorAll('.line')
+      @children = Array.prototype.slice.call(
+        lines, -@rows)
+
+    @nativeScrollTo() unless @scrollLock
 
   _cursorBlink: ->
     @cursorState ^= 1
-    cursor = @element.querySelector(".cursor")
+    cursor = @body.querySelector(".cursor")
     return unless cursor
     if cursor.classList.contains("reverse-video")
       cursor.classList.remove "reverse-video"
@@ -483,7 +528,8 @@ class Terminal
   showCursor: ->
     unless @cursorState
       @cursorState = 1
-      @refresh @y, @y
+      @screen[@y + @shift].dirty = true
+      @refresh()
 
 
   startBlink: ->
@@ -499,58 +545,49 @@ class Terminal
 
 
   scroll: ->
-    if ++@ybase is @scrollback
-      @ybase = @ybase / 2 | 0
-      @lines = @lines.slice(-(@ybase + @rows) + 1)
+    # Use emulated scroll in alternate buffer or when scroll region is defined
+    if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+      # inner scroll
+      @screen.splice @shift + @scrollBottom + 1, 0, @blankLine()
+      @screen.splice @shift + @scrollTop, 1
 
-    @ydisp = @ybase
-
-    # last line
-    row = @ybase + @rows - 1
-
-    # subtract the bottom scroll region
-    row -= @rows - 1 - @scrollBottom
-    if row is @lines.length
-      # potential optimization:
-      # pushing is faster than splicing
-      # when they amount to the same
-      # behavior.
-      @lines.push @blankLine()
+      for i in [@scrollTop..@scrollBottom]
+        @screen[i + @shift].dirty = true
     else
-      # add our new line
-      @lines.splice row, 0, @blankLine()
+      @screen.push @blankLine()
+      @shift++
 
-    if @scrollTop isnt 0
-      if @ybase isnt 0
-        @ybase--
-        @ydisp = @ybase
-      @lines.splice @ybase + @scrollTop, 1
+  unscroll: ->
+    @screen.splice @shift + @scrollTop , 0, @blankLine(true)
+    @screen.splice @shift + @scrollBottom + 1, 1
 
-    @updateRange @scrollTop
-    @updateRange @scrollBottom
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift].dirty = true
 
-  scrollDisp: (disp) ->
-    @ydisp += disp
-    if @ydisp > @ybase
-      @ydisp = @ybase
 
-    else
-      @ydisp = 0  if @ydisp < 0
+  nativeScrollTo: (scroll=2000000000) -> # ~ Max ff number
+    window.scrollTo 0, scroll
 
-    @refresh 0, @rows - 1
+  scrollDisplay: (disp) ->
+    @nativeScrollTo window.scrollY + disp * @charSize.height
+
+  nextLine: ->
+    @y++
+    if @y > @scrollBottom
+      @y--
+      @scroll()
+
+  prevLine: ->
+    @y--
+    if @y < @scrollTop
+      @y++
+      @unscroll()
 
   write: (data) ->
-    @refreshStart = @y
-    @refreshEnd = @y
-
-    if @ybase isnt @ydisp
-      @ydisp = @ybase
-      @maxRange()
-
     i = 0
     l = data.length
     while i < l
-      ch = data[i]
+      ch = data.charAt(i)
       switch @state
         when State.normal
           switch ch
@@ -561,12 +598,8 @@ class Terminal
 
             # '\n', '\v', '\f'
             when "\n", "\x0b", "\x0c"
-              @x = 0 if @convertEol
-
-              @y++
-              if @y > @scrollBottom
-                @y--
-                @scroll()
+              # @x = 0 if @convertEol
+              @nextLine()
 
             # '\r'
             when "\r"
@@ -597,21 +630,18 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
+                  @screen[@y + @shift].wrap = true
                   @x = 0
-                  @y++
-                  if @y > @scrollBottom
-                    @y--
-                    @scroll()
-                @lines[@y + @ybase][@x] = [@curAttr, ch]
+                  @nextLine()
+
+                @putChar ch
                 @x++
-                @updateRange @y
-                if "\uff00" < ch < "\uffef"
-                  j = @y + @ybase
+                if @forceWidth and "\uff00" < ch < "\uffef"
                   if @cols < 2 or @x >= @cols
-                    @lines[j][@x - 1] = [@curAttr, " "]
+                    @putChar " "
                     break
 
-                  @lines[j][@x] = [@curAttr, " "]
+                  @putChar " "
                   @x++
 
         when State.escaped
@@ -728,6 +758,22 @@ class Terminal
             when "#"
               @state = State.normal
               i++
+              num = data.charAt(i)
+              switch num
+                when "3" # DECDHL
+                  break
+                when "4" # DECDHL
+                  break
+                when "5" # DECSWL
+                  break
+                when "6" # DECDWL
+                  break
+                when "8" # DECALN
+                  for line in @screen
+                    line.dirty = true
+                    for c in [0..line.chars.length]
+                      line.chars[c] = @cloneAttr @curAttr, "E"
+                  @x = @y = 0
 
             # ESC H Tab Set (HTS is 0x88).
             when "H"
@@ -794,29 +840,10 @@ class Terminal
             i++ if ch is "\x1b"
             @params.push @currentParam
             switch @params[0]
-              when 0, 1 , 2
+              when 0, 1, 2
                 if @params[1]
                   @title = @params[1] + " - ƸӜƷ butterfly"
                   @handleTitle @title
-
-              # Disabling this for now as we need a good script
-              #  striper to avoid malicious script injection
-              # when 99
-              #     # Custom escape to produce raw html
-              #     html = "<div class=\"inline-html\">" + @params[1] + "</div>"
-              #     @lines[@y + @ybase][@x] = [
-              #         @curAttr
-              #         html
-              #     ]
-              #     line = 0
-
-              #     while line < @get_html_height_in_lines(html) - 1
-              #         @y++
-              #         if @y > @scrollBottom
-              #             @y--
-              #             @scroll()
-              #         line++
-              #     @updateRange @y
 
             # reset colors
             @params = []
@@ -1042,7 +1069,59 @@ class Terminal
             switch @prefix
               # User-Defined Keys (DECUDK).
               when ""
-                break
+                # Disabling this for now as we need a good script
+                #  striper to avoid malicious script injection
+                pt = @currentParam
+                unless pt[0] is ';'
+                  console.error "Unknown DECUDK: #{pt}"
+                  break
+                pt = pt.slice(1)
+
+                [type, content] = pt.split('|', 2)
+
+                unless content
+                  console.error "No type for inline DECUDK: #{pt}"
+                  break
+
+                switch type
+                  when "HTML"
+                    unless @htmlEscapesEnabled
+                      console.log "HTML escapes are disabled"
+                      break
+
+                    attr = @cloneAttr @curAttr
+                    attr.html = (
+                      "<div class=\"inline-html\">#{content}</div>")
+                    @screen[@y + @shift].chars[@x] = attr
+                    @screen[@y + @shift].dirty = true
+                    @screen[@y + @shift].wrap = false
+
+                  when "IMAGE"
+                    # Prevent injection
+                    content = encodeURI content
+
+                    if content.indexOf(';')
+                      mime = content.slice(0, content.indexOf(';'))
+                      b64 = content.slice(content.indexOf(';') + 1)
+                    else
+                      mime = 'image'
+                      b64 = content
+                    attr = @cloneAttr @curAttr
+                    attr.html = (
+                      "<img class=\"inline-image\" src=\"data:#{mime};base64,#{
+                        b64}\" />")
+                    @screen[@y + @shift].chars[@x] = attr
+                    @screen[@y + @shift].dirty = true
+                    @screen[@y + @shift].wrap = false
+
+                  when "PROMPT"
+                    @send content
+
+                  when "TEXT"
+                    l += content.length
+                    data = data.slice(0, i + 1) + content + data.slice(i + 1)
+                  else
+                    console.error "Unknown type #{type} for DECUDK"
 
               # Request Status String (DECRQSS).
               # test: echo -e '\eP$q"p\e\\'
@@ -1101,8 +1180,9 @@ class Terminal
             i++ if ch is "\x1b"
             @state = State.normal
       i++
-    @updateRange @y
-    @refresh @refreshStart, @refreshEnd
+
+    @screen[@y + @shift].dirty = true
+    @refresh()
 
   writeln: (data) ->
     @write "#{data}\r\n"
@@ -1125,12 +1205,12 @@ class Terminal
     # May be redundant with keyPrefix
     if ev.altKey and ev.keyCode is 90 and not @skipNextKey
       @skipNextKey = true
-      @element.classList.add('skip')
+      @body.classList.add('skip')
       return cancel(ev)
 
     if @skipNextKey
       @skipNextKey = false
-      @element.classList.remove('skip')
+      @body.classList.remove('skip')
       return true
 
     switch ev.keyCode
@@ -1178,7 +1258,7 @@ class Terminal
           key = "\x1bOA"
           break
         if ev.ctrlKey
-          @scrollDisp -1
+          @scrollDisplay -1
           return cancel(ev)
         else
           key = "\x1b[A"
@@ -1189,7 +1269,7 @@ class Terminal
           key = "\x1bOB"
           break
         if ev.ctrlKey
-          @scrollDisp 1
+          @scrollDisplay 1
           return cancel(ev)
         else
           key = "\x1b[B"
@@ -1219,7 +1299,7 @@ class Terminal
       # page up
       when 33
         if ev.shiftKey
-          @scrollDisp -(@rows - 1)
+          @scrollDisplay -(@rows - 1)
           return cancel(ev)
         else
           key = "\x1b[5~"
@@ -1227,7 +1307,7 @@ class Terminal
       # page down
       when 34
         if ev.shiftKey
-          @scrollDisp @rows - 1
+          @scrollDisplay @rows - 1
           return cancel(ev)
         else
           key = "\x1b[6~"
@@ -1280,18 +1360,30 @@ class Terminal
       when 123
         key = "\x1b[24~"
 
+      # Scroll lock
+      when 145
+        @scrollLock = ! @scrollLock
+        if @scrollLock
+          @body.classList.add 'locked'
+        else
+          @body.classList.remove 'locked'
+        return cancel(ev)
+
       else
         # a-z and space
         if ev.ctrlKey
           if ev.keyCode >= 65 and ev.keyCode <= 90
             if ev.keyCode is 67
               t = (new Date()).getTime()
-              if (t - @last_cc) < 75
-                id = (setTimeout ->) - 6  # Let the end write
-                @write '\r\n --8<------8<-- Sectioned --8<------8<-- \r\n\r\n'
+              if (t - @lastcc) < 500 and not @stop
+                id = (setTimeout ->)
                 (clearTimeout id if id not in [
                   @t_bell, @t_queue, @t_blink]) while id--
-              @last_cc = t
+                @body.classList.add 'stopped'
+                @stop = true
+              else if @stop
+                return true
+              @lastcc = t
             key = String.fromCharCode(ev.keyCode - 64)
           else if ev.keyCode is 32
 
@@ -1335,16 +1427,8 @@ class Terminal
 
     return true unless key
 
-    if @prefixMode
-      @leavePrefix()
-      return cancel(ev)
-
-    if @selectMode
-      @keySelect ev, key
-      return cancel(ev)
-
     @showCursor()
-    @handler(key)
+    @send(key)
     cancel ev
 
 
@@ -1361,6 +1445,16 @@ class Terminal
       @skipNextKey = null
       return true
 
+    # Don't handle modifiers alone
+    return true if ev.keyCode > 15 and ev.keyCode < 19
+
+    # Handle shift insert and ctrl insert
+    # copy/paste usefull for typematrix keyboard
+    return true if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
+
+    # Let the ctrl+shift+c, ctrl+shift+v go through to handle native copy paste
+    return true if (ev.shiftKey and ev.ctrlKey) and ev.keyCode in [67, 86]
+
     cancel ev
 
     if ev.charCode
@@ -1376,70 +1470,62 @@ class Terminal
     key = String.fromCharCode(key)
 
     @showCursor()
-    @handler key
+    @send key
     false
 
-  send: (data) ->
-    unless @queue
-      @t_queue = setTimeout (=>
-        @handler @queue
-        @queue = ""
-      ), 1
-
-    @queue += data
-
-  bell: ->
+  bell: (cls="bell")->
     return unless @visualBell
-    @element.classList.add "bell"
+    @body.classList.add cls
     @t_bell = setTimeout (=>
-      @element.classList.remove "bell"
+      @body.classList.remove cls
     ), @visualBell
 
-  resize: ->
-    old_cols = @cols
-    old_rows = @rows
-    @compute_char_size()
-    term_size = @parent.getBoundingClientRect()
-    @cols = Math.floor(term_size.width / @char_size.width)
-    @rows = Math.floor(term_size.height / @char_size.height)
-    if old_cols == @cols and old_rows == @rows
+  resize: (x=null, y=null) ->
+    oldCols = @cols
+    oldRows = @rows
+    @computeCharSize()
+    @cols = x or Math.floor(@body.clientWidth / @charSize.width)
+    @rows = y or Math.floor(window.innerHeight / @charSize.height)
+    px = window.innerHeight % @charSize.height
+    @body.style['padding-bottom'] = "#{px}px"
+
+    if (not x and not y) and oldCols == @cols and oldRows == @rows
       return
 
     @ctl 'Resize', @cols, @rows
 
     # resize cols
-    if old_cols < @cols
+    if oldCols < @cols
       # does xterm use the default attr?
-      ch = [@defAttr, " "]
-      i = @lines.length
+      i = @screen.length
       while i--
-        @lines[i].push ch while @lines[i].length < @cols
-    else if old_cols > @cols
-      i = @lines.length
-      while i--
-        @lines[i].pop() while @lines[i].length > @cols
+        @screen[i].chars.push @defAttr while @screen[i].chars.length < @cols
+        @screen[i].wrap = false
 
-    @setupStops old_cols
+    else if oldCols > @cols
+      i = @screen.length
+      while i--
+        @screen[i].chars.pop() while @screen[i].chars.length > @cols
+
+    @setupStops oldCols
 
     # resize rows
-    j = old_rows
+    j = oldRows
     if j < @rows
-      el = @element
+      el = @body
       while j++ < @rows
-        @lines.push @blankLine() if @lines.length < @rows + @ybase
+        @screen.push @blankLine() if @screen.length < @rows
         if @children.length < @rows
           line = @document.createElement("div")
           line.className = 'line'
-          line.style.height = @char_size.height + 'px'
           el.appendChild line
           @children.push line
     else if j > @rows
       while j-- > @rows
-        @lines.pop() if @lines.length > @rows + @ybase
+        @screen.pop() if @screen.length > @rows
         if @children.length > @rows
           el = @children.pop()
-          continue unless el
-          el.parentNode.removeChild el
+          el?.parentNode.removeChild el
 
     # make sure the cursor stays on screen
     @y = @rows - 1 if @y >= @rows
@@ -1448,21 +1534,14 @@ class Terminal
     @scrollTop = 0
     @scrollBottom = @rows - 1
 
-    @refresh 0, @rows - 1
+    @refresh(true)
 
     # it's a real nightmare trying
     # to resize the original
     # screen buffer. just set it
     # to null for now.
     @normal = null
-
-  updateRange: (y) ->
-    @refreshStart = y if y < @refreshStart
-    @refreshEnd = y if y > @refreshEnd
-
-  maxRange: ->
-    @refreshStart = 0
-    @refreshEnd = @rows - 1
+    @reset() if x or y
 
   setupStops: (i) ->
     if i?
@@ -1489,43 +1568,43 @@ class Terminal
     if x >= @cols then @cols - 1 else (if x < 0 then 0 else x)
 
   eraseRight: (x, y) ->
-    line = @lines[@ybase + y]
+    line = @screen[y + @shift].chars
     # xterm
-    ch = [@eraseAttr(), " "]
 
     while x < @cols
-      line[x] = ch
+      line[x] = @eraseAttr()
       x++
-    @updateRange y
+    @screen[y + @shift].dirty = true
+    @screen[y + @shift].wrap = false
 
   eraseLeft: (x, y) ->
-    line = @lines[@ybase + y]
-    # xterm
-    ch = [@eraseAttr(), " "]
     x++
-    line[x] = ch while x--
-    @updateRange y
+    @screen[y + @shift].chars[x] = @eraseAttr() while x--
+    @screen[y + @shift].dirty = true
+    @screen[y + @shift].wrap = false
 
   eraseLine: (y) ->
     @eraseRight 0, y
 
   blankLine: (cur) ->
     attr = (if cur then @eraseAttr() else @defAttr)
-    ch = [attr, " "]
     line = []
     i = 0
     while i < @cols
-      line[i] = ch
+      line[i] = attr
       i++
-    line
+
+    chars: line
+    dirty: true
+    wrap: false
 
   ch: (cur) ->
-    if cur then [@eraseAttr(), " "] else [@defAttr, " "]
+    if cur then @eraseAttr() else @defAttr
 
   isterm: (term) ->
     "#{@termName}".indexOf(term) is 0
 
-  handler: (data) ->
+  send: (data) ->
     @out data
 
   handleTitle: (title) ->
@@ -1535,35 +1614,18 @@ class Terminal
 
   # ESC D Index (IND is 0x84).
   index: ->
-    @y++
-    if @y > @scrollBottom
-      @y--
-      @scroll()
+    @nextLine()
     @state = State.normal
 
   # ESC M Reverse Index (RI is 0x8d).
   reverseIndex: ->
-    @y--
-    if @y < @scrollTop
-      @y++
-
-      # possibly move the code below to term.reverseScroll();
-      # test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
-      # blankLine(true) is xterm/linux behavior
-      @lines.splice @y + @ybase, 0, @blankLine(true)
-      j = @rows - 1 - @scrollBottom
-      @lines.splice @rows - 1 + @ybase - j + 1, 1
-
-      # @maxRange();
-      @updateRange @scrollTop
-      @updateRange @scrollBottom
+    @prevLine()
     @state = State.normal
-
 
   # ESC c Full Reset (RIS).
   reset: ->
-    @reset_vars()
-    @refresh 0, @rows - 1
+    @resetVars()
+    @refresh(true)
 
   # ESC H Tab Set (HTS is 0x88).
   tabSet: ->
@@ -1682,7 +1744,7 @@ class Terminal
   #         Ps = 7    -> Inverse.
   #         Ps = 8    -> Invisible, i.e., hidden (VT300).
   #         Ps = 2 2    -> Normal (neither bold nor faint).
-  #         Ps = 2 4    -> Not underlined.
+  #         Ps = 2 4    -> Not underline.
   #         Ps = 2 5    -> Steady (not blinking).
   #         Ps = 2 7    -> Positive (not inverse).
   #         Ps = 2 8    -> Visible, i.e., not hidden (VT300).
@@ -1739,110 +1801,96 @@ class Terminal
   charAttributes: (params) ->
     # Optimize a single SGR0.
     if params.length is 1 and params[0] is 0
-      @curAttr = @defAttr
+      @curAttr = @cloneAttr @defAttr
       return
-    flags = @curAttr >> 18
-
-    fg = (@curAttr >> 9) & 0x1ff
-    bg = @curAttr & 0x1ff
-
     l = params.length
     i = 0
     while i < l
       p = params[i]
       if p >= 30 and p <= 37
         # fg color 8
-        fg = p - 30
+        @curAttr.fg = p - 30
       else if p >= 40 and p <= 47
         # bg color 8
-        bg = p - 40
+        @curAttr.bg = p - 40
       else if p >= 90 and p <= 97
         # fg color 16
         p += 8
-        fg = p - 90
+        @curAttr.fg = p - 90
       else if p >= 100 and p <= 107
         # bg color 16
         p += 8
-        bg = p - 100
+        @curAttr.bg = p - 100
       else if p is 0
         # default
-        flags = @defAttr >> 18
-        fg = (@defAttr >> 9) & 0x1ff
-        bg = @defAttr & 0x1ff
-
-      # flags = 0;
-      # fg = 0x1ff;
-      # bg = 0x1ff;
+        @curAttr = @cloneAttr @defAttr
       else if p is 1
         # bold text
-        flags |= 1
+        @curAttr.bold = true
       else if p is 4
-        # underlined text
-        flags |= 2
+        # underline text
+        @curAttr.underline = true
       else if p is 5
         # blink
-        flags |= 4
+        @curAttr.blink = true
       else if p is 7
         # inverse and positive
         # test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
-        flags |= 8
+        @curAttr.inverse = true
       else if p is 8
         # invisible
-        flags |= 16
+        @curAttr.invisible = true
+      else if p is 10
+         # Primary Font
+         # ignoring
       else if p is 22
         # not bold
-        flags &= ~1
+        @curAttr.bold = false
       else if p is 24
-        # not underlined
-        flags &= ~2
+        # not underline
+        @curAttr.underline = false
       else if p is 25
         # not blink
-        flags &= ~4
+        @curAttr.blink = false
       else if p is 27
         # not inverse
-        flags &= ~8
+        @curAttr.inverse = false
       else if p is 28
         # not invisible
-        flags &= ~16
+        @curAttr.invisible = false
       else if p is 39
         # reset fg
-        fg = (@defAttr >> 9) & 0x1ff
+        @curAttr.fg = 257
       else if p is 49
         # reset bg
-        bg = @defAttr & 0x1ff
+        @curAttr.bg = 256
       else if p is 38
         if params[i + 1] is 2
           # fg color 2^24
           i += 2
-          fg = "#" + params[i] & 0xff +
-            params[i + 1] & 0xff +
-            params[i + 2] & 0xff
+          @curAttr.fg = "rgb(#{params[i]}, #{params[i+1]}, #{params[i+2]})"
           i += 2
         else if params[i + 1] is 5
           # fg color 256
           i += 2
-          fg = params[i] & 0xff
+          @curAttr.fg = params[i] & 0xff
       else if p is 48
         if params[i + 1] is 2
           # bg color 2^24
           i += 2
-          bg = "#" + params[i] & 0xff +
-            params[i + 1] & 0xff +
-            params[i + 2] & 0xff
+          @curAttr.bg = "rgb(#{params[i]}, #{params[i+1]}, #{params[i+2]})"
           i += 2
         else if params[i + 1] is 5
           # bg color 256
           i += 2
-          bg = params[i] & 0xff
+          @curAttr.bg = params[i] & 0xff
       else if p is 100
         # reset fg/bg
-        fg = (@defAttr >> 9) & 0x1ff
-        bg = @defAttr & 0x1ff
+        @curAttr.fg = 257
+        @curAttr.bg = 256
       else
         console.error "Unknown SGR attribute: %d.", p
       i++
-    @curAttr = (flags << 18) | (fg << 9) | bg
-
 
   # CSI Ps n    Device Status Report (DSR).
   #         Ps = 5    -> Status Report.    Result (``OK'') is
@@ -1889,13 +1937,13 @@ class Terminal
   insertChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
+    row = @y
     j = @x
     # xterm
-    ch = [@eraseAttr(), " "]
     while param-- and j < @cols
-      @lines[row].splice j++, 0, ch
-      @lines[row].pop()
+      @screen[row + @shift].chars.splice j++, 0, [@eraseAttr(), true]
+      @screen[row + @shift].chars.pop()
+    @screen[row + @shift].dirty = true
 
 
   # CSI Ps E
@@ -1929,64 +1977,60 @@ class Terminal
 
   # CSI Ps L
   # Insert Ps Line(s) (default = 1) (IL).
+  # test: echo -e '\e[44m\e[1L\e[0m'
   insertLines: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
-    j = @rows - 1 - @scrollBottom
-    j = @rows - 1 + @ybase - j + 1
+
     while param--
-      # test: echo -e '\e[44m\e[1L\e[0m'
+      @screen.splice @y + @shift, 0, @blankLine(true)
       # blankLine(true) - xterm/linux behavior
-      @lines.splice row, 0, @blankLine(true)
-      @lines.splice j, 1
+      @screen.splice @scrollBottom + 1 + @shift, 1
 
-    @updateRange @y
-    @updateRange @scrollBottom
-
+    for i in [@y + @shift..@screen.length - 1]
+      @screen[i].dirty = true
 
   # CSI Ps M
   # Delete Ps Line(s) (default = 1) (DL).
   deleteLines: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
-    j = @rows - 1 - @scrollBottom
-    j = @rows - 1 + @ybase - j
+
     while param--
       # test: echo -e '\e[44m\e[1M\e[0m'
       # blankLine(true) - xterm/linux behavior
-      @lines.splice j + 1, 0, @blankLine(true)
-      @lines.splice row, 1
+      @screen.splice @scrollBottom + @shift, 0, @blankLine(true)
+      @screen.splice @y + @shift, 1
+      unless @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+        @children[@y + @shift].remove()
+        @children.splice @y + @shift, 1
 
-    @updateRange @y
-    @updateRange @scrollBottom
-
+    if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
+      for i in [@y + @shift..@screen.length - 1]
+        @screen[i].dirty = true
 
   # CSI Ps P
   # Delete Ps Character(s) (default = 1) (DCH).
   deleteChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
-    # xterm
-    ch = [@eraseAttr(), " "]
-    while param--
-      @lines[row].splice @x, 1
-      @lines[row].push ch
 
+    while param--
+      @screen[@y + @shift].chars.splice @x, 1
+      @screen[@y + @shift].chars.push @eraseAttr()
+    @screen[@y + @shift].dirty = true
+    @screen[@y + @shift].wrap = false
 
   # CSI Ps X
   # Erase Ps Character(s) (default = 1) (ECH).
   eraseChars: (params) ->
     param = params[0]
     param = 1 if param < 1
-    row = @y + @ybase
     j = @x
     # xterm
-    ch = [@eraseAttr(), " "]
-    @lines[row][j++] = ch while param-- and j < @cols
-
+    @screen[@y + @shift].chars[j++] = @eraseAttr() while param-- and j < @cols
+    @screen[@y + @shift].dirty = true
+    @screen[@y + @shift].wrap = false
 
   # CSI Pm `    Character Position Absolute
   #     [column] (default = [row,1]) (HPA).
@@ -2186,6 +2230,13 @@ class Terminal
         @setMode params[i]
         i++
       return
+    if not @prefix
+      switch params
+        when 4
+          @insertMode = true
+        when 20
+          @convertEol = true
+      return
     if @prefix is "?"
       switch params
         when 1
@@ -2214,7 +2265,7 @@ class Terminal
           @vt200Mouse = params is 1000
           @normalMouse = params > 1000
           @mouseEvents = true
-          @element.style.cursor = 'pointer'
+          @body.style.cursor = 'pointer'
         when 1004 # send focusin/focusout events
           # focusin: ^[[I
           # focusout: ^[[O
@@ -2242,11 +2293,10 @@ class Terminal
         when 1049, 47, 1047 # alt screen buffer
           unless @normal
             normal =
-              lines: @lines
-              ybase: @ybase
-              ydisp: @ydisp
+              screen: @screen
               x: @x
               y: @y
+              shift: @shift
               scrollTop: @scrollTop
               scrollBottom: @scrollBottom
               tabs: @tabs
@@ -2343,6 +2393,13 @@ class Terminal
         @resetMode params[i]
         i++
       return
+    if not @prefix
+      switch params
+        when 4
+          @insertMode = false
+        when 20
+          @convertEol = false
+      return
 
     if @prefix is "?"
       switch params
@@ -2362,7 +2419,7 @@ class Terminal
           @vt200Mouse = false
           @normalMouse = false
           @mouseEvents = false
-          @element.style.cursor = ""
+          @body.style.cursor = ""
         when 1004 # send focusin/focusout events
           @sendFocus = false
         when 1005 # utf8 ext mode mouse
@@ -2375,16 +2432,15 @@ class Terminal
           @cursorHidden = true
         when 1049, 47, 1047 # normal screen buffer - clearing it first
           if @normal
-            @lines = @normal.lines
-            @ybase = @normal.ybase
-            @ydisp = @normal.ydisp
+            @screen = @normal.screen
             @x = @normal.x
             @y = @normal.y
+            @shift = @normal.shift
             @scrollTop = @normal.scrollTop
             @scrollBottom = @normal.scrollBottom
             @tabs = @normal.tabs
             @normal = null
-            @refresh 0, @rows - 1
+            @reset()
             @showCursor()
 
 
@@ -2426,22 +2482,22 @@ class Terminal
   scrollUp: (params) ->
     param = params[0] or 1
     while param--
-      @lines.splice @ybase + @scrollTop, 1
-      @lines.splice @ybase + @scrollBottom, 0, @blankLine()
+      @screen.splice @scrollTop, 1
+      @screen.splice @scrollBottom, 0, @blankLine()
 
-    @updateRange @scrollTop
-    @updateRange @scrollBottom
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift].dirty = true
 
 
   # CSI Ps T    Scroll down Ps lines (default = 1) (SD).
   scrollDown: (params) ->
     param = params[0] or 1
     while param--
-      @lines.splice @ybase + @scrollBottom, 1
-      @lines.splice @ybase + @scrollTop, 0, @blankLine()
+      @screen.splice @scrollBottom, 1
+      @screen.splice @scrollTop, 0, @blankLine()
 
-    @updateRange @scrollTop
-    @updateRange @scrollBottom
+    for i in [@scrollTop..@scrollBottom]
+      @screen[i + @shift].dirty = true
 
 
   # CSI Ps ; Ps ; Ps ; Ps ; Ps T
@@ -2475,10 +2531,10 @@ class Terminal
   # CSI Ps b    Repeat the preceding graphic character Ps times (REP).
   repeatPrecedingCharacter: (params) ->
     param = params[0] or 1
-    line = @lines[@ybase + @y]
-    ch = line[@x - 1] or [@defAttr, " "]
+    line = @screen[@y + @shift].chars
+    ch = line[@x - 1] or @defAttr
     line[@x++] = ch while param--
-
+    @screen[@y + @shift].dirty = true
 
   # CSI Ps g    Tab Clear (TBC).
   #         Ps = 0    -> Clear Current Column (default).
@@ -2649,15 +2705,13 @@ class Terminal
     r = params[3]
     attr = params[4]
     while t < b + 1
-      line = @lines[@ybase + t]
+      line = @screen[t + @shift].chars
+      @screen[t + @shift].dirty = true
       i = l
       while i < r
-        line[i] = [attr, line[i][1]]
+        line[i] = @cloneAttr attr, line[i].ch
         i++
       t++
-
-    @updateRange params[0]
-    @updateRange params[2]
 
 
   # CSI ? Pm s
@@ -2808,15 +2862,13 @@ class Terminal
     b = params[3]
     r = params[4]
     while t < b + 1
-      line = @lines[@ybase + t]
+      line = @screen[t + @shift].chars
+      @screen[t + @shift].dirty = true
       i = l
       while i < r
-        line[i] = [line[i][0], String.fromCharCode(ch)]
+        line[i] = @cloneAttr line[i][0], String.fromCharCode(ch)
         i++
       t++
-
-    @updateRange params[1]
-    @updateRange params[3]
 
 
   # CSI Ps ; Pu ' z
@@ -2844,25 +2896,21 @@ class Terminal
     l = params[1]
     b = params[2]
     r = params[3]
-    ch = [@eraseAttr(), " "]
     while t < b + 1
-      line = @lines[@ybase + t]
+      line = @screen[t + @shift].chars
+      @screen[t + @shift].dirty = true
       i = l
       while i < r
-        line[i] = ch
+        line[i] = @eraseAttr()
         i++
       t++
-
-    @updateRange params[0]
-    @updateRange params[2]
-
 
   # CSI Pm ' {
   #     Select Locator Events (DECSLE).
   #     Valid values for the first (and any additional parameters)
   #     are:
   #         Ps = 0    -> only respond to explicit host requests (DECRQLP).
-  #                   (This is default).    It also cancels any filter
+  #                        (This is default).    It also cancels any filter
   #     rectangle.
   #         Ps = 1    -> report button down transitions.
   #         Ps = 2    -> do not report button down transitions.
@@ -2925,15 +2973,14 @@ class Terminal
   # NOTE: xterm doesn't enable this code by default.
   insertColumns: ->
     param = params[0]
-    l = @ybase + @rows
-    ch = [@eraseAttr(), " "]
+    l = @rows + @shift
     while param--
-      i = @ybase
+      i = @shift
       while i < l
-        @lines[i].splice @x + 1, 0, ch
-        @lines[i].pop()
+        @screen[i].chars.splice @x + 1, 0, @eraseAttr()
+        @screen[i].chars.pop()
+        @screen[i].dirty = true
         i++
-    @maxRange()
 
 
   # CSI P m SP ~
@@ -2941,24 +2988,15 @@ class Terminal
   # NOTE: xterm doesn't enable this code by default.
   deleteColumns: ->
     param = params[0]
-    l = @ybase + @rows
-    ch = [@eraseAttr(), " "]
+    l = @rows + @shift
     while param--
-      i = @ybase
+      i = @shift
       while i < l
-        @lines[i].splice @x, 1
-        @lines[i].push ch
+        @screen[i].chars.splice @x, 1
+        @screen[i].chars.push @eraseAttr()
+        @screen[i].dirty = true
+        @screen[i].wrap = false
         i++
-    @maxRange()
-
-
-  get_html_height_in_lines: (html) ->
-    temp_node = document.createElement("div")
-    temp_node.innerHTML = html
-    @element.appendChild temp_node
-    html_height = temp_node.getBoundingClientRect().height
-    @element.removeChild temp_node
-    Math.ceil(html_height / @char_size.height)
 
   # DEC Special Character and Line Drawing Set.
   # http://vt100.net/docs/vt102-ug/table5-13.html

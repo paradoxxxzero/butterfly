@@ -11,6 +11,12 @@
 /* GNU General Public License for more details. */
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Theses are the various imported style files */
+/* You can put this file in /etc/butterfly/style.sass or ~/.butterfly/style.sass */
+/* To customize the style of your terminal. */
+/* THIS NEEDS the python `libsass` library to be installed. */
+/* You can also copy the imported files in those dirs, they will be imported prioritarily. */
+/* You can change this file to import any webfont: */
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
 /* butterfly Copyright (C) 2014  Florian Mounier */
@@ -63,6 +69,65 @@ body {
   font-family: "SourceCodePro";
   line-height: 1.2; }
 
+/* You can comment / uncomment the following to enable/disable terminal effects. */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+body {
+  transition: 200ms;
+  transform-origin: bottom; }
+  body.bell {
+    -webkit-filter: blur(2px);
+    filter: blur(2px); }
+  body.skip {
+    -webkit-filter: sepia(1);
+    filter: sepia(1); }
+  body.selection {
+    -webkit-filter: saturate(2);
+    filter: saturate(2); }
+  body.alarm {
+    -webkit-filter: hue-rotate(150deg);
+    filter: hue-rotate(150deg); }
+  body.dead {
+    -webkit-filter: grayscale(1);
+    filter: grayscale(1); }
+    body.dead:after {
+      content: "CLOSED";
+      font-size: 15em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-45deg);
+      opacity: .2;
+      font-weight: 900; }
+  body.stopped {
+    -webkit-filter: brightness(50%);
+    filter: brightness(50%); }
+  body.locked::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 0, 0.7); }
+  body.locked::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 0, 0, 0.8); }
+
+/* Comment this one to remove the blurry text: */
+body {
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5); }
+
+/* @import all_fx */
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
 /* butterfly Copyright (C) 2014  Florian Mounier */
@@ -77,85 +142,13 @@ body {
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  line-height: 1.2; }
-
-#wrapper {
-  height: 100%;
-  overflow: hidden;
-  white-space: nowrap; }
-
-.terminal {
-  outline: none; }
-
-/* *-* coding: utf-8 *-* */
-/* This file is part of butterfly */
-/* butterfly Copyright (C) 2014  Florian Mounier */
-/* This program is free software: you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License as published by */
-/* the Free Software Foundation, either version 3 of the License, or */
-/* (at your option) any later version. */
-/* This program is distributed in the hope that it will be useful, */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
-/* GNU General Public License for more details. */
-/* You should have received a copy of the GNU General Public License */
-/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-.terminal {
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
-  transition: 200ms; }
-  .terminal.bell {
-    -webkit-filter: blur(2px);
-    filter: blur(2px); }
-  .terminal.skip {
-    -webkit-filter: sepia(1);
-    filter: sepia(1); }
-  .terminal.selection {
-    -webkit-filter: saturate(2);
-    filter: saturate(2); }
-  .terminal.alarm {
-    -webkit-filter: hue-rotate(150deg);
-    filter: hue-rotate(150deg); }
-  .terminal.dead {
-    -webkit-filter: grayscale(1);
-    filter: grayscale(1); }
-    .terminal.dead:after {
-      content: "CLOSED";
-      font-size: 15em;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      transform: rotate(-45deg);
-      opacity: 0.2;
-      font-weight: 900; }
-
-/* *-* coding: utf-8 *-* */
-/* This file is part of butterfly */
-/* butterfly Copyright (C) 2014  Florian Mounier */
-/* This program is free software: you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License as published by */
-/* the Free Software Foundation, either version 3 of the License, or */
-/* (at your option) any later version. */
-/* This program is distributed in the hope that it will be useful, */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
-/* GNU General Public License for more details. */
-/* You should have received a copy of the GNU General Public License */
-/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-#wrapper {
   background-color: #110f13; }
 
 .terminal {
   background-color: #110f13;
   color: #f4ead5; }
 
+/* The color theme is defined in this one: */
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
 /* butterfly Copyright (C) 2014  Florian Mounier */
@@ -2870,15 +2863,15 @@ html, body {
     background-color: #767676 !important; }
 
 .bg-color-244 {
-  background-color: grey; }
+  background-color: gray; }
   .bg-color-244.reverse-video {
-    color: grey !important; }
+    color: gray !important; }
 
 .fg-color-244 {
-  color: grey;
+  color: gray;
   text-shadow: 0 0 6px rgba(128, 128, 128, 0.5); }
   .fg-color-244.reverse-video {
-    background-color: grey !important; }
+    background-color: gray !important; }
 
 .bg-color-245 {
   background-color: #8a8a8a; }
@@ -3036,6 +3029,39 @@ html, body {
 /* GNU General Public License for more details. */
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+html, body {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2; }
+
+body {
+  white-space: nowrap;
+  overflow-x: hidden;
+  overflow-y: scroll; }
+  body::-webkit-scrollbar {
+    background: #110f13;
+    width: .75em; }
+  body::-webkit-scrollbar-thumb {
+    background: rgba(244, 234, 213, 0.1); }
+  body::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 234, 213, 0.15); }
+
+.terminal {
+  outline: none; }
+
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2014  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .focus .cursor {
   transition: 300ms; }
 
@@ -3061,8 +3087,21 @@ html, body {
 .underline, .nbsp {
   text-decoration: underline; }
 
+/* Not supported, emulated */
+/* .blink */
+/*   text-decoration: blink */
 .blink {
-  text-decoration: blink; }
+  animation: blink 1s ease-in-out infinite; }
+
+@keyframes blink {
+  0% {
+    opacity: 1; }
+
+  50% {
+    opacity: 0; }
+
+  100% {
+    opacity: 1; } }
 
 .invisible {
   visibility: hidden; }
@@ -3074,3 +3113,12 @@ html, body {
 .blur .cursor.reverse-video {
   background: none; }
 
+.inline-html {
+  overflow: hidden; }
+
+.inline-image {
+  max-width: 100%;
+  max-height: 50vh; }
+
+a {
+  color: inherit; }

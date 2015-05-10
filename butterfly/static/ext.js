@@ -1,12 +1,12 @@
 (function() {
-  var Selection, alt, cancel, ctrl, first, next_leaf, previous_leaf, selection, set_alarm, virtual_input,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var Selection, alt, cancel, copy, ctrl, first, nextLeaf, previousLeaf, selection, setAlarm, virtualInput,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  set_alarm = function(notification) {
+  setAlarm = function(notification) {
     var alarm;
     alarm = function(data) {
       var note;
-      butterfly.element.classList.remove('alarm');
+      butterfly.body.classList.remove('alarm');
       note = "New activity on butterfly terminal [" + butterfly.title + "]";
       if (notification) {
         new Notification(note, {
@@ -19,7 +19,7 @@
       return butterfly.ws.removeEventListener('message', alarm);
     };
     butterfly.ws.addEventListener('message', alarm);
-    return butterfly.element.classList.add('alarm');
+    return butterfly.body.classList.add('alarm');
   };
 
   cancel = function(ev) {
@@ -39,12 +39,42 @@
     }
     if (Notification && Notification.permission === 'default') {
       Notification.requestPermission(function() {
-        return set_alarm(Notification.permission === 'granted');
+        return setAlarm(Notification.permission === 'granted');
       });
     } else {
-      set_alarm(Notification.permission === 'granted');
+      setAlarm(Notification.permission === 'granted');
     }
     return cancel(e);
+  });
+
+  addEventListener('copy', copy = function(e) {
+    var data, end, j, len1, line, ref, sel;
+    butterfly.bell("copied");
+    e.clipboardData.clearData();
+    sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
+    data = '';
+    ref = sel.split('\n');
+    for (j = 0, len1 = ref.length; j < len1; j++) {
+      line = ref[j];
+      if (line.slice(-1) === '\u23CE') {
+        end = '';
+        line = line.slice(0, -1);
+      } else {
+        end = '\n';
+      }
+      data += line.replace(/\s*$/, '') + end;
+    }
+    e.clipboardData.setData('text/plain', data.slice(0, -1));
+    return e.preventDefault();
+  });
+
+  addEventListener('paste', function(e) {
+    var data;
+    butterfly.bell("pasted");
+    data = e.clipboardData.getData('text/plain');
+    data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r');
+    butterfly.send(data);
+    return e.preventDefault();
   });
 
   selection = null;
@@ -60,7 +90,7 @@
     return false;
   };
 
-  previous_leaf = function(node) {
+  previousLeaf = function(node) {
     var previous;
     previous = node.previousSibling;
     if (!previous) {
@@ -75,7 +105,7 @@
     return previous;
   };
 
-  next_leaf = function(node) {
+  nextLeaf = function(node) {
     var next;
     next = node.nextSibling;
     if (!next) {
@@ -84,7 +114,7 @@
     if (!next) {
       next = node.parentNode.parentNode.nextSibling;
     }
-    while (next.firstChild) {
+    while (next != null ? next.firstChild : void 0) {
       next = next.firstChild;
     }
     return next;
@@ -92,16 +122,16 @@
 
   Selection = (function() {
     function Selection() {
-      butterfly.element.classList.add('selection');
+      butterfly.body.classList.add('selection');
       this.selection = getSelection();
     }
 
     Selection.prototype.reset = function() {
-      var fake_range, _ref, _results;
+      var fakeRange, ref, results;
       this.selection = getSelection();
-      fake_range = document.createRange();
-      fake_range.setStart(this.selection.anchorNode, this.selection.anchorOffset);
-      fake_range.setEnd(this.selection.focusNode, this.selection.focusOffset);
+      fakeRange = document.createRange();
+      fakeRange.setStart(this.selection.anchorNode, this.selection.anchorOffset);
+      fakeRange.setEnd(this.selection.focusNode, this.selection.focusOffset);
       this.start = {
         node: this.selection.anchorNode,
         offset: this.selection.anchorOffset
@@ -110,19 +140,19 @@
         node: this.selection.focusNode,
         offset: this.selection.focusOffset
       };
-      if (fake_range.collapsed) {
-        _ref = [this.end, this.start], this.start = _ref[0], this.end = _ref[1];
+      if (fakeRange.collapsed) {
+        ref = [this.end, this.start], this.start = ref[0], this.end = ref[1];
       }
-      this.start_line = this.start.node;
-      while (!this.start_line.classList || __indexOf.call(this.start_line.classList, 'line') < 0) {
-        this.start_line = this.start_line.parentNode;
+      this.startLine = this.start.node;
+      while (!this.startLine.classList || indexOf.call(this.startLine.classList, 'line') < 0) {
+        this.startLine = this.startLine.parentNode;
       }
-      this.end_line = this.end.node;
-      _results = [];
-      while (!this.end_line.classList || __indexOf.call(this.end_line.classList, 'line') < 0) {
-        _results.push(this.end_line = this.end_line.parentNode);
+      this.endLine = this.end.node;
+      results = [];
+      while (!this.endLine.classList || indexOf.call(this.endLine.classList, 'line') < 0) {
+        results.push(this.endLine = this.endLine.parentNode);
       }
-      return _results;
+      return results;
     };
 
     Selection.prototype.clear = function() {
@@ -130,12 +160,12 @@
     };
 
     Selection.prototype.destroy = function() {
-      butterfly.element.classList.remove('selection');
+      butterfly.body.classList.remove('selection');
       return this.clear();
     };
 
     Selection.prototype.text = function() {
-      return this.selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/, ' ');
+      return this.selection.toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
     };
 
     Selection.prototype.up = function() {
@@ -148,7 +178,7 @@
 
     Selection.prototype.go = function(n) {
       var index;
-      index = butterfly.children.indexOf(this.start_line) + n;
+      index = butterfly.children.indexOf(this.startLine) + n;
       if (!((0 <= index && index < butterfly.children.length))) {
         return;
       }
@@ -158,7 +188,7 @@
           return;
         }
       }
-      return this.select_line(index);
+      return this.selectLine(index);
     };
 
     Selection.prototype.apply = function() {
@@ -170,30 +200,30 @@
       return this.selection.addRange(range);
     };
 
-    Selection.prototype.select_line = function(index) {
-      var line, line_end, line_start;
+    Selection.prototype.selectLine = function(index) {
+      var line, lineEnd, lineStart;
       line = butterfly.children[index];
-      line_start = {
+      lineStart = {
         node: line.firstChild,
         offset: 0
       };
-      line_end = {
+      lineEnd = {
         node: line.lastChild,
         offset: line.lastChild.textContent.length
       };
-      this.start = this.walk(line_start, /\S/);
-      return this.end = this.walk(line_end, /\S/, true);
+      this.start = this.walk(lineStart, /\S/);
+      return this.end = this.walk(lineEnd, /\S/, true);
     };
 
     Selection.prototype.collapsed = function(start, end) {
-      var fake_range;
-      fake_range = document.createRange();
-      fake_range.setStart(start.node, start.offset);
-      fake_range.setEnd(end.node, end.offset);
-      return fake_range.collapsed;
+      var fakeRange;
+      fakeRange = document.createRange();
+      fakeRange.setStart(start.node, start.offset);
+      fakeRange.setEnd(end.node, end.offset);
+      return fakeRange.collapsed;
     };
 
-    Selection.prototype.shrink_right = function() {
+    Selection.prototype.shrinkRight = function() {
       var end, node;
       node = this.walk(this.end, /\s/, true);
       end = this.walk(node, /\S/, true);
@@ -202,7 +232,7 @@
       }
     };
 
-    Selection.prototype.shrink_left = function() {
+    Selection.prototype.shrinkLeft = function() {
       var node, start;
       node = this.walk(this.start, /\s/);
       start = this.walk(node, /\S/);
@@ -211,13 +241,13 @@
       }
     };
 
-    Selection.prototype.expand_right = function() {
+    Selection.prototype.expandRight = function() {
       var node;
       node = this.walk(this.end, /\S/);
       return this.end = this.walk(node, /\s/);
     };
 
-    Selection.prototype.expand_left = function() {
+    Selection.prototype.expandLeft = function() {
       var node;
       node = this.walk(this.start, /\S/, true);
       return this.start = this.walk(node, /\s/, true);
@@ -245,7 +275,7 @@
               };
             }
           }
-          node = previous_leaf(node);
+          node = previousLeaf(node);
           text = node.textContent;
           i = text.length;
         }
@@ -259,7 +289,7 @@
               };
             }
           }
-          node = next_leaf(node);
+          node = nextLeaf(node);
           text = node.textContent;
           i = 0;
         }
@@ -272,18 +302,18 @@
   })();
 
   document.addEventListener('keydown', function(e) {
-    var _ref, _ref1;
-    if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    var ref, ref1;
+    if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
     }
     if (e.shiftKey && e.keyCode === 13 && !selection && !getSelection().isCollapsed) {
-      butterfly.handler(getSelection().toString());
+      butterfly.send(getSelection().toString());
       getSelection().removeAllRanges();
       return cancel(e);
     }
     if (selection) {
       selection.reset();
-      if (!e.ctrlKey && e.shiftKey && (37 <= (_ref1 = e.keyCode) && _ref1 <= 40)) {
+      if (!e.ctrlKey && e.shiftKey && (37 <= (ref1 = e.keyCode) && ref1 <= 40)) {
         return true;
       }
       if (e.shiftKey && e.ctrlKey) {
@@ -293,13 +323,13 @@
           selection.down();
         }
       } else if (e.keyCode === 39) {
-        selection.shrink_left();
+        selection.shrinkLeft();
       } else if (e.keyCode === 38) {
-        selection.expand_left();
+        selection.expandLeft();
       } else if (e.keyCode === 37) {
-        selection.shrink_right();
+        selection.shrinkRight();
       } else if (e.keyCode === 40) {
-        selection.expand_right();
+        selection.expandRight();
       } else {
         return cancel(e);
       }
@@ -310,7 +340,7 @@
     }
     if (!selection && e.ctrlKey && e.shiftKey && e.keyCode === 38) {
       selection = new Selection();
-      selection.select_line(butterfly.y - 1);
+      selection.selectLine(butterfly.y - 1);
       selection.apply();
       return cancel(e);
     }
@@ -318,18 +348,18 @@
   });
 
   document.addEventListener('keyup', function(e) {
-    var _ref, _ref1;
-    if (_ref = e.keyCode, __indexOf.call([16, 17, 18, 19], _ref) >= 0) {
+    var ref, ref1;
+    if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
     }
     if (selection) {
       if (e.keyCode === 13) {
-        butterfly.handler(selection.text());
+        butterfly.send(selection.text());
         selection.destroy();
         selection = null;
         return cancel(e);
       }
-      if (_ref1 = e.keyCode, __indexOf.call([37, 38, 39, 40], _ref1) < 0) {
+      if (ref1 = e.keyCode, indexOf.call([37, 38, 39, 40], ref1) < 0) {
         selection.destroy();
         selection = null;
         return true;
@@ -339,7 +369,7 @@
   });
 
   document.addEventListener('dblclick', function(e) {
-    var anchorNode, anchorOffset, new_range, range, sel;
+    var anchorNode, anchorOffset, newRange, range, sel;
     if (e.ctrlKey || e.altkey) {
       return;
     }
@@ -352,12 +382,11 @@
     range.setEnd(sel.focusNode, sel.focusOffset);
     if (range.collapsed) {
       sel.removeAllRanges();
-      new_range = document.createRange();
-      new_range.setStart(sel.focusNode, sel.focusOffset);
-      new_range.setEnd(sel.anchorNode, sel.anchorOffset);
-      sel.addRange(new_range);
+      newRange = document.createRange();
+      newRange.setStart(sel.focusNode, sel.focusOffset);
+      newRange.setEnd(sel.anchorNode, sel.anchorOffset);
+      sel.addRange(newRange);
     }
-    range.detach();
     while (!(sel.toString().match(/\s/) || !sel.toString())) {
       sel.modify('extend', 'forward', 'character');
     }
@@ -376,17 +405,17 @@
     ctrl = false;
     alt = false;
     first = true;
-    virtual_input = document.createElement('input');
-    virtual_input.type = 'password';
-    virtual_input.style.position = 'fixed';
-    virtual_input.style.top = 0;
-    virtual_input.style.left = 0;
-    virtual_input.style.border = 'none';
-    virtual_input.style.outline = 'none';
-    virtual_input.style.opacity = 0;
-    virtual_input.value = '0';
-    document.body.appendChild(virtual_input);
-    virtual_input.addEventListener('blur', function() {
+    virtualInput = document.createElement('input');
+    virtualInput.type = 'password';
+    virtualInput.style.position = 'fixed';
+    virtualInput.style.top = 0;
+    virtualInput.style.left = 0;
+    virtualInput.style.border = 'none';
+    virtualInput.style.outline = 'none';
+    virtualInput.style.opacity = 0;
+    virtualInput.value = '0';
+    document.body.appendChild(virtualInput);
+    virtualInput.addEventListener('blur', function() {
       return setTimeout(((function(_this) {
         return function() {
           return _this.focus();
@@ -394,7 +423,7 @@
       })(this)), 10);
     });
     addEventListener('click', function() {
-      return virtual_input.focus();
+      return virtualInput.focus();
     });
     addEventListener('touchstart', function(e) {
       if (e.touches.length === 2) {
@@ -407,11 +436,11 @@
         return alt = true;
       }
     });
-    virtual_input.addEventListener('keydown', function(e) {
+    virtualInput.addEventListener('keydown', function(e) {
       butterfly.keyDown(e);
       return true;
     });
-    virtual_input.addEventListener('input', function(e) {
+    virtualInput.addEventListener('input', function(e) {
       var len;
       len = this.value.length;
       if (len === 0) {

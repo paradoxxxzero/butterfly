@@ -21,22 +21,22 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
   ctrl = false
   alt = false
   first = true
-  virtual_input = document.createElement 'input'
-  virtual_input.type = 'password'
-  virtual_input.style.position = 'fixed'
-  virtual_input.style.top = 0
-  virtual_input.style.left = 0
-  virtual_input.style.border = 'none'
-  virtual_input.style.outline = 'none'
-  virtual_input.style.opacity = 0
-  virtual_input.value = '0'
-  document.body.appendChild virtual_input
+  virtualInput = document.createElement 'input'
+  virtualInput.type = 'password'
+  virtualInput.style.position = 'fixed'
+  virtualInput.style.top = 0
+  virtualInput.style.left = 0
+  virtualInput.style.border = 'none'
+  virtualInput.style.outline = 'none'
+  virtualInput.style.opacity = 0
+  virtualInput.value = '0'
+  document.body.appendChild virtualInput
 
-  virtual_input.addEventListener 'blur', ->
+  virtualInput.addEventListener 'blur', ->
     setTimeout((=> @focus()), 10)
 
   addEventListener 'click', ->
-    virtual_input.focus()
+    virtualInput.focus()
 
   addEventListener 'touchstart', (e) ->
     if e.touches.length == 2
@@ -48,11 +48,11 @@ if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
       ctrl = true
       alt = true
 
-  virtual_input.addEventListener 'keydown', (e) ->
+  virtualInput.addEventListener 'keydown', (e) ->
     butterfly.keyDown(e)
     return true
 
-  virtual_input.addEventListener 'input', (e) ->
+  virtualInput.addEventListener 'input', (e) ->
     len = @value.length
 
     if len == 0

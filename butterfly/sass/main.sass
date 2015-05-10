@@ -15,11 +15,28 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+
+
+/* Theses are the various imported style files
+/* You can put this file in /etc/butterfly/style.sass or ~/.butterfly/style.sass
+/* To customize the style of your terminal.
+/* THIS NEEDS the python `libsass` library to be installed.
+/* You can also copy the imported files in those dirs, they will be imported prioritarily.
+
+/* You can change this file to import any webfont:
 @import font
-@import layout
-@import fx
+
+/* You can comment / uncomment the following to enable/disable terminal effects.
+@import light_fx
+/* Comment this one to remove the blurry text:
+@import text_fx
+/* @import all_fx
+
 @import colors
+/* The color theme is defined in this one:
 @import 16_colors
 @import 256_colors
+
+@import layout
 @import cursor
 @import term_styles

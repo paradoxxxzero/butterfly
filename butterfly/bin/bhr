@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+
+
+print('\x1bP;HTML|<hr />\x1bP')

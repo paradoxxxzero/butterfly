@@ -18,7 +18,11 @@
 
 import os
 import pwd
+import time
+import sys
+import struct
 from logging import getLogger
+from collections import namedtuple
 import subprocess
 import re
 
@@ -42,7 +46,7 @@ def get_style():
             os.path.dirname(__file__), 'sass')
         try:
             import sass
-        except:
+        except Exception:
             log.error('You must install libsass to use sass '
                       '(pip install libsass)')
             return
@@ -120,9 +124,14 @@ class Socket(object):
         sn = socket.getsockname()
         self.local_addr = sn[0]
         self.local_port = sn[1]
-        pn = socket.getpeername()
-        self.remote_addr = pn[0]
-        self.remote_port = pn[1]
+        try:
+            pn = socket.getpeername()
+            self.remote_addr = pn[0]
+            self.remote_port = pn[1]
+        except Exception:
+            log.debug("Can't get peer name", exc_info=True)
+            self.remote_addr = '???'
+            self.remote_port = 0
         self.user = None
         self.env = {}
 
@@ -184,7 +193,7 @@ def get_procfs_socket_line(port):
             if line.split()[1] == '0100007F:%X' % port:
                 # We got the socket
                 return line.split()
-    except:
+    except Exception:
         log.debug('getting socket inet4 line fail', exc_info=True)
 
     try:
@@ -196,7 +205,7 @@ def get_procfs_socket_line(port):
                     '00000000000000000000000001000000:%X' % port):
                 # We got the socket
                 return line.split()
-    except:
+    except Exception:
         log.debug('getting socket inet6 line fail', exc_info=True)
 
 
@@ -222,3 +231,153 @@ def get_socket_env(inode):
                                         key, val = keyval.split('=', 1)
                                         env[key] = val
                                 return env
+
+
+utmp_struct = struct.Struct('hi32s4s32s256shhiii4i20s')
+
+
+if sys.version_info[0] == 2:
+    b = lambda x: x
+else:
+    def b(x):
+        if isinstance(x, str):
+            return x.encode('utf-8')
+        return x
+
+
+def get_utmp_file():
+    for file in (
+            '/var/run/utmp',
+            '/var/adm/utmp',
+            '/var/adm/utmpx',
+            '/etc/utmp',
+            '/etc/utmpx',
+            '/var/run/utx.active'):
+        if os.path.exists(file):
+            return file
+
+
+def get_wtmp_file():
+    for file in (
+            '/var/log/wtmp',
+            '/var/adm/wtmp',
+            '/var/adm/wtmpx',
+            '/var/run/utx.log'):
+        if os.path.exists(file):
+            return file
+
+UTmp = namedtuple(
+            'UTmp',
+            ['type', 'pid', 'line', 'id', 'user', 'host',
+             'exit0', 'exit1', 'session',
+             'sec', 'usec', 'addr0', 'addr1', 'addr2', 'addr3', 'unused'])
+
+
+def utmp_line(id, type, pid, fd, user, host, ts):
+    return UTmp(
+        type,  # Type, 7 : user process
+        pid,  # pid
+        b(fd),  # line
+        b(id),  # id
+        b(user),  # user
+        b(host),  # host
+        0,  # exit 0
+        0,  # exit 1
+        0,  # session
+        int(ts),  # sec
+        int(10 ** 6 * (ts - int(ts))),  # usec
+        0,  # addr 0
+        0,  # addr 1
+        0,  # addr 2
+        0,  # addr 3
+        b('')  # unused
+    )
+
+
+def add_user_info(id, fd, pid, user, host):
+    # Freebsd format is not yet supported.
+    # Please submit PR
+    if sys.platform != 'linux':
+        return
+    utmp = utmp_line(id, 7, pid, fd, user, host, time.time())
+    for kind, file in {
+            'utmp': get_utmp_file(),
+            'wtmp': get_wtmp_file()}.items():
+        if not file:
+            continue
+        try:
+            with open(file, 'rb+') as f:
+                s = f.read(utmp_struct.size)
+                while s:
+                    entry = UTmp(*utmp_struct.unpack(s))
+                    if kind == 'utmp' and entry.id == utmp.id:
+                        # Same id recycling
+                        f.seek(f.tell() - utmp_struct.size)
+                        f.write(utmp_struct.pack(*utmp))
+                        break
+                    s = f.read(utmp_struct.size)
+                else:
+                    f.write(utmp_struct.pack(*utmp))
+        except Exception:
+            log.debug('Unable to write utmp info to ' + file, exc_info=True)
+
+
+def rm_user_info(id, pid):
+    if sys.platform != 'linux':
+        return
+    utmp = utmp_line(id, 8, pid, '', '', '', time.time())
+    for kind, file in {
+            'utmp': get_utmp_file(),
+            'wtmp': get_wtmp_file()}.items():
+        if not file:
+            continue
+        try:
+            with open(file, 'rb+') as f:
+                s = f.read(utmp_struct.size)
+                while s:
+                    entry = UTmp(*utmp_struct.unpack(s))
+                    if entry.id == utmp.id:
+                        if kind == 'utmp':
+                            # Same id closing
+                            f.seek(f.tell() - utmp_struct.size)
+                            f.write(utmp_struct.pack(*utmp))
+                            break
+                        else:
+                            utmp = utmp_line(
+                                id, 8, pid, entry.line, entry.user, '',
+                                time.time())
+
+                    s = f.read(utmp_struct.size)
+                else:
+                    f.write(utmp_struct.pack(*utmp))
+
+        except Exception:
+            log.debug('Unable to update utmp info to ' + file, exc_info=True)
+
+
+class AnsiColors(object):
+    colors = {
+        'black': 30,
+        'red': 31,
+        'green': 32,
+        'yellow': 33,
+        'blue': 34,
+        'magenta': 35,
+        'cyan': 36,
+        'white': 37
+    }
+
+    def __getattr__(self, key):
+        bold = True
+        if key.startswith('light_'):
+            bold = False
+            key = key[len('light_'):]
+        if key in self.colors:
+            return '\x1b[%d%sm' % (
+                self.colors[key],
+                ';1' if bold else '')
+        if key == 'reset':
+            return '\x1b[0m'
+        return ''
+
+ansi_colors = AnsiColors()

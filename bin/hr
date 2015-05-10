@@ -1,4 +1,0 @@
-#!/usr/bin/env python
-
-
-print('\x1b]99;<hr />\x07')
