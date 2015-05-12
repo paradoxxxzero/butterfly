@@ -50,7 +50,6 @@ class Terminal
     # Global elements
     @document = @parent.ownerDocument
     @body = @document.getElementsByTagName('body')[0]
-    @htmlEscapesEnabled = @body.getAttribute('data-allow-html') is 'yes'
     @forceWidth = @body.getAttribute(
       'data-force-unicode-width') is 'yes'
 
@@ -92,14 +91,16 @@ class Terminal
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
     addEventListener 'resize', => @resize()
+    @body.addEventListener 'load', =>
+      @nativeScrollTo()
+    , true
 
     # # Horrible Firefox paste workaround
     if typeof InstallTrigger isnt "undefined"
       @body.contentEditable = 'true'
 
     @initmouse()
-
-    setTimeout(@resize.bind(@), 100)
+    # setTimeout(@resize.bind(@), 100)
 
   cloneAttr: (a, char=null) ->
     bg: a.bg
@@ -407,7 +408,7 @@ class Terminal
         data = line.chars[i]
         if data.html
           out += data.html
-          continue
+          break
         if skipnext
           skipnext = false
           continue
@@ -486,7 +487,7 @@ class Terminal
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
-      out = @linkify(out) unless j is @y + @shift
+      out = @linkify(out) unless j is @y + @shift or data.html
       out += '\u23CE' if line.wrap
       if @children[j]
         @children[j].innerHTML = out
@@ -1085,16 +1086,14 @@ class Terminal
 
                 switch type
                   when "HTML"
-                    unless @htmlEscapesEnabled
-                      console.log "HTML escapes are disabled"
-                      break
-
+                    safe = html_sanitize(content, (l) -> l)
                     attr = @cloneAttr @curAttr
                     attr.html = (
-                      "<div class=\"inline-html\">#{content}</div>")
+                      "<div class=\"inline-html\">#{safe}</div>")
                     @screen[@y + @shift].chars[@x] = attr
                     @screen[@y + @shift].dirty = true
                     @screen[@y + @shift].wrap = false
+                    @nextLine()
 
                   when "IMAGE"
                     # Prevent injection
@@ -1595,7 +1594,7 @@ class Terminal
       i++
 
     chars: line
-    dirty: true
+    dirty: false
     wrap: false
 
   ch: (cur) ->

@@ -148,7 +148,6 @@
       this.ctl = ctl1 != null ? ctl1 : function() {};
       this.document = this.parent.ownerDocument;
       this.body = this.document.getElementsByTagName('body')[0];
-      this.htmlEscapesEnabled = this.body.getAttribute('data-allow-html') === 'yes';
       this.forceWidth = this.body.getAttribute('data-force-unicode-width') === 'yes';
       this.body.className = 'terminal focus';
       this.body.style.outline = 'none';
@@ -184,11 +183,15 @@
           return _this.resize();
         };
       })(this));
+      this.body.addEventListener('load', (function(_this) {
+        return function() {
+          return _this.nativeScrollTo();
+        };
+      })(this), true);
       if (typeof InstallTrigger !== "undefined") {
         this.body.contentEditable = 'true';
       }
       this.initmouse();
-      setTimeout(this.resize.bind(this), 100);
     }
 
     Terminal.prototype.cloneAttr = function(a, char) {
@@ -521,7 +524,7 @@
           data = line.chars[i];
           if (data.html) {
             out += data.html;
-            continue;
+            break;
           }
           if (skipnext) {
             skipnext = false;
@@ -615,7 +618,7 @@
         if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
         }
-        if (j !== this.y + this.shift) {
+        if (!(j === this.y + this.shift || data.html)) {
           out = this.linkify(out);
         }
         if (line.wrap) {
@@ -753,7 +756,7 @@
     };
 
     Terminal.prototype.write = function(data) {
-      var attr, b64, c, ch, content, cs, i, k, l, len, line, m, mime, num, pt, ref, ref1, ref2, ref3, type, valid;
+      var attr, b64, c, ch, content, cs, i, k, l, len, line, m, mime, num, pt, ref, ref1, ref2, ref3, safe, type, valid;
       i = 0;
       l = data.length;
       while (i < l) {
@@ -1189,15 +1192,15 @@
                   }
                   switch (type) {
                     case "HTML":
-                      if (!this.htmlEscapesEnabled) {
-                        console.log("HTML escapes are disabled");
-                        break;
-                      }
+                      safe = html_sanitize(content, function(l) {
+                        return l;
+                      });
                       attr = this.cloneAttr(this.curAttr);
-                      attr.html = "<div class=\"inline-html\">" + content + "</div>";
+                      attr.html = "<div class=\"inline-html\">" + safe + "</div>";
                       this.screen[this.y + this.shift].chars[this.x] = attr;
                       this.screen[this.y + this.shift].dirty = true;
                       this.screen[this.y + this.shift].wrap = false;
+                      this.nextLine();
                       break;
                     case "IMAGE":
                       content = encodeURI(content);
@@ -1739,7 +1742,7 @@
       }
       return {
         chars: line,
-        dirty: true,
+        dirty: false,
         wrap: false
       };
     };

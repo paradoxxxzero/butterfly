@@ -41,9 +41,6 @@ tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
-tornado.options.define("allow_html_escapes", default=False,
-                       help="Allow use of HTML escapes. "
-                       "Really unsafe as it is now.")
 tornado.options.define("force_unicode_width",
                        default=False,
                        help="Force all unicode characters to the same width."
