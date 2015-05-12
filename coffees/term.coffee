@@ -169,7 +169,7 @@ class Terminal
     @screen = []
     i = @rows
     @shift = 0
-    @screen.push @blankLine() while i--
+    @screen.push @blankLine(false, false) while i--
     @setupStops()
     @skipNextKey = null
 
@@ -600,6 +600,7 @@ class Terminal
             # '\n', '\v', '\f'
             when "\n", "\x0b", "\x0c"
               # @x = 0 if @convertEol
+              @screen[@y + @shift].dirty = true
               @nextLine()
 
             # '\r'
@@ -1585,7 +1586,7 @@ class Terminal
   eraseLine: (y) ->
     @eraseRight 0, y
 
-  blankLine: (cur) ->
+  blankLine: (cur=false, dirty=true) ->
     attr = (if cur then @eraseAttr() else @defAttr)
     line = []
     i = 0
@@ -1594,7 +1595,7 @@ class Terminal
       i++
 
     chars: line
-    dirty: false
+    dirty: dirty
     wrap: false
 
   ch: (cur) ->

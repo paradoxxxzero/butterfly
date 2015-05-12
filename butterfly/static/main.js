@@ -261,7 +261,7 @@
       i = this.rows;
       this.shift = 0;
       while (i--) {
-        this.screen.push(this.blankLine());
+        this.screen.push(this.blankLine(false, false));
       }
       this.setupStops();
       return this.skipNextKey = null;
@@ -770,6 +770,7 @@
               case "\n":
               case "\x0b":
               case "\x0c":
+                this.screen[this.y + this.shift].dirty = true;
                 this.nextLine();
                 break;
               case "\r":
@@ -1731,8 +1732,14 @@
       return this.eraseRight(0, y);
     };
 
-    Terminal.prototype.blankLine = function(cur) {
+    Terminal.prototype.blankLine = function(cur, dirty) {
       var attr, i, line;
+      if (cur == null) {
+        cur = false;
+      }
+      if (dirty == null) {
+        dirty = true;
+      }
       attr = (cur ? this.eraseAttr() : this.defAttr);
       line = [];
       i = 0;
@@ -1742,7 +1749,7 @@
       }
       return {
         chars: line,
-        dirty: false,
+        dirty: dirty,
         wrap: false
       };
     };
