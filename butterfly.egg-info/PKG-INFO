@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: butterfly
+Version: 2.0.0
+Summary: A sleek web based terminal emulator
+Home-page: http://github.com/paradoxxxzero/butterfly
+Author: Florian Mounier
+Author-email: paradoxxx.zero@gmail.com
+License: GPLv3
+Description: See http://github.com/paradoxxxzero/butterfly
+Platform: Any
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Terminals
