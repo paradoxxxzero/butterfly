@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+
+sys.path[0] = '%s/../..' % os.path.abspath(os.path.dirname(__file__))
+# from butterfly.escapes import image
+from butterfly.utils import ansi_colors
+# import base64
+
+print(ansi_colors.white + "Welcome to the console help." + ansi_colors.reset)
+# with image('image/png'):
+#     with open(
+#             os.path.join(
+#                 os.path.abspath(os.path.dirname(__file__)),
+#                 '../static/images/favicon.png'), 'rb') as i:
+#         print(base64.b64encode(i.read()).decode('ascii'))
+print("""
+== 复制粘贴说明 ==
+
+    {title}在浏览器中如何使用快捷键复制粘贴？{reset}
+
+        {strong}(1). 进入复制粘贴模式
+            {reset}[Alt] + [z]
+
+        {strong}(2). 复制内容
+            {reset}[Ctrl] + [c]
+
+        {strong}(3). 再次进入复制粘贴模式
+            {reset}[Alt] + [z]
+
+        {strong}(4). 粘贴内容
+            {reset}[Ctrl] + [v]
+""".format(
+    title=ansi_colors.light_blue,
+    strong=ansi_colors.white,
+    reset=ansi_colors.reset,
+    main=os.path.normpath(os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                '../sass/main.sass'))))
