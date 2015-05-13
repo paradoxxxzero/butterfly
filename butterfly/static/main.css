@@ -102,8 +102,8 @@ body {
     -webkit-filter: grayscale(1);
     filter: grayscale(1); }
     body.dead:after {
-      content: "CLOSED";
-      font-size: 15em;
+      content: "Lost Connection!";
+      font-size: 22px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -112,9 +112,25 @@ body {
       left: 0;
       width: 100%;
       height: 100%;
-      transform: rotate(-45deg);
-      opacity: .2;
-      font-weight: 900; }
+      opacity: .2; }
+   .pull-center {
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2000; }
+   .btn-conn {
+      border: 2px solid #eee;
+      color: #fff;
+      background: #303a38;
+      cursor: pointer;
+      padding: 6px 24px;
+      font-size: 18px; }
+    .btn-conn:hover {
+        background: #515151; }
   body.stopped {
     -webkit-filter: brightness(50%);
     filter: brightness(50%); }
