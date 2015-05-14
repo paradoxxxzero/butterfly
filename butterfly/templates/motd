@@ -1,9 +1,2 @@
-{{ colors.blue }}             _   _                       _
-{{ colors.blue }} _ __  _   _| |_| |__   ___  _ __  _ __ (_) ___  {{ colors.yellow }}   ___ ___  _ __ ___
-{{ colors.blue }}| '_ \| | | | __| '_ \ / _ \| '_ \| '_ \| |/ _ \ {{ colors.yellow }}  / __/ _ \| '_ ` _ \
-{{ colors.blue }}| |_) | |_| | |_| | | | (_) | | | | |_) | |  __/ {{ colors.yellow }} | (_| (_) | | | | | |
-{{ colors.blue }}| .__/ \__, |\__|_| |_|\___/|_| |_| .__/|_|\___| {{ colors.yellow }}(_)___\___/|_| |_| |_|
-{{ colors.blue }}|_|    |___/                      |_|
-
+{{ colors.blue }}pythonpie.com
 {{ colors.red }}For more information type: {{ colors.green }}# console_help {{ colors.white }}
-
