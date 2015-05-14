@@ -20,5 +20,8 @@
                  '' if options.unminified else 'min.')) }}"></script>
     <script src="{{ static_url('ext.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
+    <div class="pull-center" id="reconnect" style="display: none;">
+        <button class="btn-conn" onclick="location.reload();">Connect</button>
+    </div>
   </body>
 </html>

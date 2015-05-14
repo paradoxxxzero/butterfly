@@ -6,4 +6,3 @@ node_modules/
 *.src.coffee
 *.map
 sass/scss
-*.egg-info/

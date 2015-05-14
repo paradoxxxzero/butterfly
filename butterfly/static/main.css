@@ -102,8 +102,8 @@ body {
     -webkit-filter: grayscale(1);
     filter: grayscale(1); }
     body.dead:after {
-      content: "CLOSED";
-      font-size: 15em;
+      content: "Lost Connection!";
+      font-size: 22px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -112,9 +112,25 @@ body {
       left: 0;
       width: 100%;
       height: 100%;
-      transform: rotate(-45deg);
-      opacity: .2;
-      font-weight: 900; }
+      opacity: .2; }
+   .pull-center {
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2000; }
+   .btn-conn {
+      border: 2px solid #eee;
+      color: #fff;
+      background: #303a38;
+      cursor: pointer;
+      padding: 6px 24px;
+      font-size: 18px; }
+    .btn-conn:hover {
+        background: #515151; }
   body.stopped {
     -webkit-filter: brightness(50%);
     filter: brightness(50%); }
@@ -142,10 +158,10 @@ body {
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 html, body {
-  background-color: #110f13; }
+  background-color: #1a2229; }
 
 .terminal {
-  background-color: #110f13;
+  background-color: #1a2229;
   color: #f4ead5; }
 
 /* The color theme is defined in this one: */
@@ -2764,7 +2780,7 @@ html, body {
     background-color: #1c1c1c !important; }
 
 .bg-color-235 {
-  background-color: #262626; }
+  background-color: #1a2229; }
   .bg-color-235.reverse-video {
     color: #262626 !important; }
 
@@ -2995,7 +3011,7 @@ html, body {
     background-color: #eeeeee !important; }
 
 .bg-color-256 {
-  background-color: #110f13; }
+  background-color: #1a2229; }
   .bg-color-256.reverse-video {
     color: #110f13 !important; }
 
@@ -3032,6 +3048,7 @@ html, body {
 html, body {
   margin: 0;
   padding: 0;
+  font-size: 15px;
   line-height: 1.2; }
 
 body {
@@ -3039,7 +3056,7 @@ body {
   overflow-x: hidden;
   overflow-y: scroll; }
   body::-webkit-scrollbar {
-    background: #110f13;
+    background: #1a2229;
     width: .75em; }
   body::-webkit-scrollbar-thumb {
     background: rgba(244, 234, 213, 0.1); }

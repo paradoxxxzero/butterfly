@@ -69,6 +69,7 @@
       setTimeout(function() {
         term.write('Closed');
         term.skipNextKey = true;
+        document.getElementById("reconnect").style.display = "flex";
         return term.body.classList.add('dead');
       }, 1);
       quit = true;
