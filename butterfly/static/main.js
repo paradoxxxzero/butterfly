@@ -1053,6 +1053,19 @@
             if (ch === "$" || ch === "\"" || ch === " " || ch === "'") {
               break;
             }
+            if (ch <= " " || ch >= "~") {
+              if (ch === '\b') {
+                this.currentParam = (this.currentParam / 10) & 1;
+              }
+              if (ch === '\r') {
+                this.x = 0;
+              }
+              if (["\n", "\x0b", "\x0c"].indexOf(ch) >= 0) {
+                this.screen[this.y + this.shift].dirty = true;
+                this.nextLine();
+              }
+              break;
+            }
             this.params.push(this.currentParam);
             this.currentParam = 0;
             if (ch === ";") {
@@ -1174,7 +1187,7 @@
                 }
                 break;
               default:
-                console.error("Unknown CSI code: %s.", ch);
+                console.error("Unknown CSI code: %s (%d).", ch, ch.charCodeAt(0));
             }
             this.prefix = "";
             break;

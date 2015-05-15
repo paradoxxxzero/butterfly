@@ -877,6 +877,18 @@ class Terminal
           # '$', '"', ' ', '\''
           if ch is "$" or ch is "\"" or ch is " " or ch is "'"
             break
+
+          # Ignore garbage characters
+          if ch <= " " or ch >= "~"
+            if ch is '\b'
+              @currentParam = (@currentParam / 10) & 1
+            if ch is '\r'
+              @x = 0
+            if ["\n", "\x0b", "\x0c"].indexOf(ch) >= 0
+              @screen[@y + @shift].dirty = true
+              @nextLine()
+            break
+
           @params.push @currentParam
           @currentParam = 0
 
@@ -1064,7 +1076,7 @@ class Terminal
                 @softReset @params
 
             else
-              console.error "Unknown CSI code: %s.", ch
+              console.error "Unknown CSI code: %s (%d).", ch, ch.charCodeAt(0)
           @prefix = ""
 
         when State.dcs
