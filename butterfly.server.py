@@ -59,6 +59,22 @@ tornado.options.define("generate_user_pkcs", default='',
                        "(Must be root to create for another user)")
 tornado.options.define("unminified", default=False,
                        help="Use the unminified js (for development only)")
+tornado.options.define("theme", default=None,
+                       help="Specify a theme for butterfly.")
+
+if os.getuid() == 0:
+    conf_file = os.path.join(
+        os.path.abspath(os.sep), 'etc', 'butterfly', 'butterfly.conf')
+else:
+    conf_file = os.path.join(
+        os.path.expanduser('~'), '.butterfly', 'butterfly.conf')
+
+tornado.options.define("conf", default=conf_file,
+                       help="Butterfly configuration file. "
+                       "Contains the same options as command line.")
+
+if os.path.exists(conf_file):
+    tornado.options.parse_config_file(conf_file)
 
 tornado.options.parse_command_line()
 
@@ -259,27 +275,16 @@ from butterfly import application
 http_server = tornado_systemd.SystemdHTTPServer(
     application, ssl_options=ssl_opts)
 http_server.listen(port, address=host)
-url = "http%s://%s:%d/*" % (
-    "s" if not tornado.options.options.unsecure else "", host, port)
 
 if http_server.systemd:
     os.environ.pop('LISTEN_PID')
     os.environ.pop('LISTEN_FDS')
 
-# This is for debugging purpose
-try:
-    from wsreload.client import sporadic_reload, watch
-except ImportError:
-    log.debug('wsreload not found')
-else:
-    sporadic_reload({'url': url})
-
-    files = ['butterfly/static/javascripts/',
-             'butterfly/static/stylesheets/',
-             'butterfly/templates/']
-    watch({'url': url}, files, unwatch_at_exit=True)
-
 log.info('Starting loop')
 
 ioloop = tornado.ioloop.IOLoop.instance()
+
+url = "http%s://%s:%d/" % (
+    "s" if not tornado.options.options.unsecure else "", host, port)
+log.warn('Butterfly is ready, open your browser to: %s' % url)
 ioloop.start()

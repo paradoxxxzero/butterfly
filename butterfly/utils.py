@@ -24,6 +24,7 @@ import struct
 from logging import getLogger
 from collections import namedtuple
 import subprocess
+import tornado.options
 import re
 
 log = getLogger('butterfly')
@@ -31,10 +32,16 @@ log = getLogger('butterfly')
 
 def get_style():
     style = None
+
+    if tornado.options.options.theme:
+        theme = 'themes/%s/' % tornado.options.options.theme
+    else:
+        theme = '/'
+
     for ext in ['css', 'scss', 'sass']:
         for fn in [
-                '/etc/butterfly/style',
-                os.path.expanduser('~/.butterfly/style')]:
+                '/etc/butterfly/%sstyle' % theme,
+                os.path.expanduser('~/.butterfly/%sstyle' % theme)]:
             if os.path.exists('%s.%s' % (fn, ext)):
                 style = '%s.%s' % (fn, ext)
 
@@ -52,11 +59,12 @@ def get_style():
             return
 
         try:
-            return sass.compile(filename=style, include_paths=[sass_path])
+            return sass.compile(filename=style, include_paths=[
+                theme, sass_path])
         except sass.CompileError:
             log.error(
                 'Unable to compile style.scss (filename: %s, paths: %r) ' % (
-                    style, [sass_path]), exc_info=True)
+                    style, [theme, sass_path]), exc_info=True)
             return
 
     with open(style) as s:

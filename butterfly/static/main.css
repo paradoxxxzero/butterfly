@@ -141,13 +141,6 @@ body {
 /* GNU General Public License for more details. */
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
-html, body {
-  background-color: #110f13; }
-
-.terminal {
-  background-color: #110f13;
-  color: #f4ead5; }
-
 /* The color theme is defined in this one: */
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
@@ -3032,7 +3025,9 @@ html, body {
 html, body {
   margin: 0;
   padding: 0;
-  line-height: 1.2; }
+  line-height: 1.2;
+  background-color: #110f13;
+  color: #f4ead5; }
 
 body {
   white-space: nowrap;
