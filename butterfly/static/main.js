@@ -237,7 +237,7 @@
       this.applicationKeypad = false;
       this.applicationCursor = false;
       this.originMode = false;
-      this.wraparoundMode = false;
+      this.autowrap = true;
       this.normal = null;
       this.charset = null;
       this.gcharset = null;
@@ -777,6 +777,9 @@
                 this.x = 0;
                 break;
               case "\b":
+                if (this.x >= this.cols) {
+                  this.x--;
+                }
                 if (this.x > 0) {
                   this.x--;
                 }
@@ -799,9 +802,11 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    this.screen[this.y + this.shift].wrap = true;
+                    if (this.autowrap) {
+                      this.screen[this.y + this.shift].wrap = true;
+                      this.nextLine();
+                    }
                     this.x = 0;
-                    this.nextLine();
                   }
                   this.putChar(ch);
                   this.x++;
@@ -1654,6 +1659,13 @@
       }
     };
 
+    Terminal.prototype.resizeWindowPlease = function(cols) {
+      var margin, width;
+      margin = window.innerWidth - this.body.clientWidth;
+      width = cols * this.charSize.width + margin;
+      return resizeTo(width, window.innerHeight);
+    };
+
     Terminal.prototype.setupStops = function(i) {
       var results;
       if (i != null) {
@@ -1865,7 +1877,7 @@
         }
       }
       this.x = col;
-      return this.y = row;
+      return this.y = row + (this.originMode ? this.scrollTop : 0);
     };
 
     Terminal.prototype.eraseInDisplay = function(params) {
@@ -2246,11 +2258,13 @@
             return this.setgCharset(3, Terminal.prototype.charsets.US);
           case 3:
             this.savedCols = this.cols;
-            return this.resize(132, this.rows);
+            this.resize(132, this.rows);
+            this.resizeWindowPlease(132);
+            return this.reset();
           case 6:
             return this.originMode = true;
           case 7:
-            return this.wraparoundMode = true;
+            return this.autowrap = true;
           case 66:
             return this.applicationKeypad = true;
           case 9:
@@ -2322,11 +2336,13 @@
             if (this.cols === 132 && this.savedCols) {
               this.resize(this.savedCols, this.rows);
             }
+            this.resizeWindowPlease(80);
+            this.reset();
             return delete this.savedCols;
           case 6:
             return this.originMode = false;
           case 7:
-            return this.wraparoundMode = false;
+            return this.autowrap = false;
           case 66:
             return this.applicationKeypad = false;
           case 9:
@@ -2474,7 +2490,7 @@
       this.cursorHidden = false;
       this.insertMode = false;
       this.originMode = false;
-      this.wraparoundMode = false;
+      this.autowrap = true;
       this.applicationKeypad = false;
       this.applicationCursor = false;
       this.scrollTop = 0;

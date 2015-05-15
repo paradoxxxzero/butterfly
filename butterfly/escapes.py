@@ -1,29 +1,34 @@
 from contextlib import contextmanager
+import sys
 
 
 @contextmanager
 def html():
-    print('\x1bP;HTML|')
+    sys.stdout.write('\x1bP;HTML|')
     yield
-    print('\x1bP')
+    sys.stdout.write('\x1bP')
+    sys.stdout.flush()
 
 
 @contextmanager
 def image(mime='image'):
-    print('\x1bP;IMAGE|%s;' % mime)
+    sys.stdout.write('\x1bP;IMAGE|%s;' % mime)
     yield
-    print('\x1bP')
+    sys.stdout.write('\x1bP\n')
+    sys.stdout.flush()
 
 
 @contextmanager
 def prompt():
-    print('\x1bP;PROMPT|')
+    sys.stdout.write('\x1bP;PROMPT|')
     yield
-    print('\x1bP')
+    sys.stdout.write('\x1bP')
+    sys.stdout.flush()
 
 
 @contextmanager
 def text():
-    print('\x1bP;TEXT|')
+    sys.stdout.write('\x1bP;TEXT|')
     yield
-    print('\x1bP')
+    sys.stdout.write('\x1bP')
+    sys.stdout.flush()

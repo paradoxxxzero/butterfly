@@ -100,7 +100,6 @@ class Terminal
       @body.contentEditable = 'true'
 
     @initmouse()
-    # setTimeout(@resize.bind(@), 100)
 
   cloneAttr: (a, char=null) ->
     bg: a.bg
@@ -142,7 +141,7 @@ class Terminal
     @applicationKeypad = false
     @applicationCursor = false
     @originMode = false
-    @wraparoundMode = false
+    @autowrap = true
     @normal = null
 
     # charset
@@ -609,6 +608,8 @@ class Terminal
 
             # '\b'
             when "\b"
+              # Cap on overflow
+              @x-- if @x >= @cols
               @x-- if @x > 0
 
             # '\t'
@@ -632,9 +633,10 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  @screen[@y + @shift].wrap = true
+                  if @autowrap
+                    @screen[@y + @shift].wrap = true
+                    @nextLine()
                   @x = 0
-                  @nextLine()
 
                 @putChar ch
                 @x++
@@ -1543,6 +1545,12 @@ class Terminal
     @normal = null
     @reset() if x or y
 
+  resizeWindowPlease: (cols) ->
+    # This is only when running butterfly in app mode when resizeTo is available
+    margin = window.innerWidth - @body.clientWidth
+    width = cols * @charSize.width + margin
+    resizeTo width, window.innerHeight
+
   setupStops: (i) ->
     if i?
       i = @prevStop(i) unless @tabs[i]
@@ -1687,8 +1695,7 @@ class Terminal
       col = @cols - 1 if col >= @cols
 
     @x = col
-    @y = row
-
+    @y = row + if @originMode then @scrollTop else 0
 
   # CSI Ps J    Erase in Display (ED).
   #         Ps = 0    -> Erase Below (default).
@@ -2250,10 +2257,13 @@ class Terminal
         when 3 # 132 col mode
           @savedCols = @cols
           @resize 132, @rows
+          @resizeWindowPlease 132
+          @reset()
+          # For app mode
         when 6
           @originMode = true
         when 7
-          @wraparoundMode = true
+          @autowrap = true
         when 66
           @applicationKeypad = true
         # X10 Mouse
@@ -2407,11 +2417,14 @@ class Terminal
           @applicationCursor = false
         when 3
           @resize @savedCols, @rows if @cols is 132 and @savedCols
+          @resizeWindowPlease 80
+          @reset()
+          # App mode
           delete @savedCols
         when 6
           @originMode = false
         when 7
-          @wraparoundMode = false
+          @autowrap = false
         when 66
           @applicationKeypad = false
         when 9, 1000, 1002 , 1003 # any event mouse
@@ -2611,7 +2624,7 @@ class Terminal
     @cursorHidden = false
     @insertMode = false
     @originMode = false
-    @wraparoundMode = false # autowrap
+    @autowrap = true
     @applicationKeypad = false # ?
     @applicationCursor = false
     @scrollTop = 0
