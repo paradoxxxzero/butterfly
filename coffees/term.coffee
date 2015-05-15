@@ -100,6 +100,7 @@ class Terminal
       @body.contentEditable = 'true'
 
     @initmouse()
+    addEventListener 'load', => @resize()
 
   cloneAttr: (a, char=null) ->
     bg: a.bg

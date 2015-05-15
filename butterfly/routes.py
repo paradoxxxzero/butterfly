@@ -85,6 +85,32 @@ class Style(Route):
         self.finish()
 
 
+@url(r'/theme/font/([^/]+)')
+class Font(Route):
+
+    def get(self, name):
+        if not tornado.options.options.theme or not name:
+            raise tornado.web.HTTPError(404)
+        font = 'themes/%s/font/%s' % (
+            tornado.options.options.theme,
+            name)
+        for fn in [
+                '/etc/butterfly/%s' % font,
+                os.path.expanduser('~/.butterfly/%s' % font)]:
+            if os.path.exists(fn):
+                ext = fn.split('.')[-1]
+                self.set_header("Content-Type", "application/x-font-%s" % ext)
+                with open(fn, 'rb') as s:
+                    while True:
+                        data = s.read(16384)
+                        if data:
+                            self.write(data)
+                        else:
+                            break
+                self.finish()
+        raise tornado.web.HTTPError(404)
+
+
 @url(r'/ws(?:/user/([^/]+))?/?(?:/wd/(.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
@@ -303,16 +329,18 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
         TermWebSocket.terminals.add(self)
 
-        motd = (self.render_string(
-            tornado.options.options.motd,
-            butterfly=self,
-            version=__version__,
-            opts=tornado.options.options,
-            colors=utils.ansi_colors)
-                .decode('utf-8')
-                .replace('\r', '')
-                .replace('\n', '\r\n'))
-        self.write_message(motd)
+        if tornado.options.options.motd != '':
+            motd = (self.render_string(
+                tornado.options.options.motd,
+                butterfly=self,
+                version=__version__,
+                opts=tornado.options.options,
+                colors=utils.ansi_colors)
+                    .decode('utf-8')
+                    .replace('\r', '')
+                    .replace('\n', '\r\n'))
+            self.write_message(motd)
+
         self.pty()
 
     def on_message(self, message):

@@ -192,6 +192,11 @@
         this.body.contentEditable = 'true';
       }
       this.initmouse();
+      addEventListener('load', (function(_this) {
+        return function() {
+          return _this.resize();
+        };
+      })(this));
     }
 
     Terminal.prototype.cloneAttr = function(a, char) {
