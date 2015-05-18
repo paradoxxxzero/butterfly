@@ -57,6 +57,7 @@
       }
     });
     treat = function() {
+      console.log("TERM IS " + term);
       term.write(queue);
       if (term.stop) {
         term.stop = false;

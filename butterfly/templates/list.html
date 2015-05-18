@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% from tornado.options import options %}
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Butterfly - A web terminal based on websocket and tornado">
+    <meta name="author" content="Mounier Florian">
+    <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
+
+    <title>Butterfly</title>
+    <link href="/style.css" rel="stylesheet">
+  </head>
+
+  <body spellcheck="false"
+        data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}">
+    <script src="{{ static_url('html-sanitizer.js') }}"></script>
+    <ul>
+    {% for t in terms %}
+      <li>The available terminals are : <a target="_blank" href="/fragment/{{ t.uid }}">{{ t.uid }}</a></li>
+    {% end %}
+    </ul>
+  </body>
+</html>

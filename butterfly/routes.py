@@ -51,9 +51,9 @@ def u(s):
     return s
 
 
-@url(r'/(?:user/(.+))?/?(?:wd/(.+))?')
+@url(r'/(?:user/(.+))?/?(?:wd/(.+))?/?(?:fragment/(.+))?')
 class Index(Route):
-    def get(self, user, path):
+    def get(self, user, path, fragment):
         if not tornado.options.options.unsecure and user:
             raise tornado.web.HTTPError(400)
         return self.render('index.html')
@@ -111,10 +111,11 @@ class Font(Route):
         raise tornado.web.HTTPError(404)
 
 
-@url(r'/ws(?:/user/([^/]+))?/?(?:/wd/(.+))?')
+@url(r'/ws(?P<user>/user/(?:[^/]+))?/?(?P<path>/wd/(?:.+))?/?(?P<fragment>fragment/(?:.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
-    terminals = set()
+    terminals = {}
+    clones = {}
 
     def pty(self):
         # Make a "unique" id in 4 bytes
@@ -280,7 +281,20 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         ioloop.add_handler(
             self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
 
-    def open(self, user, path):
+    def open(self, user, path, fragment):
+        if fragment:
+            fragment = fragment.split('/')[1]
+            if fragment in self.terminals.keys():
+                self.current_session = self.terminals.get(fragment)
+                self.write_message("Restoring previous session")
+                self.uid = ''.join(
+                    random.choice(
+                        string.ascii_lowercase + string.ascii_uppercase +
+                        string.digits)
+                    for _ in range(4))
+                TermWebSocket.clones.update({self.uid: self.current_session.uid})
+                TermWebSocket.terminals.update({self.uid: self})
+                return
         self.fd = None
         self.closed = False
         if self.request.headers['Origin'] not in (
@@ -327,8 +341,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             except LookupError:
                 raise Exception('Invalid user in certificate')
 
-        TermWebSocket.terminals.add(self)
-
         if tornado.options.options.motd != '':
             motd = (self.render_string(
                 tornado.options.options.motd,
@@ -342,40 +354,43 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.write_message(motd)
 
         self.pty()
+        
+        TermWebSocket.terminals.update({self.uid: self})
 
     def on_message(self, message):
-        if not hasattr(self, 'writer'):
-            self.on_close()
-            self.close()
+        current_session = getattr(self, 'current_session', self)
+        if not hasattr(current_session, 'writer'):
+            current_session.on_close()
             return
         if message[0] == 'R':
             cols, rows = map(int, message[1:].split(','))
             s = struct.pack("HHHH", rows, cols, 0, 0)
-            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
-            self.log.info('SIZE (%d, %d)' % (cols, rows))
+            fcntl.ioctl(current_session.fd, termios.TIOCSWINSZ, s)
+            current_session.log.info('SIZE (%d, %d)' % (cols, rows))
         elif message[0] == 'S':
-            self.log.debug('WRIT<%r' % message)
-            self.writer.write(message[1:])
-            self.writer.flush()
+            current_session.log.debug('WRIT<%r' % message)
+            current_session.writer.write(message[1:])
+            current_session.writer.flush()
 
     def shell_handler(self, fd, events):
+        current_session = getattr(self, 'current_session', self)
         if events & ioloop.READ:
             try:
-                read = self.reader.read()
+                read = current_session.reader.read()
             except IOError:
                 read = ''
 
-            self.log.debug('READ>%r' % read)
-            if read and len(read) != 0 and self.ws_connection:
-                self.write_message(read.decode('utf-8', 'replace'))
+            current_session.log.debug('READ>%r' % read)
+            if read and len(read) != 0 and current_session.ws_connection:
+                for t in self.terminals.values():
+                    t.write_message(read.decode('utf-8', 'replace'))
             else:
                 events = ioloop.ERROR
 
         if events & ioloop.ERROR:
-            self.log.info('Error on fd %d, closing' % fd)
+            current_session.log.info('Error on fd %d, closing' % fd)
             # Terminated
-            self.on_close()
-            self.close()
+            current_session.on_close()
 
     def on_close(self):
         if self.closed:
@@ -406,9 +421,21 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         except Exception:
             self.log.debug('waitpid fail', exc_info=True)
 
-        TermWebSocket.terminals.remove(self)
+        to_delete = [i for i, v in TermWebSocket.clones.items() if self.uid == v]
+        for item in [self.uid] + to_delete:
+            connection = TermWebSocket.terminals.pop(item)
+            connection.close()
         self.log.info('Websocket closed')
 
         if self.application.systemd and not len(TermWebSocket.terminals):
             self.log.info('No more terminals, exiting...')
             sys.exit(0)
+
+            
+@url(r'/list(?:user/(.+))?/?(?:wd/(.+))?')
+class List(Route):
+    """List available terminals"""
+    def get(self, user, path):
+        if not tornado.options.options.unsecure and user:
+            raise tornado.web.HTTPError(400)
+        return self.render('list.html', terms=TermWebSocket.terminals.values())
