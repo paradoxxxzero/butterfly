@@ -1,7 +1,7 @@
 # *-* coding: utf-8 *-*
 # This file is part of butterfly
 #
-# butterfly Copyright (C) 2014  Florian Mounier
+# butterfly Copyright (C) 2015  Florian Mounier
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -16,33 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import pty
 import os
-import io
-import struct
-import string
-import random
-import fcntl
-import termios
+import sys
+import tornado.options
+import tornado.process
 import tornado.web
 import tornado.websocket
-import tornado.process
-import tornado.ioloop
-import tornado.options
-import sys
-import signal
 from butterfly import url, Route, utils, __version__
-
-ioloop = tornado.ioloop.IOLoop.instance()
-
-server = utils.User()
-daemon = utils.User(name='daemon')
-
-# Python 2 backward compatibility
-try:
-    input = raw_input
-except NameError:
-    pass
+from butterfly.terminal import Terminal
 
 
 def u(s):
@@ -51,9 +32,9 @@ def u(s):
     return s
 
 
-@url(r'/(?:user/(.+))?/?(?:wd/(.+))?/?(?:fragment/(.+))?')
+@url(r'/(?:user/(.+))?/?(?:wd/(.+))?/?(?:session/(.+))?')
 class Index(Route):
-    def get(self, user, path, fragment):
+    def get(self, user, path, session):
         if not tornado.options.options.unsecure and user:
             raise tornado.web.HTTPError(400)
         return self.render('index.html')
@@ -111,192 +92,29 @@ class Font(Route):
         raise tornado.web.HTTPError(404)
 
 
-@url(r'/ws(?P<user>/user/(?:[^/]+))?/?(?P<path>/wd/(?:.+))?/?(?P<fragment>fragment/(?:.+))?')
+@url(r'/ws'
+     '(?:/user/(?P<user>[^/]+))?/?'
+     '(?:session/(?P<session>[^/]+))?/?'
+     '(?:/wd/(?P<path>.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
+    session_history_size = 100000
+    # List of websockets per session
+    sessions = {}
 
+    # Terminal for session
     terminals = {}
-    clones = {}
 
-    def pty(self):
-        # Make a "unique" id in 4 bytes
-        self.uid = ''.join(
-            random.choice(
-                string.ascii_lowercase + string.ascii_uppercase +
-                string.digits)
-            for _ in range(4))
+    # All terminals sockets for systemd socket deactivation
+    sockets = []
 
-        self.pid, self.fd = pty.fork()
-        if self.pid == 0:
-            self.determine_user()
-            self.shell()
-        else:
-            self.communicate()
+    # Session history
+    history = {}
 
-    def determine_user(self):
-        if self.callee is None and (
-                tornado.options.options.unsecure and
-                tornado.options.options.login):
-            # If callee is now known and we have unsecure connection
-            user = ''
-            while user == '':
-                try:
-                    user = input('login: ')
-                except (KeyboardInterrupt, EOFError):
-                    self.log.debug("Errorin login input", exc_info=True)
-                    pass
-
-            try:
-                self.callee = utils.User(name=user)
-            except Exception:
-                self.log.debug("Can't switch to user %s" % user, exc_info=True)
-                self.callee = utils.User(name='nobody')
-        elif (tornado.options.options.unsecure and not
-              tornado.options.options.login):
-            # if login is not required, we will use the same user as
-            # butterfly is executed
-            self.callee = utils.User()
-
-        assert self.callee is not None
-
-    def shell(self):
-        try:
-            os.chdir(self.path or self.callee.dir)
-        except Exception:
-            self.log.debug(
-                "Can't chdir to %s" % (self.path or self.callee.dir),
-                exc_info=True)
-
-        env = os.environ
-        # If local and local user is the same as login user
-        # We set the env of the user from the browser
-        # Usefull when running as root
-        if self.caller == self.callee:
-            env.update(self.socket.env)
-        env["TERM"] = "xterm-256color"
-        env["COLORTERM"] = "butterfly"
-        env["HOME"] = self.callee.dir
-        env["LOCATION"] = "http%s://%s:%d/" % (
-            "s" if not tornado.options.options.unsecure else "",
-            tornado.options.options.host, tornado.options.options.port)
-        env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
-            os.path.dirname(__file__), 'bin')), env.get("PATH"))
-
-        try:
-            tty = os.ttyname(0).replace('/dev/', '')
-        except Exception:
-            self.log.debug("Can't get ttyname", exc_info=True)
-            tty = ''
-
-        if self.caller != self.callee:
-            try:
-                os.chown(os.ttyname(0), self.callee.uid, -1)
-            except Exception:
-                self.log.debug("Can't chown ttyname", exc_info=True)
-
-        utils.add_user_info(
-            self.uid,
-            tty, os.getpid(),
-            self.callee.name, self.request.headers['Host'])
-
-        if not tornado.options.options.unsecure or (
-                self.socket.local and
-                self.caller == self.callee and
-                server == self.callee
-        ) or not tornado.options.options.login:
-            # User has been auth with ssl or is the same user as server
-            # or login is explicitly turned off
-            if (
-                    not tornado.options.options.unsecure and
-                    tornado.options.options.login and not (
-                        self.socket.local and
-                        self.caller == self.callee and
-                        server == self.callee
-                    )):
-                # User is authed by ssl, setting groups
-                try:
-                    os.initgroups(self.callee.name, self.callee.gid)
-                    os.setgid(self.callee.gid)
-                    os.setuid(self.callee.uid)
-                except Exception:
-                    self.log.error(
-                        'The server must be run as root '
-                        'if you want to log as different user\n',
-                        exc_info=True)
-                    sys.exit(1)
-
-            if tornado.options.options.cmd:
-                args = tornado.options.options.cmd.split(' ')
-            else:
-                args = [tornado.options.options.shell or self.callee.shell]
-                args.append('-i')
-
-            os.execvpe(args[0], args, env)
-            # This process has been replaced
-
-        # Unsecure connection with su
-        if server.root:
-            if self.socket.local:
-                if self.callee != self.caller:
-                    # Force password prompt by dropping rights
-                    # to the daemon user
-                    os.setuid(daemon.uid)
-            else:
-                # We are not local so we should always get a password prompt
-                if self.callee == daemon:
-                    # No logging from daemon
-                    sys.exit(1)
-                os.setuid(daemon.uid)
-
-        if os.path.exists('/usr/bin/su'):
-            args = ['/usr/bin/su']
-        else:
-            args = ['/bin/su']
-
-        if sys.platform == 'linux':
-            args.append('-p')
-            if tornado.options.options.shell:
-                args.append('-s')
-                args.append(tornado.options.options.shell)
-        args.append(self.callee.name)
-        os.execvpe(args[0], args, env)
-
-    def communicate(self):
-        fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
-
-        def utf8_error(e):
-            self.log.error(e)
-
-        self.reader = io.open(
-            self.fd,
-            'rb',
-            buffering=0,
-            closefd=False
-        )
-        self.writer = io.open(
-            self.fd,
-            'wt',
-            encoding='utf-8',
-            closefd=False
-        )
-        ioloop.add_handler(
-            self.fd, self.shell_handler, ioloop.READ | ioloop.ERROR)
-
-    def open(self, user, path, fragment):
-        if fragment:
-            fragment = fragment.split('/')[1]
-            if fragment in self.terminals.keys():
-                self.current_session = self.terminals.get(fragment)
-                self.write_message("Restoring previous session")
-                self.uid = ''.join(
-                    random.choice(
-                        string.ascii_lowercase + string.ascii_uppercase +
-                        string.digits)
-                    for _ in range(4))
-                TermWebSocket.clones.update({self.uid: self.current_session.uid})
-                TermWebSocket.terminals.update({self.uid: self})
-                return
-        self.fd = None
+    def open(self, user, path, session):
+        self.session = session
         self.closed = False
+
+        # Prevent cross domain
         if self.request.headers['Origin'] not in (
                 'http://%s' % self.request.headers['Host'],
                 'https://%s' % self.request.headers['Host']):
@@ -307,135 +125,94 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             self.close()
             return
 
-        self.socket = utils.Socket(self.ws_connection.stream.socket)
+        TermWebSocket.sockets.append(self)
+
+        self.log.info('Websocket opened %r' % self)
         self.set_nodelay(True)
-        self.log.info('Websocket opened %r' % self.socket)
-        self.path = path
-        self.user = user if user else None
-        self.caller = self.callee = None
 
-        # If local we have the user connecting
-        if self.socket.local and self.socket.user is not None:
-            self.caller = self.socket.user
+        # Handling terminal session
+        if session:
+            if session in TermWebSocket.sessions:
+                # Session already here, registering websocket
+                TermWebSocket.sessions[session].append(self)
+                self.write_message(TermWebSocket.history[session])
+                # And returning, we don't want another terminal
+                return
+            else:
+                # New session, opening terminal
+                TermWebSocket.sessions[session] = [self]
+                TermWebSocket.history[session] = ''
 
-        if tornado.options.options.unsecure:
-            if self.user:
-                try:
-                    self.callee = utils.User(name=self.user)
-                except LookupError:
-                    self.log.debug(
-                        "Can't switch to user %s" % self.user, exc_info=True)
-                    self.callee = None
+        terminal = Terminal(
+                    user, path, session,
+                    self.ws_connection.stream.socket,
+                    self.request.headers['Host'],
+                    self.render_string,
+                    self.write)
 
-            # If no user where given and we are local, keep the same user
-            # as the one who opened the socket
-            # ie: the one openning a terminal in borwser
-            if not self.callee and not self.user and self.socket.local:
-                self.callee = self.caller
+        if session:
+            TermWebSocket.terminals[session] = terminal
         else:
-            user = utils.parse_cert(self.stream.socket.getpeercert())
-            assert user, 'No user in certificate'
-            self.user = user
+            self._terminal = terminal
+
+    @classmethod
+    def close_all(cls, session):
+        for inst in TermWebSocket.sessions[session][:]:
+            inst.on_close()
+            inst.close()
+        del TermWebSocket.sessions[session]
+        del TermWebSocket.terminals[session]
+
+    @classmethod
+    def broadcast(cls, session, message):
+        cls.history[session] += message
+        if len(cls.history) > cls.session_history_size:
+            cls.history[session] = cls.history[session][
+                -cls.session_history_size:]
+        for session in cls.sessions[session][:]:
             try:
-                self.callee = utils.User(name=self.user)
-            except LookupError:
-                raise Exception('Invalid user in certificate')
+                session.write_message(message)
+            except Exception:
+                session.close()
 
-        if tornado.options.options.motd != '':
-            motd = (self.render_string(
-                tornado.options.options.motd,
-                butterfly=self,
-                version=__version__,
-                opts=tornado.options.options,
-                colors=utils.ansi_colors)
-                    .decode('utf-8')
-                    .replace('\r', '')
-                    .replace('\n', '\r\n'))
-            self.write_message(motd)
-
-        self.pty()
-        
-        TermWebSocket.terminals.update({self.uid: self})
+    def write(self, message):
+        if self.session:
+            if message is None:
+                TermWebSocket.close_all(self.session)
+            else:
+                TermWebSocket.broadcast(self.session, message)
+        else:
+            if message is None:
+                self.on_close()
+                self.close()
+            else:
+                self.write_message(message)
 
     def on_message(self, message):
-        current_session = getattr(self, 'current_session', self)
-        if not hasattr(current_session, 'writer'):
-            current_session.on_close()
-            return
-        if message[0] == 'R':
-            cols, rows = map(int, message[1:].split(','))
-            s = struct.pack("HHHH", rows, cols, 0, 0)
-            fcntl.ioctl(current_session.fd, termios.TIOCSWINSZ, s)
-            current_session.log.info('SIZE (%d, %d)' % (cols, rows))
-        elif message[0] == 'S':
-            current_session.log.debug('WRIT<%r' % message)
-            current_session.writer.write(message[1:])
-            current_session.writer.flush()
-
-    def shell_handler(self, fd, events):
-        current_session = getattr(self, 'current_session', self)
-        if events & ioloop.READ:
-            try:
-                read = current_session.reader.read()
-            except IOError:
-                read = ''
-
-            current_session.log.debug('READ>%r' % read)
-            if read and len(read) != 0 and current_session.ws_connection:
-                for t in self.terminals.values():
-                    t.write_message(read.decode('utf-8', 'replace'))
-            else:
-                events = ioloop.ERROR
-
-        if events & ioloop.ERROR:
-            current_session.log.info('Error on fd %d, closing' % fd)
-            # Terminated
-            current_session.on_close()
+        if self.session:
+            term = TermWebSocket.terminals.get(self.session)
+            term and term.write(message)
+        else:
+            self._terminal.write(message)
 
     def on_close(self):
         if self.closed:
             return
         self.closed = True
-        if self.fd is not None:
-            self.log.info('Closing fd %d' % self.fd)
-
-        if getattr(self, 'pid', 0) == 0:
-            self.log.info('pid is 0')
-            return
-
-        utils.rm_user_info(self.uid, self.pid)
-
-        try:
-            ioloop.remove_handler(self.fd)
-        except Exception:
-            self.log.error('handler removal fail', exc_info=True)
-
-        try:
-            os.close(self.fd)
-        except Exception:
-            self.log.debug('closing fd fail', exc_info=True)
-
-        try:
-            os.kill(self.pid, signal.SIGKILL)
-            os.waitpid(self.pid, 0)
-        except Exception:
-            self.log.debug('waitpid fail', exc_info=True)
-
-        to_delete = [i for i, v in TermWebSocket.clones.items() if self.uid == v]
-        for item in [self.uid] + to_delete:
-            connection = TermWebSocket.terminals.pop(item)
-            connection.close()
-        self.log.info('Websocket closed')
-
+        self.log.info('Websocket closed %r' % self)
+        TermWebSocket.sockets.remove(self)
+        if self.session:
+            TermWebSocket.sessions[self.session].remove(self)
+        else:
+            self._terminal.close()
         if self.application.systemd and not len(TermWebSocket.terminals):
-            self.log.info('No more terminals, exiting...')
             sys.exit(0)
 
-            
+
 @url(r'/list(?:user/(.+))?/?(?:wd/(.+))?')
 class List(Route):
     """List available terminals"""
     def get(self, user, path):
         if not tornado.options.options.unsecure and user:
             raise tornado.web.HTTPError(400)
-        return self.render('list.html', terms=TermWebSocket.terminals.values())
+        return self.render('list.html', sessions=TermWebSocket.sessions)

@@ -10,16 +10,15 @@
     <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
 
     <title>Butterfly</title>
-    <link href="/style.css" rel="stylesheet">
+    {# <link href="/style.css" rel="stylesheet"> #}
   </head>
 
-  <body spellcheck="false"
-        data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}">
-    <script src="{{ static_url('html-sanitizer.js') }}"></script>
-    <ul>
-    {% for t in terms %}
-      <li>The available terminals are : <a target="_blank" href="/fragment/{{ t.uid }}">{{ t.uid }}</a></li>
-    {% end %}
-    </ul>
+  <body>
+    <p>Currently open butterfly sessions :
+      <ul>
+        {% for session in sessions %}
+          <li> <a target="_blank" href="/session/{{ session }}">{{ session }}</a></li>
+        {% end %}
+      </ul>
   </body>
 </html>
