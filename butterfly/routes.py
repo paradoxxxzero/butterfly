@@ -97,7 +97,7 @@ class Font(Route):
      '(?:session/(?P<session>[^/]+))?/?'
      '(?:/wd/(?P<path>.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
-    session_history_size = 100000
+    session_history_size = 10000
     # List of websockets per session
     sessions = {}
 
@@ -203,8 +203,11 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         TermWebSocket.sockets.remove(self)
         if self.session:
             TermWebSocket.sessions[self.session].remove(self)
-        else:
+        elif hasattr(self, '_terminal'):
             self._terminal.close()
+        else:
+            self.log.error(
+                'Socket with neither session nor terminal %r' % self)
         if self.application.systemd and not len(TermWebSocket.terminals):
             sys.exit(0)
 

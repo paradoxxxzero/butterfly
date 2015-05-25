@@ -73,13 +73,13 @@ class Terminal(object):
                         "Can't switch to user %s" % self.user, exc_info=True)
                     self.callee = None
 
-            # If no user where given and we are local, keep the same user
-            # as the one who opened the socket
-            # ie: the one openning a terminal in borwser
+            # If no user where given and we are local, keep the same
+            # user as the one who opened the socket ie: the one
+            # openning a terminal in browser
             if not self.callee and not self.user and self.socket.local:
                 self.callee = self.caller
         else:
-            user = utils.parse_cert(self.stream.socket.getpeercert())
+            user = utils.parse_cert(socket.getpeercert())
             assert user, 'No user in certificate'
             self.user = user
             try:
