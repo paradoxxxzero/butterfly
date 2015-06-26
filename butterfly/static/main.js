@@ -57,7 +57,6 @@
       }
     });
     treat = function() {
-      console.log("TERM IS " + term);
       term.write(queue);
       if (term.stop) {
         term.stop = false;
@@ -762,7 +761,7 @@
     };
 
     Terminal.prototype.write = function(data) {
-      var attr, b64, c, ch, content, cs, i, k, l, len, line, m, mime, num, pt, ref, ref1, ref2, ref3, safe, type, valid;
+      var attr, b64, c, ch, content, cs, i, k, l, len, line, m, mime, num, pt, ref, ref1, ref2, ref3, safe, type, valid, x, y;
       i = 0;
       l = data.length;
       while (i < l) {
@@ -803,6 +802,20 @@
                 this.state = State.escaped;
                 break;
               default:
+                if (("\u0300" <= ch && ch <= "\u036F") || ("\u1AB0" <= ch && ch <= "\u1AFF") || ("\u1DC0" <= ch && ch <= "\u1DFF") || ("\u20D0" <= ch && ch <= "\u20FF") || ("\uFE20" <= ch && ch <= "\uFE2F")) {
+                  x = this.x;
+                  y = this.y + this.shift;
+                  if (this.x > 0) {
+                    x -= 1;
+                  } else if (this.y > 0) {
+                    y -= 1;
+                    x = this.cols - 1;
+                  } else {
+                    break;
+                  }
+                  this.screen[y].chars[x].ch += ch;
+                  break;
+                }
                 if (ch >= " ") {
                   if ((ref = this.charset) != null ? ref[ch] : void 0) {
                     ch = this.charset[ch];
@@ -1491,6 +1504,7 @@
                   }
                   this.body.classList.add('stopped');
                   this.stop = true;
+                  return this.send(' \x7f');
                 } else if (this.stop) {
                   return true;
                 }

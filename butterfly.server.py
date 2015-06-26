@@ -147,7 +147,7 @@ if tornado.options.options.generate_certs:
         ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
         ca_cert.set_issuer(ca_cert.get_subject())  # Self signed
         ca_cert.set_pubkey(ca_pk)
-        ca_cert.sign(ca_pk, 'sha1')
+        ca_cert.sign(ca_pk, 'sha512')
 
         write(ca, crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
         write(ca_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_pk))
@@ -167,7 +167,7 @@ if tornado.options.options.generate_certs:
     server_cert.gmtime_adj_notAfter(315360000)  # to 10y
     server_cert.set_issuer(ca_cert.get_subject())  # Signed by ca
     server_cert.set_pubkey(server_pk)
-    server_cert.sign(ca_pk, 'sha1')
+    server_cert.sign(ca_pk, 'sha512')
 
     write(cert % host, crypto.dump_certificate(
         crypto.FILETYPE_PEM, server_cert))
@@ -217,8 +217,8 @@ if (tornado.options.options.generate_current_user_pkcs or
     client_cert.gmtime_adj_notAfter(315360000)  # to 10y
     client_cert.set_issuer(ca_cert.get_subject())  # Signed by ca
     client_cert.set_pubkey(client_pk)
-    client_cert.sign(client_pk, 'sha1')
-    client_cert.sign(ca_pk, 'sha1')
+    client_cert.sign(client_pk, 'sha512')
+    client_cert.sign(ca_pk, 'sha512')
 
     pfx = crypto.PKCS12()
     pfx.set_certificate(client_cert)

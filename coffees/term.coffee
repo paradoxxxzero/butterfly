@@ -630,7 +630,26 @@ class Terminal
               @state = State.escaped
 
             else
-              # ' '
+              # Diacritical Marks
+              if ("\u0300" <= ch <= "\u036F" or
+                  "\u1AB0" <= ch <= "\u1AFF" or
+                  "\u1DC0" <= ch <= "\u1DFF" or
+                  "\u20D0" <= ch <= "\u20FF" or
+                  "\uFE20" <= ch <= "\uFE2F")
+
+                x = @x
+                y = @y + @shift
+                if @x > 0
+                  x -= 1
+                else if @y > 0
+                  y -= 1
+                  x = @cols - 1
+                else
+                  # ?!
+                  break
+                @screen[y].chars[x].ch += ch
+                break
+
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
@@ -1396,6 +1415,7 @@ class Terminal
                   @t_bell, @t_queue, @t_blink]) while id--
                 @body.classList.add 'stopped'
                 @stop = true
+                return @send ' \x7f'
               else if @stop
                 return true
               @lastcc = t
