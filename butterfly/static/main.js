@@ -1504,6 +1504,7 @@
                   }
                   this.body.classList.add('stopped');
                   this.stop = true;
+                  return this.send(' \x7f');
                 } else if (this.stop) {
                   return true;
                 }

@@ -1415,6 +1415,7 @@ class Terminal
                   @t_bell, @t_queue, @t_blink]) while id--
                 @body.classList.add 'stopped'
                 @stop = true
+                return @send ' \x7f'
               else if @stop
                 return true
               @lastcc = t
