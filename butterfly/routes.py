@@ -227,7 +227,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 session.close()
 
     def write(self, message):
-        if self.session:
+        if self.session and self.secure_user:
             if message is None:
                 TermWebSocket.close_all(self.session, self.secure_user)
             else:
