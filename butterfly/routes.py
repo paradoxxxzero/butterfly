@@ -22,6 +22,7 @@ import tornado.options
 import tornado.process
 import tornado.web
 import tornado.websocket
+from collections import defaultdict
 from butterfly import url, Route, utils, __version__
 from butterfly.terminal import Terminal
 
@@ -98,11 +99,13 @@ class Font(Route):
      '(?:/wd/(?P<path>.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     session_history_size = 10000
-    # List of websockets per session
-    sessions = {}
+    # List of websockets per session per user
+    # dict: user -> dict: session -> [TermWebSocket]
+    sessions = defaultdict(dict)
 
-    # Terminal for session
-    terminals = {}
+    # Terminal for session per user
+    # dict: user -> dict: session -> Terminal
+    terminals = defaultdict(dict)
 
     # All terminals sockets for systemd socket deactivation
     sockets = []
@@ -113,6 +116,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     def open(self, user, path, session):
         self.session = session
         self.closed = False
+        self.secure_user = None
 
         # Prevent cross domain
         if self.request.headers['Origin'] not in (
@@ -130,46 +134,93 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.log.info('Websocket opened %r' % self)
         self.set_nodelay(True)
 
+        socket = utils.Socket(self.ws_connection.stream.socket)
+        opts = tornado.options.options
+
+        if not opts.unsecure:
+            user = utils.parse_cert(
+                self.ws_connection.stream.socket.getpeercert())
+            assert user, 'No user in certificate'
+            try:
+                user = utils.User(name=user)
+            except LookupError:
+                raise Exception('Invalid user in certificate')
+
+            # Certificate authed user
+            self.secure_user = user
+
+        elif socket.local and socket.user == utils.User():
+            # Local to local returning browser user
+            self.secure_user = socket.user
+
         # Handling terminal session
         if session:
-            if session in TermWebSocket.sessions:
+            if session in self.user_sessions:
                 # Session already here, registering websocket
-                TermWebSocket.sessions[session].append(self)
+                self.user_sessions[session].append(self)
                 self.write_message(TermWebSocket.history[session])
                 # And returning, we don't want another terminal
                 return
             else:
                 # New session, opening terminal
-                TermWebSocket.sessions[session] = [self]
+                self.user_sessions[session] = [self]
                 TermWebSocket.history[session] = ''
 
         terminal = Terminal(
-                    user, path, session,
-                    self.ws_connection.stream.socket,
-                    self.request.headers['Host'],
-                    self.render_string,
-                    self.write)
+            user, path, session, socket,
+            self.request.headers['Host'], self.render_string, self.write)
+
+        terminal.pty()
 
         if session:
-            TermWebSocket.terminals[session] = terminal
+            if not self.secure_user:
+                self.log.error(
+                    'No terminal session without secure authenticated user'
+                    'or local user.')
+                self._terminal = terminal
+                self.session = None
+            else:
+                self.log.info('Openning session %s for secure user %r' % (
+                    session, self.secure_user))
+                self.user_terminals[session] = terminal
         else:
             self._terminal = terminal
 
-    @classmethod
-    def close_all(cls, session):
-        for inst in TermWebSocket.sessions[session][:]:
-            inst.on_close()
-            inst.close()
-        del TermWebSocket.sessions[session]
-        del TermWebSocket.terminals[session]
+    @property
+    def user_sessions(self):
+        """Return the dict session of socket lists"""
+        if not self.secure_user:
+            return {}
+        return TermWebSocket.sessions[self.secure_user.name]
+
+    @property
+    def user_terminals(self):
+        """Return the dict session of terminal"""
+        if not self.secure_user:
+            return {}
+        return TermWebSocket.terminals[self.secure_user.name]
 
     @classmethod
-    def broadcast(cls, session, message):
+    def close_all(cls, session, user):
+        sessions = TermWebSocket.sessions.get(user.name)
+        if sessions:
+            sockets = sessions[session]
+        for socket in sockets[:]:
+            socket.on_close()
+            socket.close()
+        del sessions[session]
+
+        terminals = TermWebSocket.terminals.get(user.name)
+        del terminals[session]
+
+    @classmethod
+    def broadcast(cls, session, message, user):
         cls.history[session] += message
         if len(cls.history) > cls.session_history_size:
             cls.history[session] = cls.history[session][
                 -cls.session_history_size:]
-        for session in cls.sessions[session][:]:
+        sessions = cls.sessions.get(user.name, [])
+        for session in sessions[session]:
             try:
                 session.write_message(message)
             except Exception:
@@ -178,9 +229,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     def write(self, message):
         if self.session:
             if message is None:
-                TermWebSocket.close_all(self.session)
+                TermWebSocket.close_all(self.session, self.secure_user)
             else:
-                TermWebSocket.broadcast(self.session, message)
+                TermWebSocket.broadcast(
+                    self.session, message, self.secure_user)
         else:
             if message is None:
                 self.on_close()
@@ -189,8 +241,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 self.write_message(message)
 
     def on_message(self, message):
-        if self.session:
-            term = TermWebSocket.terminals.get(self.session)
+        if self.session and self.secure_user:
+            term = self.user_terminals.get(self.session)
             term and term.write(message)
         else:
             self._terminal.write(message)
@@ -202,7 +254,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.log.info('Websocket closed %r' % self)
         TermWebSocket.sockets.remove(self)
         if self.session:
-            TermWebSocket.sessions[self.session].remove(self)
+            self.user_sessions[self.session].remove(self)
         elif hasattr(self, '_terminal'):
             self._terminal.close()
         else:
@@ -212,10 +264,18 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             sys.exit(0)
 
 
-@url(r'/list(?:user/(.+))?/?(?:wd/(.+))?')
-class List(Route):
-    """List available terminals"""
-    def get(self, user, path):
-        if not tornado.options.options.unsecure and user:
-            raise tornado.web.HTTPError(400)
-        return self.render('list.html', sessions=TermWebSocket.sessions)
+@url(r'/sessions')
+class Sessions(Route):
+    """List available sessions"""
+    def get(self):
+        if tornado.options.options.unsecure:
+            raise tornado.web.HTTPError(403)
+
+        cert = self.request.get_ssl_certificate()
+        user = utils.parse_cert(cert)
+
+        if not user:
+            raise tornado.web.HTTPError(403)
+
+        return self.render(
+            'list.html', sessions=TermWebSocket.sessions.get(user, []))

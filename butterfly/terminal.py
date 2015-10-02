@@ -53,7 +53,7 @@ class Terminal(object):
         self.send = send
         self.fd = None
         self.closed = False
-        self.socket = utils.Socket(socket)
+        self.socket = socket
         log.info('Terminal opening with session: %s and socket %r' % (
             self.session, self.socket))
         self.path = path
@@ -77,15 +77,10 @@ class Terminal(object):
             # user as the one who opened the socket ie: the one
             # openning a terminal in browser
             if not self.callee and not self.user and self.socket.local:
-                self.callee = self.caller
+                self.user = self.callee = self.caller
         else:
-            user = utils.parse_cert(socket.getpeercert())
-            assert user, 'No user in certificate'
-            self.user = user
-            try:
-                self.callee = utils.User(name=self.user)
-            except LookupError:
-                raise Exception('Invalid user in certificate')
+            # Authed user
+            self.callee = self.user
 
         if tornado.options.options.motd != '':
             motd = (render_string(
@@ -99,7 +94,7 @@ class Terminal(object):
                     .replace('\n', '\r\n'))
             self.send(motd)
 
-        self.pty()
+        log.info('Forking pty for user %r' % self.user)
 
     def pty(self):
         # Make a "unique" id in 4 bytes
@@ -112,6 +107,8 @@ class Terminal(object):
         self.pid, self.fd = pty.fork()
         if self.pid == 0:
             self.determine_user()
+            log.debug('Pty forked for user %r caller %r callee %r' % (
+                self.user, self.caller, self.callee))
             self.shell()
         else:
             self.communicate()
@@ -126,7 +123,7 @@ class Terminal(object):
                 try:
                     user = input('login: ')
                 except (KeyboardInterrupt, EOFError):
-                    log.debug("Errorin login input", exc_info=True)
+                    log.debug("Error in login input", exc_info=True)
                     pass
 
             try:
@@ -201,6 +198,8 @@ class Terminal(object):
                     os.initgroups(self.callee.name, self.callee.gid)
                     os.setgid(self.callee.gid)
                     os.setuid(self.callee.uid)
+                    # Apparently necessary for some cmd
+                    env['LOGNAME'] = env['USER'] = self.callee.name
                 except Exception:
                     log.error(
                         'The server must be run as root '

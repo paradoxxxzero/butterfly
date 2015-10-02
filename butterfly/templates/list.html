@@ -10,15 +10,15 @@
     <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
 
     <title>Butterfly</title>
-    {# <link href="/style.css" rel="stylesheet"> #}
+    <link href="/style.css" rel="stylesheet"> 
   </head>
 
   <body>
-    <p>Currently open butterfly sessions :
-      <ul>
-        {% for session in sessions %}
-          <li> <a target="_blank" href="/session/{{ session }}">{{ session }}</a></li>
-        {% end %}
-      </ul>
+    <h1>Currently open butterfly sessions :</h1>
+    <ul>
+      {% for session in sessions %}
+        <li><h2><a target="_blank" href="/session/{{ session }}">{{ session }}</a></h2></li>
+      {% end %}
+    </ul>
   </body>
 </html>

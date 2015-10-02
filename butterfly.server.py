@@ -65,46 +65,47 @@ tornado.options.define("theme", default=None,
 if os.getuid() == 0:
     conf_file = os.path.join(
         os.path.abspath(os.sep), 'etc', 'butterfly', 'butterfly.conf')
+    ssl_dir = os.path.join(os.path.abspath(os.sep), 'etc', 'butterfly', 'ssl')
 else:
     conf_file = os.path.join(
         os.path.expanduser('~'), '.butterfly', 'butterfly.conf')
+    ssl_dir = os.path.join(os.path.expanduser('~'), '.butterfly', 'ssl')
 
 tornado.options.define("conf", default=conf_file,
                        help="Butterfly configuration file. "
                        "Contains the same options as command line.")
 
-if os.path.exists(conf_file):
-    tornado.options.parse_config_file(conf_file)
+tornado.options.define("ssl_dir", default=ssl_dir,
+                       help="Force SSL directory location")
 
 tornado.options.parse_command_line()
 
+if os.path.exists(tornado.options.options.conf):
+    tornado.options.parse_config_file(tornado.options.options.conf)
+
+options = tornado.options.options
 
 for logger in ('tornado.access', 'tornado.application',
                'tornado.general', 'butterfly'):
     level = logging.WARNING
-    if tornado.options.options.debug:
+    if options.debug:
         level = logging.INFO
-        if tornado.options.options.more:
+        if options.more:
             level = logging.DEBUG
     logging.getLogger(logger).setLevel(level)
 
 log = logging.getLogger('butterfly')
 log.info('Starting server')
 
-host = tornado.options.options.host
-port = tornado.options.options.port
+host = options.host
+port = options.port
 
-if os.getuid() == 0:
-    ssl_dir = os.path.join(os.path.abspath(os.sep), 'etc', 'butterfly', 'ssl')
-else:
-    ssl_dir = os.path.join(os.path.expanduser('~'), '.butterfly', 'ssl')
-
-if not os.path.exists(ssl_dir):
-    os.makedirs(ssl_dir)
+if not os.path.exists(options.ssl_dir):
+    os.makedirs(options.ssl_dir)
 
 
 def to_abs(file):
-    return os.path.join(ssl_dir, file)
+    return os.path.join(options.ssl_dir, file)
 
 ca, ca_key, cert, cert_key, pkcs12 = map(to_abs, [
     'butterfly_ca.crt', 'butterfly_ca.key',
@@ -131,7 +132,7 @@ def read(file):
     with open(file, 'rb') as fd:
         return fd.read()
 
-if tornado.options.options.generate_certs:
+if options.generate_certs:
     from OpenSSL import crypto
     print('Generating certificates for %s (change it with --host)\n' % host)
 
@@ -180,8 +181,8 @@ if tornado.options.options.generate_certs:
     sys.exit(0)
 
 
-if (tornado.options.options.generate_current_user_pkcs or
-        tornado.options.options.generate_user_pkcs):
+if (options.generate_current_user_pkcs or
+        options.generate_user_pkcs):
     from butterfly import utils
     try:
         current_user = utils.User()
@@ -193,10 +194,10 @@ if (tornado.options.options.generate_current_user_pkcs or
         print('Please generate certificates using --generate-certs before')
         sys.exit(1)
 
-    if tornado.options.options.generate_current_user_pkcs:
+    if options.generate_current_user_pkcs:
         user = current_user.name
     else:
-        user = tornado.options.options.generate_user_pkcs
+        user = options.generate_user_pkcs
 
     if user != current_user.name and current_user.uid != 0:
         print('Cannot create certificate for another user with '
@@ -239,7 +240,7 @@ if (tornado.options.options.generate_current_user_pkcs or
     sys.exit(0)
 
 
-if tornado.options.options.unsecure:
+if options.unsecure:
     ssl_opts = None
 else:
     if not all(map(os.path.exists, [cert % host, cert_key % host, ca])):
@@ -260,15 +261,15 @@ else:
         'ca_certs': ca,
         'cert_reqs': ssl.CERT_REQUIRED
     }
-    if tornado.options.options.ssl_version is not None:
+    if options.ssl_version is not None:
         if not hasattr(
-                ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version):
+                ssl, 'PROTOCOL_%s' % options.ssl_version):
             print(
                 "Unknown SSL protocol %s" %
-                tornado.options.options.ssl_version)
+                options.ssl_version)
             sys.exit(1)
         ssl_opts['ssl_version'] = getattr(
-            ssl, 'PROTOCOL_%s' % tornado.options.options.ssl_version)
+            ssl, 'PROTOCOL_%s' % options.ssl_version)
 
 from butterfly import application
 
@@ -285,6 +286,6 @@ log.info('Starting loop')
 ioloop = tornado.ioloop.IOLoop.instance()
 
 url = "http%s://%s:%d/" % (
-    "s" if not tornado.options.options.unsecure else "", host, port)
+    "s" if not options.unsecure else "", host, port)
 log.warn('Butterfly is ready, open your browser to: %s' % url)
 ioloop.start()
