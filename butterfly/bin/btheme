@@ -8,7 +8,7 @@ except ImportError:
     from urllib import urlopen
 
 from io import BytesIO
-from shutil import move
+from shutil import move, rmtree
 from zipfile import ZipFile
 from tempfile import mkdtemp
 from butterfly.escapes import sass
@@ -62,12 +62,21 @@ if args.install:
 
     zip_dest = os.path.join(home_dir, 'butterfly-themes-master')
     theme_dir = os.path.join(home_dir, 'themes')
-    if os.path.exists(theme_dir):
-        tmp_dir = mkdtemp()
-        print('%s already present. Putting it in %s.' % (
-            theme_dir, os.path.join(tmp_dir, 'themes')))
-        move(theme_dir, tmp_dir)
-    move(zip_dest, theme_dir)
+    if not os.path.exists(theme_dir):
+        os.makedirs(theme_dir)
+
+    tmp_dir = mkdtemp()
+    for dir_ in os.listdir(zip_dest):
+        if dir_ == 'README.md':
+            continue
+        new_dir = os.path.join(theme_dir, dir_)
+        if os.path.exists(new_dir):
+            move(new_dir, tmp_dir)
+            print('Old theme %s has been backed up in %s' % (
+                new_dir, tmp_dir))
+        move(os.path.join(zip_dest, dir_), theme_dir)
+
+    rmtree(zip_dest)
     print('%s extracted.' % theme_dir)
 
 elif args.refresh:
