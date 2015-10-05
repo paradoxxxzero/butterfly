@@ -278,6 +278,8 @@ class Terminal(object):
             log.debug('WRIT<%r' % message)
             self.writer.write(message[1:])
             self.writer.flush()
+        elif message[0] == 'T':
+            tornado.options.options.theme = message[1:]
 
     def shell_handler(self, fd, events):
         if events & ioloop.READ:

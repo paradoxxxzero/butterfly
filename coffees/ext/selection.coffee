@@ -148,7 +148,7 @@ class Selection
     else
       node = needle.node
 
-    text = node.textContent
+    text = node?.textContent
     i = needle.offset
     if backward
       while node
@@ -156,7 +156,7 @@ class Selection
           if text[--i].match til
             return node: node, offset: i + 1
         node = previousLeaf node
-        text = node.textContent
+        text = node?.textContent
         i = text.length
     else
       while node
@@ -164,7 +164,7 @@ class Selection
           if text[i++].match til
             return node: node, offset: i - 1
         node = nextLeaf node
-        text = node.textContent
+        text = node?.textContent
         i = 0
 
     return needle

@@ -1115,7 +1115,7 @@ class Terminal
 
                 [type, content] = pt.split('|', 2)
 
-                unless content
+                if not content and type isnt 'SASS'
                   console.error "No type for inline DECUDK: #{pt}"
                   break
 
@@ -1154,6 +1154,13 @@ class Terminal
                   when "TEXT"
                     l += content.length
                     data = data.slice(0, i + 1) + content + data.slice(i + 1)
+
+                  when "SASS"
+                    # sass file
+                    if content.length
+                      @ctl 'Theme', content
+                    setTimeout @refreshStyle.bind(@), 50
+
                   else
                     console.error "Unknown type #{type} for DECUDK"
 
@@ -1333,6 +1340,7 @@ class Terminal
       # page up
       when 33
         if ev.shiftKey
+          break if ev.ctrlKey
           @scrollDisplay -(@rows - 1)
           return cancel(ev)
         else
@@ -1341,6 +1349,7 @@ class Terminal
       # page down
       when 34
         if ev.shiftKey
+          break if ev.ctrlKey
           @scrollDisplay @rows - 1
           return cancel(ev)
         else
@@ -3044,6 +3053,12 @@ class Terminal
         @screen[i].dirty = true
         @screen[i].wrap = false
         i++
+
+  refreshStyle: ->
+    document.getElementById('style').setAttribute(
+      'href', '/style.css?' + new Date().getTime())
+    setTimeout @resize.bind(@), 300
+
 
   # DEC Special Character and Line Drawing Set.
   # http://vt100.net/docs/vt102-ug/table5-13.html

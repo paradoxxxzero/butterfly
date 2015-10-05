@@ -30,11 +30,19 @@ import re
 log = getLogger('butterfly')
 
 
-def get_style():
-    style = None
+def get_style_path():
+    opts = tornado.options.options
 
-    if tornado.options.options.theme:
-        theme = 'themes/%s/' % tornado.options.options.theme
+    if opts.theme and os.path.exists(opts.theme):
+        if os.path.isdir(opts.theme):
+            theme = os.path.join(opts.theme, 'style.sass')
+            if os.path.exists(theme):
+                return theme
+        else:
+            return opts.theme
+
+    if opts.theme:
+        theme = 'themes/%s/' % opts.theme
     else:
         theme = '/'
 
@@ -43,8 +51,11 @@ def get_style():
                 '/etc/butterfly/%sstyle' % theme,
                 os.path.expanduser('~/.butterfly/%sstyle' % theme)]:
             if os.path.exists('%s.%s' % (fn, ext)):
-                style = '%s.%s' % (fn, ext)
+                return '%s.%s' % (fn, ext)
 
+
+def get_style():
+    style = get_style_path()
     if style is None:
         return
 
@@ -53,18 +64,19 @@ def get_style():
             os.path.dirname(__file__), 'sass')
         try:
             import sass
+            sass.CompileError
         except Exception:
             log.error('You must install libsass to use sass '
                       '(pip install libsass)')
             return
-
+        base = os.path.dirname(style)
         try:
             return sass.compile(filename=style, include_paths=[
-                theme, sass_path])
+                base, sass_path])
         except sass.CompileError:
             log.error(
                 'Unable to compile style.scss (filename: %s, paths: %r) ' % (
-                    style, [theme, sass_path]), exc_info=True)
+                    style, [base, sass_path]), exc_info=True)
             return
 
     with open(style) as s:

@@ -23,24 +23,33 @@ Butterfly is a xterm compliant terminal built with python and javascript.
 
 
 {title}Butterfly programs:{reset}
-  {strong}bcat  : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
-  {strong}bopen : {reset}Open a new terminal at specified location.
-  {strong}b16M  : {reset}Test the 16M colors support in terminal.
-  {strong}bhr   : {reset}Put a html hr. This is a test and needs --allow-html-escapes flag.
-  {strong}bcal  : {reset}Display current month using html. This is a test and needs --allow-html-escapes flag.
+  {strong}bcat   : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
+  {strong}bopen  : {reset}Open a new terminal at specified location.
+  {strong}bopen  : {reset}Open or rattach a butterfly session. Multiplexing is supported.
+  {strong}b16M   : {reset}Test the 16M colors support in terminal.
+  {strong}bhr    : {reset}Put a html hr. This is a test for html output.
+  {strong}bcal   : {reset}Display current month using html. This is also a test for html output.
+  {strong}btheme : {reset}Set a theme as current theme. (Can also install preset themes)
 
 
 {title}Styling butterfly:{reset}
   To style butterfly in sass, you need to have the libsass python library installed.
 
-  You will have to:
-    $ cp {main} ~/.butterfly/style.sass
-  or for system wide:
-    # cp {main} /etc/butterfly/style.sass
+  First check out existing themes, run:
+    $ btheme --install
+  Then try:
+    $ btheme solarized-dark # or C64 or abstract-image
+  If you want to set a theme as default add a 'style=theme' line in your butterfly.conf
+
+  If you want to style it yourself do:
+    $ cp {main} ~/.butterfly/style.sass # or /etc/butterfly/style.sass for system wide
   and then edit this file.
 
-  You can also copy the imported sass files in the same dir.
-  Sass files are compiled on the fly so just reload your tab to see the changes.
+  You can also copy the imported sass files in the same dir. Run:
+    $ btheme --refresh
+  To update the style in the current terminal.
+
+  Finally when your theme is done please submit it to https://github.com/paradoxxxzero/butterfly-themes
 
   It is also possible to use a style.css file and re do all the styling in css exclusively.\
 """.format(

@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+import argparse
+import os
+import sys
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
+
+from io import BytesIO
+from shutil import move
+from zipfile import ZipFile
+from tempfile import mkdtemp
+from butterfly.escapes import sass
+
+try:
+    import sass as _
+    _.CompileError
+except Exception:
+    print('You must install libsass to use themes '
+          '(run: pip install libsass)')
+    sys.exit(1)
+
+themes_url = ("https://github.com/paradoxxxzero/"
+              "butterfly-themes/archive/master.zip")
+
+parser = argparse.ArgumentParser(description='Butterfly session opener.')
+parser.add_argument(
+    '--install',
+    action="store_true",
+    help='Install preset themes from '
+    'https://github.com/paradoxxxzero/butterfly-themes')
+
+parser.add_argument(
+    '--refresh',
+    action="store_true",
+    help='Refresh the current style')
+
+parser.add_argument(
+    '-g',
+    action="store_true",
+    help='Install system wide for usage with butterfly as daemon')
+
+parser.add_argument(
+    'theme',
+    nargs='?',
+    help='Theme to load. '
+    'Can be a sass file or a directory containing a sass file.')
+args = parser.parse_args()
+
+if args.g:
+    home_dir = os.path.join('/etc', 'butterfly')
+else:
+    home_dir = os.path.expanduser(os.path.join('~', '.butterfly'))
+
+if args.install:
+    print('Downloading %s...' % themes_url)
+    zip_ = ZipFile(BytesIO(urlopen(themes_url).read()))
+
+    print('Extracting in %s' % home_dir)
+    zip_.extractall(home_dir)
+
+    zip_dest = os.path.join(home_dir, 'butterfly-themes-master')
+    theme_dir = os.path.join(home_dir, 'themes')
+    if os.path.exists(theme_dir):
+        tmp_dir = mkdtemp()
+        print('%s already present. Putting it in %s.' % (
+            theme_dir, os.path.join(tmp_dir, 'themes')))
+        move(theme_dir, tmp_dir)
+    move(zip_dest, theme_dir)
+    print('%s extracted.' % theme_dir)
+
+elif args.refresh:
+    with sass():
+        pass
+
+else:
+    sss = os.path.abspath(args.theme or home_dir)
+    if not os.path.exists(sss):
+        sss = os.path.join(home_dir, 'themes', args.theme)
+    if not os.path.exists(sss):
+        print('%s not found' % sss)
+        sys.exit(1)
+
+    print('Loading %s' % sss)
+    with sass():
+        sys.stdout.write(sss)

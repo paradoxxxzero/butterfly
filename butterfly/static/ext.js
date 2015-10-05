@@ -263,7 +263,7 @@
       } else {
         node = needle.node;
       }
-      text = node.textContent;
+      text = node != null ? node.textContent : void 0;
       i = needle.offset;
       if (backward) {
         while (node) {
@@ -276,7 +276,7 @@
             }
           }
           node = previousLeaf(node);
-          text = node.textContent;
+          text = node != null ? node.textContent : void 0;
           i = text.length;
         }
       } else {
@@ -290,7 +290,7 @@
             }
           }
           node = nextLeaf(node);
-          text = node.textContent;
+          text = node != null ? node.textContent : void 0;
           i = 0;
         }
       }

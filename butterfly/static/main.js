@@ -22,6 +22,8 @@
       params = args.join(',');
       if (type === 'Resize') {
         return ws.send('R' + params);
+      } else if (type === 'Theme') {
+        return ws.send('T' + params);
       }
     };
     if (location.protocol === 'https:') {
@@ -1224,7 +1226,7 @@
                   }
                   pt = pt.slice(1);
                   ref3 = pt.split('|', 2), type = ref3[0], content = ref3[1];
-                  if (!content) {
+                  if (!content && type !== 'SASS') {
                     console.error("No type for inline DECUDK: " + pt);
                     break;
                   }
@@ -1261,6 +1263,12 @@
                     case "TEXT":
                       l += content.length;
                       data = data.slice(0, i + 1) + content + data.slice(i + 1);
+                      break;
+                    case "SASS":
+                      if (content.length) {
+                        this.ctl('Theme', content);
+                      }
+                      setTimeout(this.refreshStyle.bind(this), 50);
                       break;
                     default:
                       console.error("Unknown type " + type + " for DECUDK");
@@ -1432,6 +1440,9 @@
           break;
         case 33:
           if (ev.shiftKey) {
+            if (ev.ctrlKey) {
+              break;
+            }
             this.scrollDisplay(-(this.rows - 1));
             return cancel(ev);
           } else {
@@ -1440,6 +1451,9 @@
           break;
         case 34:
           if (ev.shiftKey) {
+            if (ev.ctrlKey) {
+              break;
+            }
             this.scrollDisplay(this.rows - 1);
             return cancel(ev);
           } else {
@@ -2685,6 +2699,11 @@
         }).call(this));
       }
       return results;
+    };
+
+    Terminal.prototype.refreshStyle = function() {
+      document.getElementById('style').setAttribute('href', '/style.css?' + new Date().getTime());
+      return setTimeout(this.resize.bind(this), 300);
     };
 
     Terminal.prototype.charsets = {

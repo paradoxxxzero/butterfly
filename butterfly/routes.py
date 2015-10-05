@@ -22,6 +22,7 @@ import tornado.options
 import tornado.process
 import tornado.web
 import tornado.websocket
+from mimetypes import guess_type
 from collections import defaultdict
 from butterfly import url, Route, utils, __version__
 from butterfly.terminal import Terminal
@@ -68,28 +69,44 @@ class Style(Route):
 
 
 @url(r'/theme/font/([^/]+)')
-class Font(Route):
+class ThemeFont(Route):
 
     def get(self, name):
         if not tornado.options.options.theme or not name:
             raise tornado.web.HTTPError(404)
-        font = 'themes/%s/font/%s' % (
-            tornado.options.options.theme,
-            name)
-        for fn in [
-                '/etc/butterfly/%s' % font,
-                os.path.expanduser('~/.butterfly/%s' % font)]:
-            if os.path.exists(fn):
-                ext = fn.split('.')[-1]
-                self.set_header("Content-Type", "application/x-font-%s" % ext)
-                with open(fn, 'rb') as s:
-                    while True:
-                        data = s.read(16384)
-                        if data:
-                            self.write(data)
-                        else:
-                            break
-                self.finish()
+        fn = os.path.join(
+            os.path.dirname(utils.get_style_path()), 'font', name)
+        if os.path.exists(fn):
+            self.set_header("Content-Type", guess_type(fn)[0])
+            with open(fn, 'rb') as s:
+                while True:
+                    data = s.read(16384)
+                    if data:
+                        self.write(data)
+                    else:
+                        break
+            self.finish()
+        raise tornado.web.HTTPError(404)
+
+
+@url(r'/theme/image/([^/]+)')
+class ThemeImage(Route):
+
+    def get(self, name):
+        if not tornado.options.options.theme or not name:
+            raise tornado.web.HTTPError(404)
+        fn = os.path.join(
+            os.path.dirname(utils.get_style_path()), 'image', name)
+        if os.path.exists(fn):
+            self.set_header("Content-Type", guess_type(fn)[0])
+            with open(fn, 'rb') as s:
+                while True:
+                    data = s.read(16384)
+                    if data:
+                        self.write(data)
+                    else:
+                        break
+            self.finish()
         raise tornado.web.HTTPError(404)
 
 

@@ -32,3 +32,11 @@ def text():
     yield
     sys.stdout.write('\x1bP')
     sys.stdout.flush()
+
+
+@contextmanager
+def sass():
+    sys.stdout.write('\x1bP;SASS|')
+    yield
+    sys.stdout.write('\x1bP')
+    sys.stdout.flush()
