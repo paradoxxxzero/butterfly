@@ -165,7 +165,7 @@ class Socket(object):
 
     @property
     def local(self):
-        return self.remote_addr in ['127.0.0.1', '::1']
+        return self.remote_addr in ['127.0.0.1', '::1', '::ffff:127.0.0.1']
 
     def __repr__(self):
         return '<Socket L: %s:%d R: %s:%d User: %r>' % (
@@ -219,6 +219,23 @@ def get_procfs_socket_line(port):
 
 # Linux only browser environment far fetch
 def get_socket_env(inode):
+    for pid in os.listdir("/proc/"):
+        if not pid.isdigit():
+            continue
+        with open('/proc/%s/cmdline' % pid) as c:
+            if c.read().split('\x00')[0] in [
+                    'gnome-session',
+                    'startkde',
+                    'xfce4-session']:
+                with open('/proc/%s/environ' % pid) as e:
+                    keyvals = e.read().split('\x00')
+                    env = {}
+                    for keyval in keyvals:
+                        if '=' in keyval:
+                            key, val = keyval.split('=', 1)
+                            env[key] = val
+                    return env
+
     for pid in os.listdir("/proc/"):
         if not pid.isdigit():
             continue
