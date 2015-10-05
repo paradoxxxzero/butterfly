@@ -507,7 +507,7 @@ class Terminal
       if lines.length > @scrollback
         for line in Array.prototype.slice.call(
           lines, 0, lines.length - @scrollback)
-          line.remove()
+            line.remove()
         for group in document.querySelectorAll('.group:empty')
           group.remove()
         lines = document.querySelectorAll('.line')
@@ -1881,8 +1881,9 @@ class Terminal
         # invisible
         @curAttr.invisible = true
       else if p is 10
-         # Primary Font
-         # ignoring
+        # Primary Font
+        # ignoring
+        undefined
       else if p is 22
         # not bold
         @curAttr.bold = false
@@ -2486,7 +2487,7 @@ class Terminal
             @scrollBottom = @normal.scrollBottom
             @tabs = @normal.tabs
             @normal = null
-            @reset()
+            @refresh(true)
             @showCursor()
 
 

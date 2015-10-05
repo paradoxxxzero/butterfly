@@ -167,6 +167,7 @@ body {
   .fg-color-0.reverse-video {
     background-color: #2e3436 !important; }
 
+/* Black */
 .bg-color-1 {
   background-color: #cc0000; }
   .bg-color-1.reverse-video {
@@ -178,6 +179,7 @@ body {
   .fg-color-1.reverse-video, .reverse-video.nbsp {
     background-color: #cc0000 !important; }
 
+/* Red */
 .bg-color-2 {
   background-color: #4e9a06; }
   .bg-color-2.reverse-video {
@@ -189,6 +191,7 @@ body {
   .fg-color-2.reverse-video {
     background-color: #4e9a06 !important; }
 
+/* Green */
 .bg-color-3 {
   background-color: #c4a000; }
   .bg-color-3.reverse-video {
@@ -200,6 +203,7 @@ body {
   .fg-color-3.reverse-video {
     background-color: #c4a000 !important; }
 
+/* Yellow */
 .bg-color-4 {
   background-color: #3465a4; }
   .bg-color-4.reverse-video {
@@ -211,6 +215,7 @@ body {
   .fg-color-4.reverse-video {
     background-color: #3465a4 !important; }
 
+/* Blue */
 .bg-color-5 {
   background-color: #75507b; }
   .bg-color-5.reverse-video {
@@ -222,6 +227,7 @@ body {
   .fg-color-5.reverse-video {
     background-color: #75507b !important; }
 
+/* Magenta */
 .bg-color-6 {
   background-color: #06989a; }
   .bg-color-6.reverse-video {
@@ -233,6 +239,7 @@ body {
   .fg-color-6.reverse-video {
     background-color: #06989a !important; }
 
+/* Cyan */
 .bg-color-7 {
   background-color: #d3d7cf; }
   .bg-color-7.reverse-video {
@@ -244,6 +251,7 @@ body {
   .fg-color-7.reverse-video {
     background-color: #d3d7cf !important; }
 
+/* White */
 .bg-color-8 {
   background-color: #555753; }
   .bg-color-8.reverse-video {
@@ -255,6 +263,7 @@ body {
   .fg-color-8.reverse-video {
     background-color: #555753 !important; }
 
+/* Bright Black */
 .bg-color-9 {
   background-color: #ef2929; }
   .bg-color-9.reverse-video {
@@ -266,6 +275,7 @@ body {
   .fg-color-9.reverse-video {
     background-color: #ef2929 !important; }
 
+/* Bright Red */
 .bg-color-10 {
   background-color: #8ae234; }
   .bg-color-10.reverse-video {
@@ -277,6 +287,7 @@ body {
   .fg-color-10.reverse-video {
     background-color: #8ae234 !important; }
 
+/* Bright Green */
 .bg-color-11 {
   background-color: #fce94f; }
   .bg-color-11.reverse-video {
@@ -288,6 +299,7 @@ body {
   .fg-color-11.reverse-video {
     background-color: #fce94f !important; }
 
+/* Bright Yellow */
 .bg-color-12 {
   background-color: #729fcf; }
   .bg-color-12.reverse-video {
@@ -299,6 +311,7 @@ body {
   .fg-color-12.reverse-video {
     background-color: #729fcf !important; }
 
+/* Bright Blue */
 .bg-color-13 {
   background-color: #ad7fa8; }
   .bg-color-13.reverse-video {
@@ -310,6 +323,7 @@ body {
   .fg-color-13.reverse-video {
     background-color: #ad7fa8 !important; }
 
+/* Bright Magenta */
 .bg-color-14 {
   background-color: #34e2e2; }
   .bg-color-14.reverse-video {
@@ -321,6 +335,7 @@ body {
   .fg-color-14.reverse-video {
     background-color: #34e2e2 !important; }
 
+/* Bright Cyan */
 .bg-color-15 {
   background-color: #eeeeec; }
   .bg-color-15.reverse-video {
@@ -332,6 +347,7 @@ body {
   .fg-color-15.reverse-video {
     background-color: #eeeeec !important; }
 
+/* Bright White */
 /* *-* coding: utf-8 *-* */
 /* This file is part of butterfly */
 /* butterfly Copyright (C) 2014  Florian Mounier */
@@ -3091,10 +3107,8 @@ body {
 @keyframes blink {
   0% {
     opacity: 1; }
-
   50% {
     opacity: 0; }
-
   100% {
     opacity: 1; } }
 

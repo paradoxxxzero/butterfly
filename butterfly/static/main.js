@@ -1990,7 +1990,7 @@
         } else if (p === 8) {
           this.curAttr.invisible = true;
         } else if (p === 10) {
-
+          void 0;
         } else if (p === 22) {
           this.curAttr.bold = false;
         } else if (p === 24) {
@@ -2409,7 +2409,7 @@
               this.scrollBottom = this.normal.scrollBottom;
               this.tabs = this.normal.tabs;
               this.normal = null;
-              this.reset();
+              this.refresh(true);
               return this.showCursor();
             }
         }
