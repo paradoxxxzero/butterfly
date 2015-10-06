@@ -3098,11 +3098,23 @@ body {
 .underline, .nbsp {
   text-decoration: underline; }
 
+.italic {
+  font-style: italic; }
+
+.faint {
+  text-opacity: .6; }
+
+.crossed {
+  text-decoration: line-through; }
+
 /* Not supported, emulated */
 /* .blink */
 /*   text-decoration: blink */
 .blink {
   animation: blink 1s ease-in-out infinite; }
+
+.blink-fast {
+  animation: blink 250ms ease-in-out infinite; }
 
 @keyframes blink {
   0% {

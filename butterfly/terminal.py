@@ -213,6 +213,9 @@ class Terminal(object):
                 args = [tornado.options.options.shell or self.callee.shell]
                 args.append('-i')
 
+            # In some cases some shells don't export SHELL var
+            env['SHELL'] = args[0]
+
             os.execvpe(args[0], args, env)
             # This process has been replaced
 

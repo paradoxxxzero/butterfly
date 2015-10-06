@@ -214,12 +214,15 @@
         underline: a.underline,
         blink: a.blink,
         inverse: a.inverse,
-        invisible: a.invisible
+        invisible: a.invisible,
+        italic: a.italic,
+        faint: a.faint,
+        crossed: a.crossed
       };
     };
 
     Terminal.prototype.equalAttr = function(a, b) {
-      return a.bg === b.bg && a.fg === b.fg && a.bold === b.bold && a.underline === b.underline && a.blink === b.blink && a.inverse === b.inverse && a.invisible === b.invisible;
+      return a.bg === b.bg && a.fg === b.fg && a.bold === b.bold && a.underline === b.underline && a.blink === b.blink && a.inverse === b.inverse && a.invisible === b.invisible && a.italic === b.italic && a.faint === b.faint && a.crossed === b.crossed;
     };
 
     Terminal.prototype.putChar = function(c) {
@@ -257,9 +260,12 @@
         ch: " ",
         bold: false,
         underline: false,
-        blink: false,
+        blink: 0,
         inverse: false,
-        invisible: false
+        invisible: false,
+        italic: false,
+        faint: false,
+        crossed: false
       };
       this.curAttr = this.cloneAttr(this.defAttr);
       this.params = [];
@@ -553,14 +559,26 @@
               if (data.underline) {
                 classes.push("underline");
               }
-              if (data.blink) {
+              if (data.blink === 1) {
                 classes.push("blink");
+              }
+              if (data.blink === 2) {
+                classes.push("blink-fast");
               }
               if (data.inverse) {
                 classes.push("reverse-video");
               }
               if (data.invisible) {
                 classes.push("invisible");
+              }
+              if (data.italic) {
+                classes.push("italic");
+              }
+              if (data.faint) {
+                classes.push("faint");
+              }
+              if (data.crossed) {
+                classes.push("crossed");
               }
               if (typeof data.fg === 'number') {
                 fg = data.fg;
@@ -1692,6 +1710,38 @@
           }
         }
       }
+      if (this.normal) {
+        if (oldCols < this.cols) {
+          i = this.normal.screen.length;
+          while (i--) {
+            while (this.normal.screen[i].chars.length < this.cols) {
+              this.normal.screen[i].chars.push(this.defAttr);
+            }
+            this.normal.screen[i].wrap = false;
+          }
+        } else if (oldCols > this.cols) {
+          i = this.normal.screen.length;
+          while (i--) {
+            while (this.normal.screen[i].chars.length > this.cols) {
+              this.normal.screen[i].chars.pop();
+            }
+          }
+        }
+        j = oldRows;
+        if (j < this.rows) {
+          while (j++ < this.rows) {
+            if (this.normal.screen.length < this.rows) {
+              this.normal.screen.push(this.blankLine());
+            }
+          }
+        } else if (j > this.rows) {
+          while (j-- > this.rows) {
+            if (this.normal.screen.length > this.rows) {
+              this.normal.screen.pop();
+            }
+          }
+        }
+      }
       if (this.y >= this.rows) {
         this.y = this.rows - 1;
       }
@@ -1701,7 +1751,6 @@
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
       this.refresh(true);
-      this.normal = null;
       if (x || y) {
         return this.reset();
       }
@@ -1996,18 +2045,31 @@
           this.curAttr = this.cloneAttr(this.defAttr);
         } else if (p === 1) {
           this.curAttr.bold = true;
+        } else if (p === 2) {
+          this.curAttr.faint = true;
+        } else if (p === 3) {
+          this.curAttr.italic = true;
         } else if (p === 4) {
           this.curAttr.underline = true;
         } else if (p === 5) {
-          this.curAttr.blink = true;
+          this.curAttr.blink = 1;
+        } else if (p === 6) {
+          this.curAttr.blink = 2;
         } else if (p === 7) {
           this.curAttr.inverse = true;
         } else if (p === 8) {
           this.curAttr.invisible = true;
+        } else if (p === 9) {
+          this.curAttr.crossed = true;
         } else if (p === 10) {
           void 0;
+        } else if (p === 21) {
+          this.curAttr.bold = false;
         } else if (p === 22) {
           this.curAttr.bold = false;
+          this.curAttr.faint = false;
+        } else if (p === 23) {
+          this.curAttr.italic = false;
         } else if (p === 24) {
           this.curAttr.underline = false;
         } else if (p === 25) {
@@ -2016,6 +2078,8 @@
           this.curAttr.inverse = false;
         } else if (p === 28) {
           this.curAttr.invisible = false;
+        } else if (p === 29) {
+          this.curAttr.crossed = false;
         } else if (p === 39) {
           this.curAttr.fg = 257;
         } else if (p === 49) {
@@ -2345,7 +2409,8 @@
                 shift: this.shift,
                 scrollTop: this.scrollTop,
                 scrollBottom: this.scrollBottom,
-                tabs: this.tabs
+                tabs: this.tabs,
+                curAttr: this.curAttr
               };
               this.reset();
               this.normal = normal;
@@ -2423,6 +2488,7 @@
               this.scrollTop = this.normal.scrollTop;
               this.scrollBottom = this.normal.scrollBottom;
               this.tabs = this.normal.tabs;
+              this.curAttr = this.normal.curAttr;
               this.normal = null;
               this.refresh(true);
               return this.showCursor();

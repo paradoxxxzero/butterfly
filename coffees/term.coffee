@@ -111,12 +111,17 @@ class Terminal
     blink: a.blink
     inverse: a.inverse
     invisible: a.invisible
+    italic: a.italic
+    faint: a.faint
+    crossed: a.crossed
 
   equalAttr: (a, b) ->
     # Not testing char
     (a.bg is b.bg and a.fg is b.fg and a.bold is b.bold and
      a.underline is b.underline and a.blink is b.blink and
-      a.inverse is b.inverse and a.invisible is b.invisible)
+      a.inverse is b.inverse and a.invisible is b.invisible and
+      a.italic is b.italic and a.faint is b.faint and
+      a.crossed is b.crossed)
 
   putChar: (c) ->
     if @insertMode
@@ -158,9 +163,12 @@ class Terminal
       ch: " "
       bold: false
       underline: false
-      blink: false
+      blink: 0
       inverse: false
       invisible: false
+      italic: false
+      faint: false
+      crossed: false
 
     @curAttr = @cloneAttr @defAttr
     @params = []
@@ -426,11 +434,18 @@ class Terminal
             # underline
             classes.push "underline" if data.underline
             # blink
-            classes.push "blink" if data.blink
+            classes.push "blink" if data.blink is 1
+            classes.push "blink-fast" if data.blink is 2
             # inverse
             classes.push "reverse-video" if data.inverse
             # invisible
             classes.push "invisible" if data.invisible
+            # italic
+            classes.push "italic" if data.italic
+            # faint
+            classes.push "faint" if data.faint
+            # crossed
+            classes.push "crossed" if data.crossed
 
             if typeof data.fg is 'number'
               fg = data.fg
@@ -1571,6 +1586,31 @@ class Terminal
           el = @children.pop()
           el?.parentNode.removeChild el
 
+    if @normal
+      # resize cols
+      if oldCols < @cols
+        # does xterm use the default attr?
+        i = @normal.screen.length
+        while i--
+          while @normal.screen[i].chars.length < @cols
+            @normal.screen[i].chars.push @defAttr
+          @normal.screen[i].wrap = false
+
+      else if oldCols > @cols
+        i = @normal.screen.length
+        while i--
+          while @normal.screen[i].chars.length > @cols
+            @normal.screen[i].chars.pop()
+
+      # resize rows
+      j = oldRows
+      if j < @rows
+        while j++ < @rows
+          @normal.screen.push @blankLine() if @normal.screen.length < @rows
+      else if j > @rows
+        while j-- > @rows
+          @normal.screen.pop() if @normal.screen.length > @rows
+
     # make sure the cursor stays on screen
     @y = @rows - 1 if @y >= @rows
     @x = @cols - 1 if @x >= @cols
@@ -1579,12 +1619,6 @@ class Terminal
     @scrollBottom = @rows - 1
 
     @refresh(true)
-
-    # it's a real nightmare trying
-    # to resize the original
-    # screen buffer. just set it
-    # to null for now.
-    @normal = null
     @reset() if x or y
 
   resizeWindowPlease: (cols) ->
@@ -1786,17 +1820,26 @@ class Terminal
 
 
   # CSI Pm m    Character Attributes (SGR).
-  #         Ps = 0    -> Normal (default).
-  #         Ps = 1    -> Bold.
-  #         Ps = 4    -> Underlined.
-  #         Ps = 5    -> Blink (appears as Bold).
-  #         Ps = 7    -> Inverse.
-  #         Ps = 8    -> Invisible, i.e., hidden (VT300).
+  #         Ps = 0      -> Normal (default).
+  #         Ps = 1      -> Bold.
+  #         Ps = 2      -> Faint
+  #         Ps = 3      -> Italic
+  #         Ps = 4      -> Underlined.
+  #         Ps = 5      -> Blink.
+  #         Ps = 6      -> Blink rapid
+  #         Ps = 7      -> Inverse.
+  #         Ps = 8      -> Invisible, i.e., hidden (VT300).
+  #         Ps = 9      -> Crossed out
+  #         Ps = 1 0    -> Primary font
+
+  #         Ps = 2 1    -> Bold off
   #         Ps = 2 2    -> Normal (neither bold nor faint).
+  #         Ps = 2 3    -> Non italic
   #         Ps = 2 4    -> Not underline.
   #         Ps = 2 5    -> Steady (not blinking).
   #         Ps = 2 7    -> Positive (not inverse).
   #         Ps = 2 8    -> Visible, i.e., not hidden (VT300).
+  #         Ps = 2 9    -> Not crossed out
   #         Ps = 3 0    -> Set foreground color to Black.
   #         Ps = 3 1    -> Set foreground color to Red.
   #         Ps = 3 2    -> Set foreground color to Green.
@@ -1876,12 +1919,21 @@ class Terminal
       else if p is 1
         # bold text
         @curAttr.bold = true
+      else if p is 2
+        # bold text
+        @curAttr.faint = true
+      else if p is 3
+        # italic text
+        @curAttr.italic = true
       else if p is 4
         # underline text
         @curAttr.underline = true
       else if p is 5
         # blink
-        @curAttr.blink = true
+        @curAttr.blink = 1
+      else if p is 6
+        # blink fast
+        @curAttr.blink = 2
       else if p is 7
         # inverse and positive
         # test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
@@ -1889,13 +1941,23 @@ class Terminal
       else if p is 8
         # invisible
         @curAttr.invisible = true
+      else if p is 9
+        # crossed out
+        @curAttr.crossed = true
       else if p is 10
         # Primary Font
         # ignoring
         undefined
+      else if p is 21
+        # bold off
+        @curAttr.bold = false
       else if p is 22
         # not bold
         @curAttr.bold = false
+        @curAttr.faint = false
+      else if p is 23
+        # not italic
+        @curAttr.italic = false
       else if p is 24
         # not underline
         @curAttr.underline = false
@@ -1908,6 +1970,9 @@ class Terminal
       else if p is 28
         # not invisible
         @curAttr.invisible = false
+      else if p is 29
+        # not crossed out
+        @curAttr.crossed = false
       else if p is 39
         # reset fg
         @curAttr.fg = 257
@@ -2353,6 +2418,7 @@ class Terminal
               scrollTop: @scrollTop
               scrollBottom: @scrollBottom
               tabs: @tabs
+              curAttr: @curAttr
             @reset()
             @normal = normal
             @showCursor()
@@ -2495,10 +2561,10 @@ class Terminal
             @scrollTop = @normal.scrollTop
             @scrollBottom = @normal.scrollBottom
             @tabs = @normal.tabs
+            @curAttr = @normal.curAttr
             @normal = null
             @refresh(true)
             @showCursor()
-
 
   # CSI Ps ; Ps r
   #     Set Scrolling Region [top;bottom] (default = full size of win-
