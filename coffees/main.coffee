@@ -22,7 +22,7 @@ openTs = (new Date()).getTime()
 $ = document.querySelectorAll.bind(document)
 
 document.addEventListener 'DOMContentLoaded', ->
-
+  term = null
   send = (data) ->
     ws.send 'S' + data
 
@@ -43,6 +43,9 @@ document.addEventListener 'DOMContentLoaded', ->
 
   ws.addEventListener 'open', ->
     console.log "WebSocket open", arguments
+    term = new Terminal document.body, send, ctl
+    term.ws = ws
+    window.butterfly = term
     ws.send 'R' + term.cols + ',' + term.rows
     openTs = (new Date()).getTime()
 
@@ -84,13 +87,9 @@ document.addEventListener 'DOMContentLoaded', ->
     if (new Date()).getTime() - openTs > 60 * 1000
       open('','_self').close()
 
-  term = new Terminal document.body, send, ctl
   addEventListener 'beforeunload', ->
     if not quit
       'This will exit the terminal session'
-
-  term.ws = ws
-  window.butterfly = term
 
 
   window.bench = (n=100000000) ->

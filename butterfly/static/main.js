@@ -13,6 +13,7 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     var ctl, lastData, queue, send, t_queue, term, treat, ws, wsUrl;
+    term = null;
     send = function(data) {
       return ws.send('S' + data);
     };
@@ -35,6 +36,9 @@
     ws = new WebSocket(wsUrl);
     ws.addEventListener('open', function() {
       console.log("WebSocket open", arguments);
+      term = new Terminal(document.body, send, ctl);
+      term.ws = ws;
+      window.butterfly = term;
       ws.send('R' + term.cols + ',' + term.rows);
       return openTs = (new Date()).getTime();
     });
@@ -78,14 +82,11 @@
         return open('', '_self').close();
       }
     });
-    term = new Terminal(document.body, send, ctl);
     addEventListener('beforeunload', function() {
       if (!quit) {
         return 'This will exit the terminal session';
       }
     });
-    term.ws = ws;
-    window.butterfly = term;
     window.bench = function(n) {
       var rnd;
       if (n == null) {
