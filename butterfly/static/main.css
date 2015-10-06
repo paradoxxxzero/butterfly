@@ -3102,7 +3102,7 @@ body {
   font-style: italic; }
 
 .faint {
-  text-opacity: .6; }
+  opacity: .6; }
 
 .crossed {
   text-decoration: line-through; }
