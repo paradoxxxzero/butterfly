@@ -219,6 +219,9 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
 
     @classmethod
     def close_all(cls, session, user):
+        terminals = TermWebSocket.terminals.get(user.name)
+        del terminals[session]
+
         sessions = TermWebSocket.sessions.get(user.name)
         if sessions:
             sockets = sessions[session]
@@ -226,9 +229,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             socket.on_close()
             socket.close()
         del sessions[session]
-
-        terminals = TermWebSocket.terminals.get(user.name)
-        del terminals[session]
 
     @classmethod
     def broadcast(cls, session, message, user):
@@ -277,7 +277,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         else:
             self.log.error(
                 'Socket with neither session nor terminal %r' % self)
-        if self.application.systemd and not len(TermWebSocket.sockets):
+        if (self.application.systemd and
+            not len(TermWebSocket.sockets) and
+            not sum([len(sessions)
+                     for user, sessions in TermWebSocket.terminals.items()])):
             sys.exit(0)
 
 
