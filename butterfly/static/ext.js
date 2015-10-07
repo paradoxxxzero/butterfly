@@ -77,6 +77,12 @@
     return e.preventDefault();
   });
 
+  addEventListener('beforeunload', function(e) {
+    if (!(butterfly.body.classList.contains('dead') || location.href.indexOf('session') > -1)) {
+      return e.returnValue = 'This terminal is active and not in session. Are you sure you want to kill it?';
+    }
+  });
+
   Popup = (function() {
     function Popup() {
       this.el = document.getElementById('popup');
@@ -506,7 +512,7 @@
         if (theme === 'default') {
           url = "/static/main.css";
         } else {
-          url = "theme/" + theme + "/style.css";
+          url = "/theme/" + theme + "/style.css";
         }
         inner += '<option ';
         if (_theme === url) {

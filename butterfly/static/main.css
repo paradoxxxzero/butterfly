@@ -3058,7 +3058,7 @@ body {
   body::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.15); }
   body .hidden {
-    display: none; }
+    display: none !important; }
   body #popup {
     position: fixed;
     display: flex;

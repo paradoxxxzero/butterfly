@@ -44,7 +44,7 @@ document.addEventListener 'keydown', (e) ->
       if theme is 'default'
         url = "/static/main.css"
       else
-        url = "theme/#{theme}/style.css"
+        url = "/theme/#{theme}/style.css"
       inner += '<option '
 
       if _theme is url
