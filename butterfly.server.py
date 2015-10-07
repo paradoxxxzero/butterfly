@@ -3,7 +3,7 @@
 
 # This file is part of butterfly
 #
-# butterfly Copyright (C) 2014  Florian Mounier
+# butterfly Copyright (C) 2015  Florian Mounier
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -316,7 +316,7 @@ else:
         print("Either generate them using --generate-certs --host=host "
               "or run as --unsecure (NOT RECOMMENDED)\n")
         print("For more information go to http://paradoxxxzero.github.io/"
-              "2014/03/21/butterfly-with-ssl-auth.html\n")
+              "2015/03/21/butterfly-with-ssl-auth.html\n")
         sys.exit(1)
 
     ssl_opts = {

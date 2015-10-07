@@ -52,7 +52,7 @@ Run `python dev.py --debug --port=12345` and you are set (yes you can launch it 
 ## License
 
 ```
-    butterfly Copyright (C) 2014  Florian Mounier
+    butterfly Copyright (C) 2015  Florian Mounier
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
