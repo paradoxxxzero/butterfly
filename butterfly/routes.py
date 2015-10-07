@@ -115,7 +115,7 @@ class ThemeImage(Route):
      '(?:session/(?P<session>[^/]+))?/?'
      '(?:/wd/(?P<path>.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
-    session_history_size = 10000
+    session_history_size = 100000
     # List of websockets per session per user
     # dict: user -> dict: session -> [TermWebSocket]
     sessions = defaultdict(dict)
@@ -233,7 +233,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     @classmethod
     def broadcast(cls, session, message, user):
         cls.history[session] += message
-        if len(cls.history) > cls.session_history_size:
+        if len(cls.history[session]) > cls.session_history_size:
             cls.history[session] = cls.history[session][
                 -cls.session_history_size:]
         sessions = cls.sessions.get(user.name, [])
