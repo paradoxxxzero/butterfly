@@ -401,6 +401,7 @@ class Terminal
       cursor.parentNode.replaceChild(
         @document.createTextNode(cursor.textContent), cursor)
     newOut = ''
+
     for line, j in @screen
       continue unless line.dirty or force
       out = ""

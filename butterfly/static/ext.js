@@ -1,20 +1,85 @@
 (function() {
-  var Popup, Selection, _set_theme_href, _theme, alt, cancel, copy, ctrl, first, nextLeaf, popup, previousLeaf, selection, setAlarm, virtualInput,
+  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, first, nextLeaf, popup, previousLeaf, selection, setAlarm, virtualInput,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  setAlarm = function(notification) {
+  clean_ansi = function(data) {
+    var c, i, out, state;
+    if (data.indexOf('\x1b') < 0) {
+      return data;
+    }
+    i = -1;
+    out = '';
+    state = 'normal';
+    while (i < data.length - 1) {
+      c = data.charAt(++i);
+      switch (state) {
+        case 'normal':
+          if (c === '\x1b') {
+            state = 'escaped';
+            break;
+          }
+          out += c;
+          break;
+        case 'escaped':
+          if (c === '[') {
+            state = 'csi';
+            break;
+          }
+          if (c === ']') {
+            state = 'osc';
+            break;
+          }
+          if ('#()%*+-./'.indexOf(c) >= 0) {
+            i++;
+          }
+          state = 'normal';
+          break;
+        case 'csi':
+          if ("?>!$\" '".indexOf(c) >= 0) {
+            break;
+          }
+          if (('0' <= c && c <= '9')) {
+            break;
+          }
+          if (c === ';') {
+            break;
+          }
+          state = 'normal';
+          break;
+        case 'osc':
+          if (c === "\x1b" || c === "\x07") {
+            if (c === "\x1b") {
+              i++;
+            }
+            state = 'normal';
+          }
+      }
+    }
+    return out;
+  };
+
+  setAlarm = function(notification, cond) {
     var alarm;
     alarm = function(data) {
-      var note;
+      var message, note, notif;
+      message = clean_ansi(data.data);
+      console.log(message);
+      if (cond !== null && !cond.test(message)) {
+        return;
+      }
       butterfly.body.classList.remove('alarm');
-      note = "New activity on butterfly terminal [" + butterfly.title + "]";
+      note = "Butterfly [" + butterfly.title + "]";
       if (notification) {
-        new Notification(note, {
-          body: data.data,
+        notif = new Notification(note, {
+          body: message,
           icon: '/static/images/favicon.png'
         });
+        notif.onclick = function() {
+          window.focus();
+          return notif.close();
+        };
       } else {
-        alert(note + '\n' + data.data);
+        alert(note + '\n' + message);
       }
       return butterfly.ws.removeEventListener('message', alarm);
     };
@@ -34,15 +99,24 @@
   };
 
   document.addEventListener('keydown', function(e) {
+    var cond;
     if (!(e.altKey && e.keyCode === 65)) {
       return true;
     }
+    cond = null;
+    if (e.shiftKey) {
+      cond = prompt('Ring alarm when encountering the following text: (can be a regexp)');
+      if (!cond) {
+        return;
+      }
+      cond = new RegExp(cond);
+    }
     if (Notification && Notification.permission === 'default') {
       Notification.requestPermission(function() {
-        return setAlarm(Notification.permission === 'granted');
+        return setAlarm(Notification.permission === 'granted', cond);
       });
     } else {
-      setAlarm(Notification.permission === 'granted');
+      setAlarm(Notification.permission === 'granted', cond);
     }
     return cancel(e);
   });
