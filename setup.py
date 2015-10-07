@@ -25,6 +25,7 @@ options = dict(
     scripts=['butterfly.server.py'],
     packages=['butterfly'],
     install_requires=["tornado>=3.2", "pyOpenSSL", 'tornado_systemd'],
+    extras_requires=["libsass"],
     package_data={
         'butterfly': [
             'sass/*.sass',
@@ -35,7 +36,8 @@ options = dict(
             'static/*.min.js',
             'templates/index.html',
             'bin/*',
-            'templates/motd'
+            'templates/motd',
+            'butterfly.conf.default'
         ]
     },
     classifiers=[

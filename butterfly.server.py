@@ -26,6 +26,7 @@ import uuid
 import ssl
 import getpass
 import os
+import shutil
 import stat
 import socket
 import sys
@@ -33,6 +34,9 @@ import sys
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("more", default=False,
                        help="Debug mode with more verbosity")
+tornado.options.define("unminified", default=False,
+                       help="Use the unminified js (for development only)")
+
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
 tornado.options.define("shell", help="Shell to execute at login")
@@ -41,12 +45,12 @@ tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
+tornado.options.define("login", default=True,
+                       help="Use login screen at start")
 tornado.options.define("force_unicode_width",
                        default=False,
                        help="Force all unicode characters to the same width."
                        "Useful for avoiding layout mess.")
-tornado.options.define("login", default=True,
-                       help="Use login screen at start")
 tornado.options.define("ssl_version", default=None,
                        help="SSL protocol version")
 tornado.options.define("generate_certs", default=False,
@@ -57,19 +61,33 @@ tornado.options.define("generate_current_user_pkcs", default=False,
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication "
                        "(Must be root to create for another user)")
-tornado.options.define("unminified", default=False,
-                       help="Use the unminified js (for development only)")
-tornado.options.define("theme", default=None,
-                       help="Specify a theme for butterfly.")
+tornado.options.define("install_themes", default=False,
+                       help="Install or update themes from butterfly-themes")
+tornado.options.define("install_themes_from",
+                       default='https://github.com/paradoxxxzero/'
+                       'butterfly-themes/archive/master.zip',
+                       help="Url to download themes from")
 
 if os.getuid() == 0:
-    conf_file = os.path.join(
-        os.path.abspath(os.sep), 'etc', 'butterfly', 'butterfly.conf')
-    ssl_dir = os.path.join(os.path.abspath(os.sep), 'etc', 'butterfly', 'ssl')
+    ev = os.getenv('XDG_CONFIG_DIRS', '/etc')
 else:
-    conf_file = os.path.join(
-        os.path.expanduser('~'), '.butterfly', 'butterfly.conf')
-    ssl_dir = os.path.join(os.path.expanduser('~'), '.butterfly', 'ssl')
+    ev = os.getenv(
+        'XDG_CONFIG_HOME', os.path.join(os.getenv('HOME'), '.config'))
+
+butterfly_dir = os.path.join(ev, 'butterfly')
+conf_file = os.path.join(butterfly_dir, 'butterfly.conf')
+ssl_dir = os.path.join(butterfly_dir, 'ssl')
+
+if not os.path.exists(conf_file):
+    try:
+        shutil.copy(
+            os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                'butterfly',
+                'butterfly.conf.default'), conf_file)
+        print('butterfly.conf installed in %s' % conf_file)
+    except:
+        pass
 
 tornado.options.define("conf", default=conf_file,
                        help="Butterfly configuration file. "
@@ -78,10 +96,14 @@ tornado.options.define("conf", default=conf_file,
 tornado.options.define("ssl_dir", default=ssl_dir,
                        help="Force SSL directory location")
 
+# Do it once to get the conf path
 tornado.options.parse_command_line()
 
 if os.path.exists(tornado.options.options.conf):
     tornado.options.parse_config_file(tornado.options.options.conf)
+
+# Do it again to overwrite conf with args
+tornado.options.parse_command_line()
 
 options = tornado.options.options
 
@@ -95,7 +117,49 @@ for logger in ('tornado.access', 'tornado.application',
     logging.getLogger(logger).setLevel(level)
 
 log = logging.getLogger('butterfly')
-log.info('Starting server')
+
+if options.install_themes:
+    from io import BytesIO
+    from shutil import move, rmtree
+    from zipfile import ZipFile
+    from tempfile import mkdtemp
+    try:
+        from urllib.request import urlopen
+    except ImportError:
+        from urllib import urlopen
+    try:
+        import sass as _
+        _.CompileError
+    except Exception:
+        print('You must install libsass to use themes '
+              '(run: pip install libsass)')
+        sys.exit(1)
+    themes_url = options.install_themes_from
+    print('Downloading %s...' % themes_url)
+    zip_ = ZipFile(BytesIO(urlopen(themes_url).read()))
+
+    print('Extracting in %s' % butterfly_dir)
+    zip_.extractall(butterfly_dir)
+
+    zip_dest = os.path.join(butterfly_dir, 'butterfly-themes-master')
+    theme_dir = os.path.join(butterfly_dir, 'themes')
+    if not os.path.exists(theme_dir):
+        os.makedirs(theme_dir)
+
+    tmp_dir = mkdtemp()
+    for dir_ in os.listdir(zip_dest):
+        if dir_ == 'README.md':
+            continue
+        new_dir = os.path.join(theme_dir, dir_)
+        if os.path.exists(new_dir):
+            move(new_dir, tmp_dir)
+            print('Old theme %s has been backed up in %s' % (
+                new_dir, tmp_dir))
+        move(os.path.join(zip_dest, dir_), theme_dir)
+
+    rmtree(zip_dest)
+    print('%s extracted.' % theme_dir)
+    sys.exit(0)
 
 host = options.host
 port = options.port
@@ -272,7 +336,8 @@ else:
             ssl, 'PROTOCOL_%s' % options.ssl_version)
 
 from butterfly import application
-
+application.butterfly_dir = butterfly_dir
+log.info('Starting server')
 http_server = tornado_systemd.SystemdHTTPServer(
     application, ssl_options=ssl_opts)
 http_server.listen(port, address=host)

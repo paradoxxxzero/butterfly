@@ -30,8 +30,6 @@ document.addEventListener 'DOMContentLoaded', ->
     params = args.join(',')
     if type == 'Resize'
       ws.send 'R' + params
-    else if type == 'Theme'
-      ws.send 'T' + params
 
   if location.protocol == 'https:'
     wsUrl = 'wss://'

@@ -1,5 +1,5 @@
 (function() {
-  var Selection, alt, cancel, copy, ctrl, first, nextLeaf, previousLeaf, selection, setAlarm, virtualInput,
+  var Popup, Selection, _set_theme_href, _theme, alt, cancel, copy, ctrl, first, nextLeaf, popup, previousLeaf, selection, setAlarm, virtualInput,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   setAlarm = function(notification) {
@@ -76,6 +76,54 @@
     butterfly.send(data);
     return e.preventDefault();
   });
+
+  Popup = (function() {
+    function Popup() {
+      this.el = document.getElementById('popup');
+      this.bound_click_maybe_close = this.click_maybe_close.bind(this);
+      this.bound_key_maybe_close = this.key_maybe_close.bind(this);
+    }
+
+    Popup.prototype.open = function(html) {
+      this.el.innerHTML = html;
+      this.el.classList.remove('hidden');
+      addEventListener('click', this.bound_click_maybe_close);
+      return addEventListener('keydown', this.bound_key_maybe_close);
+    };
+
+    Popup.prototype.close = function() {
+      removeEventListener('click', this.bound_click_maybe_close);
+      removeEventListener('keydown', this.bound_key_maybe_close);
+      this.el.classList.add('hidden');
+      return this.el.innerHTML = '';
+    };
+
+    Popup.prototype.click_maybe_close = function(e) {
+      var t;
+      t = e.target;
+      while (t.parentElement) {
+        if (Array.prototype.slice.call(this.el.children).indexOf(t) > -1) {
+          return true;
+        }
+        t = t.parentElement;
+      }
+      this.close();
+      return cancel(e);
+    };
+
+    Popup.prototype.key_maybe_close = function(e) {
+      if (e.keyCode !== 27) {
+        return true;
+      }
+      this.close();
+      return cancel(e);
+    };
+
+    return Popup;
+
+  })();
+
+  popup = new Popup();
 
   selection = null;
 
@@ -399,6 +447,85 @@
       sel.modify('extend', 'backward', 'character');
     }
     return sel.modify('extend', 'forward', 'character');
+  });
+
+  _set_theme_href = function(href) {
+    var img;
+    document.getElementById('style').setAttribute('href', href);
+    img = document.createElement('img');
+    img.onerror = function() {
+      return setTimeout((function() {
+        return typeof butterfly !== "undefined" && butterfly !== null ? butterfly.resize() : void 0;
+      }), 50);
+    };
+    return img.src = href;
+  };
+
+  _theme = typeof localStorage !== "undefined" && localStorage !== null ? localStorage.getItem('theme') : void 0;
+
+  if (_theme) {
+    _set_theme_href(_theme);
+  }
+
+  this.set_theme = function(theme) {
+    _theme = theme;
+    if (typeof localStorage !== "undefined" && localStorage !== null) {
+      localStorage.setItem('theme', theme);
+    }
+    if (theme) {
+      return _set_theme_href(theme);
+    }
+  };
+
+  document.addEventListener('keydown', function(e) {});
+
+  document.addEventListener('keydown', function(e) {
+    var oReq, style;
+    if (!(e.altKey && e.keyCode === 83)) {
+      return true;
+    }
+    if (e.shiftKey) {
+      style = document.getElementById('style').getAttribute('href');
+      style = style.split('?')[0];
+      document.getElementById('style').setAttribute('href', style + '?' + (new Date().getTime()));
+      return cancel(e);
+    }
+    oReq = new XMLHttpRequest();
+    oReq.addEventListener('load', function() {
+      var inner, j, len1, ref, response, theme, theme_list, themes, url;
+      response = JSON.parse(this.responseText);
+      themes = response.themes;
+      if (themes.length === 0) {
+        alert("No themes found in " + response.dir + ".\n Please install themes with butterfly.server.py --install-themes");
+        return;
+      }
+      inner = "<form>\n  <h2>Pick a theme:</h2>\n  <select id=\"theme_list\">";
+      ref = ['default'].concat(themes);
+      for (j = 0, len1 = ref.length; j < len1; j++) {
+        theme = ref[j];
+        if (theme === 'default') {
+          url = "/static/main.css";
+        } else {
+          url = "theme/" + theme + "/style.css";
+        }
+        inner += '<option ';
+        if (_theme === url) {
+          inner += 'selected ';
+        }
+        inner += "value=\"" + url + "\">";
+        inner += theme;
+        inner += '</option>';
+      }
+      inner += "  </select>\n  <label>You can create yours in " + response.dir + ".</label>\n</form>";
+      popup.open(inner);
+      theme_list = document.getElementById('theme_list');
+      return theme_list.addEventListener('change', function() {
+        return set_theme(theme_list.value);
+      });
+    });
+    oReq.open("GET", "/themes/list.json");
+    oReq.send();
+    return cancel(e);
   });
 
   if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {

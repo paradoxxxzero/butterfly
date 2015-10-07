@@ -20,6 +20,7 @@ import os
 import sys
 import tornado.options
 import tornado.process
+import tornado.escape
 import tornado.web
 import tornado.websocket
 from mimetypes import guess_type
@@ -42,61 +43,67 @@ class Index(Route):
         return self.render('index.html')
 
 
-@url(r'/style.css')
-class Style(Route):
+@url(r'/theme/([^/]+)/style.css')
+class Theme(Route):
 
-    def get(self):
-        default_style = os.path.join(
-            os.path.dirname(__file__), 'static', 'main.css')
-
+    def get(self, theme):
         self.log.info('Getting style')
-        css = utils.get_style()
+        try:
+            import sass
+            sass.CompileError
+        except Exception:
+            self.log.error(
+                'You must install libsass to use sass '
+                '(pip install libsass)')
+            return
+
+        themes_dir = os.path.join(
+            self.application.butterfly_dir, 'themes')
+        base_dir = os.path.join(themes_dir, theme)
+        style = None
+        for ext in ['css', 'scss', 'sass']:
+            probable_style = os.path.join(base_dir, 'style.%s' % ext)
+            if os.path.exists(probable_style):
+                style = probable_style
+
+        if not style:
+            raise tornado.web.HTTPError(404)
+
+        sass_path = os.path.join(
+            os.path.dirname(__file__), 'sass')
+
+        css = None
+        try:
+            css = sass.compile(filename=style, include_paths=[
+                base_dir, sass_path])
+        except sass.CompileError:
+            self.log.error(
+                'Unable to compile style (filename: %s, paths: %r) ' % (
+                    style, [base_dir, sass_path]), exc_info=True)
+            if not style:
+                raise tornado.web.HTTPError(500)
+
         self.log.debug('Style ok')
-
         self.set_header("Content-Type", "text/css")
-
-        if css:
-            self.write(css)
-        else:
-            with open(default_style) as s:
-                while True:
-                    data = s.read(16384)
-                    if data:
-                        self.write(data)
-                    else:
-                        break
+        self.write(css)
         self.finish()
 
 
-@url(r'/theme/font/([^/]+)')
-class ThemeFont(Route):
+@url(r'/theme/([^/]+)/(.+)')
+class ThemeStatic(Route):
 
-    def get(self, name):
-        if not tornado.options.options.theme or not name:
-            raise tornado.web.HTTPError(404)
-        fn = os.path.join(
-            os.path.dirname(utils.get_style_path()), 'font', name)
-        if os.path.exists(fn):
-            self.set_header("Content-Type", guess_type(fn)[0])
-            with open(fn, 'rb') as s:
-                while True:
-                    data = s.read(16384)
-                    if data:
-                        self.write(data)
-                    else:
-                        break
-            self.finish()
-        raise tornado.web.HTTPError(404)
+    def get(self, theme, name):
+        if '..' in name:
+            raise tornado.web.HTTPError(403)
 
+        themes_dir = os.path.join(
+            self.application.butterfly_dir, 'themes')
+        base_dir = os.path.join(themes_dir, theme)
 
-@url(r'/theme/image/([^/]+)')
-class ThemeImage(Route):
+        fn = os.path.normpath(os.path.join(base_dir, name))
+        if not fn.startswith(base_dir):
+            raise tornado.web.HTTPError(403)
 
-    def get(self, name):
-        if not tornado.options.options.theme or not name:
-            raise tornado.web.HTTPError(404)
-        fn = os.path.join(
-            os.path.dirname(utils.get_style_path()), 'image', name)
         if os.path.exists(fn):
             self.set_header("Content-Type", guess_type(fn)[0])
             with open(fn, 'rb') as s:
@@ -115,7 +122,7 @@ class ThemeImage(Route):
      '(?:session/(?P<session>[^/]+))?/?'
      '(?:/wd/(?P<path>.+))?')
 class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
-    session_history_size = 100000
+    session_history_size = 50000
     # List of websockets per session per user
     # dict: user -> dict: session -> [TermWebSocket]
     sessions = defaultdict(dict)
@@ -299,3 +306,21 @@ class Sessions(Route):
 
         return self.render(
             'list.html', sessions=TermWebSocket.sessions.get(user, []))
+
+
+@url(r'/themes/list.json')
+class ThemesList(Route):
+    """Get the theme list"""
+
+    def get(self):
+        themes_dir = os.path.join(
+            self.application.butterfly_dir, 'themes')
+        self.set_header('Content-Type', 'application/json')
+        self.write(tornado.escape.json_encode({
+            'themes': sorted(
+                [theme
+                 for theme in os.listdir(themes_dir)
+                 if os.path.isdir(os.path.join(themes_dir, theme)) and
+                 not theme.startswith('.')]),
+            'dir': themes_dir
+        }))

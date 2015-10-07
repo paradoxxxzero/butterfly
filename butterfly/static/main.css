@@ -3048,7 +3048,8 @@ html, body {
 body {
   white-space: nowrap;
   overflow-x: hidden;
-  overflow-y: scroll; }
+  overflow-y: scroll;
+  /* Pop ups */ }
   body::-webkit-scrollbar {
     background: #110f13;
     width: .75em; }
@@ -3056,6 +3057,28 @@ body {
     background: rgba(255, 255, 255, 0.1); }
   body::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.15); }
+  body .hidden {
+    display: none; }
+  body #popup {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%; }
+    body #popup form {
+      padding: 1.5em;
+      background: rgba(127, 127, 127, 0.5); }
+      body #popup form h2 {
+        margin: .5em; }
+      body #popup form select {
+        min-width: 300px;
+        padding: .5em;
+        width: 100%; }
+      body #popup form label {
+        display: block;
+        padding: .5em;
+        font-size: .75em; }
 
 .terminal {
   outline: none; }
