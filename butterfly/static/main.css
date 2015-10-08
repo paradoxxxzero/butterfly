@@ -27,12 +27,14 @@
 /* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
 /* GNU General Public License for more details. */
 /* Variables */
-/** Font Size */
+/** Font */
 /** Colors */
 /* Foreground */
 /* Background */
 /* 16 Colors in this orders :Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Bright Black, Bright Red, Bright Green, Bright Yellow, Bright Blue, Bright Magenta, Bright Cyan, Bright White */
 /** Text effects */
+/* The shadow is the size of the blur (in px for instance) */
+/* The shadow alpha is the opacity of the shadow */
 /** Scroll */
 /** Popup */
 /* These are all imported files */
