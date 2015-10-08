@@ -22,21 +22,20 @@ html, body
   background-color: $bg
   color: $fg
 
-
 body
   white-space: nowrap
   overflow-x: hidden
   overflow-y: scroll
 
   &::-webkit-scrollbar
-    background: $bg
-    width: .75em
+    background: $scroll-bg
+    width: $scroll-width
 
   &::-webkit-scrollbar-thumb
-    background: rgba($fg, .1)
+    background: $scroll-fg
 
   &::-webkit-scrollbar-thumb:hover
-    background: rgba($fg, .15)
+    background: $scroll-fg-hover
 
   /* Pop ups */
   .hidden
@@ -52,7 +51,10 @@ body
 
     form
       padding: 1.5em
-      background: rgba(127, 127, 127, .5)
+      background: $popup-bg
+      color: $popup-fg
+      font-size: $popup-fs
+
       h2
         margin: .5em
       select

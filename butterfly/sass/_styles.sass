@@ -15,20 +15,24 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-/* Here are the 240 xterm colors */
-/* See http://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg */
+/* Theses are the various imported style files
+/* THIS NEEDS the python `libsass` library to be installed.
+/* You can copy the imported files in the theme dir, they will be imported prioritarily.
 
-$st: 00, 95, 135, 175, 215, 255
+/* You can change this file to import any webfont:
+@import font
 
-@for $i from 0 through 215
-  $r: nth($st, 1 + floor(($i / 36) % 6))
-  $g: nth($st, 1 + floor(($i / 6) % 6))
-  $b: nth($st, 1 + $i % 6)
-  +termcolor($i + 16, rgb($r, $g, $b))
+/* You can comment / uncomment the following to enable/disable terminal effects.
+@import light_fx
+/* Comment this one to remove the blurry text:
+@import text_fx
+/* @import all_fx
 
-@for $i from 0 through 23
-  $l: 8 + $i * 10
-  +termcolor($i + 232, rgb($l, $l, $l))
+@import colors
+/* The color theme is defined in this one:
+@import 16_colors
+@import 256_colors
 
-+termcolor(256, $default-bg)
-+termcolor(257, $default-fg)
+@import layout
+@import cursor
+@import term_styles

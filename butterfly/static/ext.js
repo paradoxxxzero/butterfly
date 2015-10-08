@@ -567,7 +567,7 @@
     if (e.shiftKey) {
       style = document.getElementById('style').getAttribute('href');
       style = style.split('?')[0];
-      document.getElementById('style').setAttribute('href', style + '?' + (new Date().getTime()));
+      _set_theme_href(style + '?' + (new Date().getTime()));
       return cancel(e);
     }
     oReq = new XMLHttpRequest();

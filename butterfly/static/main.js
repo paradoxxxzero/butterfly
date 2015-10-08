@@ -148,6 +148,7 @@
       this.out = out1;
       this.ctl = ctl1 != null ? ctl1 : function() {};
       this.document = this.parent.ownerDocument;
+      this.html = this.document.getElementsByTagName('html')[0];
       this.body = this.document.getElementsByTagName('body')[0];
       this.forceWidth = this.body.getAttribute('data-force-unicode-width') === 'yes';
       this.body.className = 'terminal focus';
@@ -1640,7 +1641,7 @@
     };
 
     Terminal.prototype.resize = function(x, y) {
-      var el, i, j, line, oldCols, oldRows, px;
+      var el, h, i, j, line, oldCols, oldRows, px, w;
       if (x == null) {
         x = null;
       }
@@ -1650,10 +1651,13 @@
       oldCols = this.cols;
       oldRows = this.rows;
       this.computeCharSize();
-      this.cols = x || Math.floor(this.body.clientWidth / this.charSize.width);
-      this.rows = y || Math.floor(window.innerHeight / this.charSize.height);
-      px = window.innerHeight % this.charSize.height;
+      w = this.body.clientWidth;
+      h = this.html.clientHeight - (this.html.offsetHeight - this.html.scrollHeight);
+      this.cols = x || Math.floor(w / this.charSize.width);
+      this.rows = y || Math.floor(h / this.charSize.height);
+      px = h % this.charSize.height;
       this.body.style['padding-bottom'] = px + "px";
+      this.nativeScrollTo();
       if ((!x && !y) && oldCols === this.cols && oldRows === this.rows) {
         return;
       }

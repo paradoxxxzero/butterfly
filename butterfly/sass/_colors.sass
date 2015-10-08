@@ -15,15 +15,14 @@
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-$shadow: 0 !default
-$shadow-alpha: 0 !default
-
-
 =termcolor($i, $color)
   .bg-color-#{$i}
     background-color: $color
     &.reverse-video
-      color: $color !important
+      @if $color == transparent
+        color: $reverse-transparent !important
+      @else
+        color: $color !important
 
   .fg-color-#{$i}
     color: $color

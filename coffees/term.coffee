@@ -49,6 +49,7 @@ class Terminal
   constructor: (@parent, @out, @ctl=->) ->
     # Global elements
     @document = @parent.ownerDocument
+    @html = @document.getElementsByTagName('html')[0]
     @body = @document.getElementsByTagName('body')[0]
     @forceWidth = @body.getAttribute(
       'data-force-unicode-width') is 'yes'
@@ -1538,11 +1539,14 @@ class Terminal
     oldCols = @cols
     oldRows = @rows
     @computeCharSize()
-    @cols = x or Math.floor(@body.clientWidth / @charSize.width)
-    @rows = y or Math.floor(window.innerHeight / @charSize.height)
-    px = window.innerHeight % @charSize.height
+    w = @body.clientWidth
+    h = @html.clientHeight - (@html.offsetHeight - @html.scrollHeight)
+    @cols = x or Math.floor(w / @charSize.width)
+    @rows = y or Math.floor(h / @charSize.height)
+    px = h % @charSize.height
     @body.style['padding-bottom'] = "#{px}px"
 
+    @nativeScrollTo()
     if (not x and not y) and oldCols == @cols and oldRows == @rows
       return
 
