@@ -529,6 +529,36 @@
     return sel.modify('extend', 'forward', 'character');
   });
 
+  document.addEventListener('keydown', function(e) {
+    var oReq;
+    if (!(e.altKey && e.keyCode === 69)) {
+      return true;
+    }
+    oReq = new XMLHttpRequest();
+    oReq.addEventListener('load', function() {
+      var j, len1, out, ref, response, session;
+      response = JSON.parse(this.responseText);
+      out = '<div>';
+      out += '<h2>Session list</h2>';
+      if (response.sessions.length === 0) {
+        out += "No current session for user " + response.user;
+      } else {
+        out += '<ul>';
+        ref = response.sessions;
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          session = ref[j];
+          out += "<li><a href=\"/session/" + session + "\">" + session + "</a></li>";
+        }
+        out += '</ul>';
+      }
+      out += '</div>';
+      return popup.open(out);
+    });
+    oReq.open("GET", "/sessions/list.json");
+    oReq.send();
+    return cancel(e);
+  });
+
   _set_theme_href = function(href) {
     var img;
     document.getElementById('style').setAttribute('href', href);
@@ -556,8 +586,6 @@
       return _set_theme_href(theme);
     }
   };
-
-  document.addEventListener('keydown', function(e) {});
 
   document.addEventListener('keydown', function(e) {
     var oReq, style;

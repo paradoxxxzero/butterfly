@@ -291,9 +291,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             sys.exit(0)
 
 
-@url(r'/sessions')
-class Sessions(Route):
-    """List available sessions"""
+@url(r'/sessions/list.json')
+class SessionsList(Route):
+    """Get the theme list"""
+
     def get(self):
         if tornado.options.options.unsecure:
             raise tornado.web.HTTPError(403)
@@ -304,8 +305,12 @@ class Sessions(Route):
         if not user:
             raise tornado.web.HTTPError(403)
 
-        return self.render(
-            'list.html', sessions=TermWebSocket.sessions.get(user, []))
+        self.set_header('Content-Type', 'application/json')
+        self.write(tornado.escape.json_encode({
+            'sessions': sorted(
+                TermWebSocket.sessions.get(user, [])),
+            'user': user
+        }))
 
 
 @url(r'/themes/list.json')

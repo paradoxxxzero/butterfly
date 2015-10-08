@@ -2831,18 +2831,18 @@ body {
     justify-content: center;
     width: 100%;
     height: 100%; }
-    body #popup form {
+    body #popup form, body #popup > div {
       padding: 1.5em;
       background: rgba(127, 127, 127, 0.5);
       color: #f4ead5;
       font-size: 1em; }
-      body #popup form h2 {
-        margin: .5em; }
-      body #popup form select {
+      body #popup form h2, body #popup > div h2 {
+        margin: 0 0.5em 0.5em 0.5em; }
+      body #popup form select, body #popup > div select {
         min-width: 300px;
         padding: .5em;
         width: 100%; }
-      body #popup form label {
+      body #popup form label, body #popup > div label {
         display: block;
         padding: .5em;
         font-size: .75em; }

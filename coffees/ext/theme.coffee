@@ -14,8 +14,6 @@ _set_theme_href(_theme) if _theme
   _set_theme_href(theme) if theme
 
 document.addEventListener 'keydown', (e) ->
-
-document.addEventListener 'keydown', (e) ->
   return true unless e.altKey and e.keyCode is 83
   if e.shiftKey
     style = document.getElementById('style').getAttribute('href')
