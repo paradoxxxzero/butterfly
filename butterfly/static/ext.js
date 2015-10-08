@@ -167,6 +167,9 @@
     Popup.prototype.open = function(html) {
       this.el.innerHTML = html;
       this.el.classList.remove('hidden');
+      if (typeof InstallTrigger !== "undefined") {
+        document.body.contentEditable = 'false';
+      }
       addEventListener('click', this.bound_click_maybe_close);
       return addEventListener('keydown', this.bound_key_maybe_close);
     };
@@ -174,6 +177,9 @@
     Popup.prototype.close = function() {
       removeEventListener('click', this.bound_click_maybe_close);
       removeEventListener('keydown', this.bound_key_maybe_close);
+      if (typeof InstallTrigger !== "undefined") {
+        document.body.contentEditable = 'true';
+      }
       this.el.classList.add('hidden');
       return this.el.innerHTML = '';
     };
