@@ -566,7 +566,7 @@
     img.onerror = function() {
       return setTimeout((function() {
         return typeof butterfly !== "undefined" && butterfly !== null ? butterfly.resize() : void 0;
-      }), 50);
+      }), 250);
     };
     return img.src = href;
   };

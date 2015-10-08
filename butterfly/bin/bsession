@@ -10,4 +10,6 @@ parser.add_argument(
     '(Only in secure mode or in user unsecure mode (no su login))')
 args = parser.parse_args()
 
-webbrowser.open('%ssession/%s' % (os.getenv('LOCATION'), args.session))
+url = '%ssession/%s' % (os.getenv('LOCATION', '/'), args.session)
+if not webbrowser.open(url):
+    print('Unable to open browser, please go to %s' % url)
