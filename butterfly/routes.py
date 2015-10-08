@@ -321,11 +321,16 @@ class ThemesList(Route):
         themes_dir = os.path.join(
             self.application.butterfly_dir, 'themes')
         self.set_header('Content-Type', 'application/json')
+        if os.path.exists(themes_dir):
+            themes = [
+                theme
+                for theme in os.listdir(themes_dir)
+                if os.path.isdir(os.path.join(themes_dir, theme)) and
+                not theme.startswith('.')]
+        else:
+            themes = []
+
         self.write(tornado.escape.json_encode({
-            'themes': sorted(
-                [theme
-                 for theme in os.listdir(themes_dir)
-                 if os.path.isdir(os.path.join(themes_dir, theme)) and
-                 not theme.startswith('.')]),
+            'themes': sorted(themes),
             'dir': themes_dir
         }))
