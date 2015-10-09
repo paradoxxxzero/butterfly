@@ -177,7 +177,8 @@ class Socket(object):
 
     @property
     def local(self):
-        return self.remote_addr in ['127.0.0.1', '::1', '::ffff:127.0.0.1']
+        return (self.remote_addr in ['127.0.0.1', '::1', '::ffff:127.0.0.1'] or
+                self.local_addr == self.remote_addr)
 
     def __repr__(self):
         return '<Socket L: %s:%d R: %s:%d User: %r>' % (
