@@ -401,6 +401,9 @@ class Terminal
     for cursor in @body.querySelectorAll(".cursor")
       cursor.parentNode.replaceChild(
         @document.createTextNode(cursor.textContent), cursor)
+    for active in @body.querySelectorAll(".line.active")
+      active.classList.remove('active')
+
     newOut = ''
 
     for line, j in @screen
@@ -508,8 +511,11 @@ class Terminal
       out += '\u23CE' if line.wrap
       if @children[j]
         @children[j].innerHTML = out
+        if x isnt -Infinity
+          @children[j].classList.add 'active'
       else
-        newOut += "<div class=\"line\">#{out}</div>"
+        newOut += "<div class=\"line#{
+          x isnt -Infinity and ' active' or ''}\">#{out}</div>"
       @screen[j].dirty = false
 
     if newOut isnt ''

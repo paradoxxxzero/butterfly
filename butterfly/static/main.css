@@ -31,7 +31,7 @@
 /** Colors */
 /* Foreground */
 /* Background */
-/* 16 Colors in this orders :Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Bright Black, Bright Red, Bright Green, Bright Yellow, Bright Blue, Bright Magenta, Bright Cyan, Bright White */
+/* 16 Colors in this orders: Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Bright Black, Bright Red, Bright Green, Bright Yellow, Bright Blue, Bright Magenta, Bright Cyan, Bright White */
 /** Text effects */
 /* The shadow is the size of the blur (in px for instance) */
 /* The shadow alpha is the opacity of the shadow */
@@ -2771,14 +2771,14 @@ body {
     background-color: #eeeeee !important; }
 
 .bg-color-256 {
-  background-color: #110f13; }
+  background-color: transparent; }
   .bg-color-256.reverse-video {
     color: #110f13 !important; }
 
 .fg-color-256 {
-  color: #110f13; }
+  color: transparent; }
   .fg-color-256.reverse-video {
-    background-color: #110f13 !important; }
+    background-color: transparent !important; }
 
 .bg-color-257 {
   background-color: #f4ead5; }
@@ -2815,6 +2815,8 @@ body {
   overflow-x: hidden;
   overflow-y: scroll;
   /* Pop ups */ }
+  body .line.active {
+    background-color: transparent; }
   body::-webkit-scrollbar {
     background: #110f13;
     width: 0.75em; }

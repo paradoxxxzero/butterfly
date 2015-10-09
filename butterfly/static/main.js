@@ -509,7 +509,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, skipnext, styles, u, x;
+      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, v, x;
       if (force == null) {
         force = false;
       }
@@ -518,10 +518,15 @@
         cursor = ref[k];
         cursor.parentNode.replaceChild(this.document.createTextNode(cursor.textContent), cursor);
       }
+      ref1 = this.body.querySelectorAll(".line.active");
+      for (m = 0, len1 = ref1.length; m < len1; m++) {
+        active = ref1[m];
+        active.classList.remove('active');
+      }
       newOut = '';
-      ref1 = this.screen;
-      for (j = m = 0, len1 = ref1.length; m < len1; j = ++m) {
-        line = ref1[j];
+      ref2 = this.screen;
+      for (j = o = 0, len2 = ref2.length; o < len2; j = ++o) {
+        line = ref2[j];
         if (!(line.dirty || force)) {
           continue;
         }
@@ -533,7 +538,7 @@
         }
         attr = this.cloneAttr(this.defAttr);
         skipnext = false;
-        for (i = o = 0, ref2 = this.cols - 1; 0 <= ref2 ? o <= ref2 : o >= ref2; i = 0 <= ref2 ? ++o : --o) {
+        for (i = q = 0, ref3 = this.cols - 1; 0 <= ref3 ? q <= ref3 : q >= ref3; i = 0 <= ref3 ? ++q : --q) {
           data = line.chars[i];
           if (data.html) {
             out += data.html;
@@ -651,8 +656,11 @@
         }
         if (this.children[j]) {
           this.children[j].innerHTML = out;
+          if (x !== -Infinity) {
+            this.children[j].classList.add('active');
+          }
         } else {
-          newOut += "<div class=\"line\">" + out + "</div>";
+          newOut += "<div class=\"line" + (x !== -Infinity && ' active' || '') + "\">" + out + "</div>";
         }
         this.screen[j].dirty = false;
       }
@@ -665,14 +673,14 @@
         this.shift = 0;
         lines = document.querySelectorAll('.line');
         if (lines.length > this.scrollback) {
-          ref3 = Array.prototype.slice.call(lines, 0, lines.length - this.scrollback);
-          for (q = 0, len2 = ref3.length; q < len2; q++) {
-            line = ref3[q];
+          ref4 = Array.prototype.slice.call(lines, 0, lines.length - this.scrollback);
+          for (u = 0, len3 = ref4.length; u < len3; u++) {
+            line = ref4[u];
             line.remove();
           }
-          ref4 = document.querySelectorAll('.group:empty');
-          for (u = 0, len3 = ref4.length; u < len3; u++) {
-            group = ref4[u];
+          ref5 = document.querySelectorAll('.group:empty');
+          for (v = 0, len4 = ref5.length; v < len4; v++) {
+            group = ref5[v];
             group.remove();
           }
           lines = document.querySelectorAll('.line');
