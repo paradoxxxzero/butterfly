@@ -30,6 +30,36 @@ import re
 log = getLogger('butterfly')
 
 
+def get_hex_ip_port(remote):
+    ip, port = remote
+    if ip.startswith('::ffff:'):
+        ip = ip[len('::ffff:'):]
+    splits = ip.split('.')
+    if ':' not in ip and len(splits) == 4:
+        # Must be an ipv4
+        return '%02X%02X%02X%02X:%04X' % (
+            int(splits[3]),
+            int(splits[2]),
+            int(splits[1]),
+            int(splits[0]),
+            int(port)
+        )
+    try:
+        import ipaddress
+    except ImportError:
+        print('Please install ipaddress backport for ipv6 user detection')
+        return ''
+
+    # Endian reverse:
+    ipv6_parts = ipaddress.IPv6Address(ip).exploded.split(':')
+    for i in range(0, 8, 2):
+        ipv6_parts[i], ipv6_parts[i + 1] = (
+            ipv6_parts[i + 1][2:] + ipv6_parts[i + 1][:2],
+            ipv6_parts[i][2:] + ipv6_parts[i][:2])
+
+    return ''.join(ipv6_parts) + ':%04X' % port
+
+
 def get_style_path():
     opts = tornado.options.options
 
@@ -161,7 +191,7 @@ class Socket(object):
         # If there is procfs, get as much info as we can
         if os.path.exists('/proc/net'):
             try:
-                line = get_procfs_socket_line(self.remote_port)
+                line = get_procfs_socket_line(get_hex_ip_port(pn[:2]))
                 self.user = User(uid=int(line[7]))
                 self.env = get_socket_env(line[9])
             except Exception:
@@ -205,29 +235,24 @@ def get_lsof_socket_line(addr, port):
 
 
 # Linux only socket line get
-def get_procfs_socket_line(port):
+def get_procfs_socket_line(hex_ip_port):
+    fn = None
+    if len(hex_ip_port) == 13:  # ipv4
+        fn = '/proc/net/tcp'
+    elif len(hex_ip_port) == 37:  # ipv6
+        fn = '/proc/net/tcp6'
+    if not fn:
+        return
     try:
-        with open('/proc/net/tcp') as k:
+        with open(fn) as k:
             lines = k.readlines()
         for line in lines:
             # Look for local address with peer port
-            if line.split()[1] == '0100007F:%X' % port:
+            if line.split()[1] == hex_ip_port:
                 # We got the socket
                 return line.split()
     except Exception:
-        log.debug('getting socket inet4 line fail', exc_info=True)
-
-    try:
-        with open('/proc/net/tcp6') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == (
-                    '00000000000000000000000001000000:%X' % port):
-                # We got the socket
-                return line.split()
-    except Exception:
-        log.debug('getting socket inet6 line fail', exc_info=True)
+        log.debug('getting socket %s line fail' % fn, exc_info=True)
 
 
 # Linux only browser environment far fetch
