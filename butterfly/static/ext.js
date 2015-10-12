@@ -157,6 +157,14 @@
     }
   });
 
+  document.addEventListener('keydown', function(e) {
+    if (!(e.altKey && e.keyCode === 79)) {
+      return true;
+    }
+    open(location.href);
+    return cancel(e);
+  });
+
   Popup = (function() {
     function Popup() {
       this.el = document.getElementById('popup');

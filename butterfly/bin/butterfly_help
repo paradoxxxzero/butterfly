@@ -22,6 +22,7 @@ Butterfly is a xterm compliant terminal built with python and javascript.
   {strong}[Alt] + [a]             : {reset}Set an alarm which sends a notification when a modification is detected. (Ring on regexp match with [Shift])
   {strong}[Alt] + [s]             : {reset}Open theme selection prompt. Use [Alt] + [Shift] + [s] to refresh current theme.
   {strong}[Alt] + [e]             : {reset}List open user sessions. (Only available in secure mode)
+  {strong}[Alt] + [o]             : {reset}Open new terminal (As a popup)
   {strong}[Alt] + [z]             : {reset}Escape: don't catch the next pressed key.
                             Useful for using native search for example. ([Alt] + [z] then [Ctrl] + [f]).
 
