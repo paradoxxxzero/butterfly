@@ -73,12 +73,12 @@
       setTimeout(function() {
         term.write('Closed');
         term.skipNextKey = true;
-        return term.body.classList.add('dead');
+        term.body.classList.add('dead');
+        if ((new Date()).getTime() - openTs > 60 * 1000) {
+          return open('', '_self').close();
+        }
       }, 1);
-      quit = true;
-      if ((new Date()).getTime() - openTs > 60 * 1000) {
-        return open('', '_self').close();
-      }
+      return quit = true;
     });
     addEventListener('beforeunload', function() {
       if (!quit) {
