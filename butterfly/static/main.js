@@ -47,10 +47,16 @@
     t_queue = null;
     queue = '';
     ws.addEventListener('message', function(e) {
+      var ref;
+      if (e.data[0] === 'R') {
+        ref = e.data.slice(1).split(','), cols = ref[0], rows = ref[1];
+        term.resize(cols, rows, true);
+        return;
+      }
       if (t_queue) {
         clearTimeout(t_queue);
       }
-      queue += e.data;
+      queue += e.data.slice(1);
       if (term.stop) {
         queue = queue.slice(-10 * 1024);
       }
@@ -305,7 +311,8 @@
       }
       this.showCursor();
       this.body.classList.add('focus');
-      return this.body.classList.remove('blur');
+      this.body.classList.remove('blur');
+      return this.resize();
     };
 
     Terminal.prototype.blur = function() {
@@ -1648,13 +1655,16 @@
       })(this)), this.visualBell);
     };
 
-    Terminal.prototype.resize = function(x, y) {
+    Terminal.prototype.resize = function(x, y, notif) {
       var el, h, i, j, line, oldCols, oldRows, px, w;
       if (x == null) {
         x = null;
       }
       if (y == null) {
         y = null;
+      }
+      if (notif == null) {
+        notif = false;
       }
       oldCols = this.cols;
       oldRows = this.rows;
@@ -1669,7 +1679,9 @@
       if ((!x && !y) && oldCols === this.cols && oldRows === this.rows) {
         return;
       }
-      this.ctl('Resize', this.cols, this.rows);
+      if (!notif) {
+        this.ctl('Resize', this.cols, this.rows);
+      }
       if (oldCols < this.cols) {
         i = this.screen.length;
         while (i--) {

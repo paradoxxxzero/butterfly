@@ -238,16 +238,20 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         del sessions[session]
 
     @classmethod
-    def broadcast(cls, session, message, user):
-        cls.history[session] += message
+    def broadcast(cls, session, message, user, emitter=None):
+        if message[0] == 'S':
+            cls.history[session] += message[1:]
         if len(cls.history[session]) > cls.session_history_size:
             cls.history[session] = cls.history[session][
                 -cls.session_history_size:]
         sessions = cls.sessions.get(user.name, [])
+
         for session in sessions[session]:
             try:
-                session.write_message(message)
+                if session != emitter:
+                    session.write_message(message)
             except Exception:
+                session.log.exception('Error on broadcast')
                 session.close()
 
     def write(self, message):
@@ -268,6 +272,10 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         if self.session and self.secure_user:
             term = self.user_terminals.get(self.session)
             term and term.write(message)
+            if message[0] == 'R':
+                # Broadcast resize
+                TermWebSocket.broadcast(
+                    self.session, message, self.secure_user, self)
         else:
             self._terminal.write(message)
 

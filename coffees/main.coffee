@@ -55,8 +55,13 @@ document.addEventListener 'DOMContentLoaded', ->
 
   queue = ''
   ws.addEventListener 'message', (e) ->
+    if e.data[0] is 'R'
+      [cols, rows] = e.data.slice(1).split(',')
+      term.resize cols, rows, true
+      return
+
     clearTimeout t_queue if t_queue
-    queue += e.data
+    queue += e.data.slice(1)
     if term.stop
       queue = queue.slice -10 * 1024
 

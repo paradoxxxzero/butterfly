@@ -201,6 +201,7 @@ class Terminal
     @showCursor()
     @body.classList.add('focus')
     @body.classList.remove('blur')
+    @resize()
 
   blur: ->
     @cursorState = 1
@@ -1541,7 +1542,7 @@ class Terminal
       @body.classList.remove cls
     ), @visualBell
 
-  resize: (x=null, y=null) ->
+  resize: (x=null, y=null, notif=false) ->
     oldCols = @cols
     oldRows = @rows
     @computeCharSize()
@@ -1556,7 +1557,7 @@ class Terminal
     if (not x and not y) and oldCols == @cols and oldRows == @rows
       return
 
-    @ctl 'Resize', @cols, @rows
+    @ctl 'Resize', @cols, @rows unless notif
 
     # resize cols
     if oldCols < @cols

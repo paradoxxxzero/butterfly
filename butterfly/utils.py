@@ -60,59 +60,6 @@ def get_hex_ip_port(remote):
     return ''.join(ipv6_parts) + ':%04X' % port
 
 
-def get_style_path():
-    opts = tornado.options.options
-
-    if opts.theme and os.path.exists(opts.theme):
-        if os.path.isdir(opts.theme):
-            theme = os.path.join(opts.theme, 'style.sass')
-            if os.path.exists(theme):
-                return theme
-        else:
-            return opts.theme
-
-    if opts.theme:
-        theme = 'themes/%s/' % opts.theme
-    else:
-        theme = '/'
-
-    for ext in ['css', 'scss', 'sass']:
-        for fn in [
-                '/etc/butterfly/%sstyle' % theme,
-                os.path.expanduser('~/.butterfly/%sstyle' % theme)]:
-            if os.path.exists('%s.%s' % (fn, ext)):
-                return '%s.%s' % (fn, ext)
-
-
-def get_style():
-    style = get_style_path()
-    if style is None:
-        return
-
-    if style.endswith('.scss') or style.endswith('.sass'):
-        sass_path = os.path.join(
-            os.path.dirname(__file__), 'sass')
-        try:
-            import sass
-            sass.CompileError
-        except Exception:
-            log.error('You must install libsass to use sass '
-                      '(pip install libsass)')
-            return
-        base = os.path.dirname(style)
-        try:
-            return sass.compile(filename=style, include_paths=[
-                base, sass_path])
-        except sass.CompileError:
-            log.error(
-                'Unable to compile style.scss (filename: %s, paths: %r) ' % (
-                    style, [base, sass_path]), exc_info=True)
-            return
-
-    with open(style) as s:
-        return s.read()
-
-
 def parse_cert(cert):
     user = None
 

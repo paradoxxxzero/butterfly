@@ -277,12 +277,11 @@ class Terminal(object):
             s = struct.pack("HHHH", rows, cols, 0, 0)
             fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
             log.info('SIZE (%d, %d)' % (cols, rows))
+
         elif message[0] == 'S':
             log.debug('WRIT<%r' % message)
             self.writer.write(message[1:])
             self.writer.flush()
-        elif message[0] == 'T':
-            tornado.options.options.theme = message[1:]
 
     def shell_handler(self, fd, events):
         if events & ioloop.READ:
@@ -293,7 +292,7 @@ class Terminal(object):
 
             log.debug('READ>%r' % read)
             if read and len(read) != 0:
-                self.send(read.decode('utf-8', 'replace'))
+                self.send('S' + read.decode('utf-8', 'replace'))
             else:
                 events = ioloop.ERROR
 
