@@ -60,6 +60,10 @@ document.addEventListener 'DOMContentLoaded', ->
       term.resize cols, rows, true
       return
 
+    if e.data[0] isnt 'S'
+      console.error 'Garbage message'
+      return
+
     clearTimeout t_queue if t_queue
     queue += e.data.slice(1)
     if term.stop

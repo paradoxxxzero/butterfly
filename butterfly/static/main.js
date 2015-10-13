@@ -53,6 +53,10 @@
         term.resize(cols, rows, true);
         return;
       }
+      if (e.data[0] !== 'S') {
+        console.error('Garbage message');
+        return;
+      }
       if (t_queue) {
         clearTimeout(t_queue);
       }

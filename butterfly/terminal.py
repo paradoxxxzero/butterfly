@@ -92,7 +92,7 @@ class Terminal(object):
                     .decode('utf-8')
                     .replace('\r', '')
                     .replace('\n', '\r\n'))
-            self.send(motd)
+            self.send('S' + motd)
 
         log.info('Forking pty for user %r' % self.user)
 

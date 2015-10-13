@@ -182,7 +182,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
             if session in self.user_sessions:
                 # Session already here, registering websocket
                 self.user_sessions[session].append(self)
-                self.write_message(TermWebSocket.history[session])
+                self.write_message('S' + TermWebSocket.history[session])
                 # And returning, we don't want another terminal
                 return
             else:
