@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '2.0.8'
+__version__ = '2.0.10'
 
 
 import os
@@ -42,6 +42,24 @@ class Route(tornado.web.RequestHandler):
     @property
     def log(self):
         return log
+
+    @property
+    def builtin_themes_dir(self):
+        return os.path.join(
+                os.path.dirname(__file__), 'themes')
+
+    @property
+    def themes_dir(self):
+        return os.path.join(
+            self.application.butterfly_dir, 'themes')
+
+    def get_theme_dir(self, theme):
+        if theme.startswith('built-in-'):
+            return os.path.join(
+                self.builtin_themes_dir, theme[len('built-in-'):])
+        return os.path.join(
+            self.themes_dir, theme)
+
 
 # Imported from executable
 if hasattr(tornado.options.options, 'debug'):

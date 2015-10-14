@@ -56,10 +56,8 @@ class Theme(Route):
                 'You must install libsass to use sass '
                 '(pip install libsass)')
             return
+        base_dir = self.get_theme_dir(theme)
 
-        themes_dir = os.path.join(
-            self.application.butterfly_dir, 'themes')
-        base_dir = os.path.join(themes_dir, theme)
         style = None
         for ext in ['css', 'scss', 'sass']:
             probable_style = os.path.join(base_dir, 'style.%s' % ext)
@@ -96,9 +94,7 @@ class ThemeStatic(Route):
         if '..' in name:
             raise tornado.web.HTTPError(403)
 
-        themes_dir = os.path.join(
-            self.application.butterfly_dir, 'themes')
-        base_dir = os.path.join(themes_dir, theme)
+        base_dir = self.get_theme_dir(theme)
 
         fn = os.path.normpath(os.path.join(base_dir, name))
         if not fn.startswith(base_dir):
@@ -326,19 +322,29 @@ class ThemesList(Route):
     """Get the theme list"""
 
     def get(self):
-        themes_dir = os.path.join(
-            self.application.butterfly_dir, 'themes')
-        self.set_header('Content-Type', 'application/json')
-        if os.path.exists(themes_dir):
+
+        if os.path.exists(self.themes_dir):
             themes = [
                 theme
-                for theme in os.listdir(themes_dir)
-                if os.path.isdir(os.path.join(themes_dir, theme)) and
+                for theme in os.listdir(self.themes_dir)
+                if os.path.isdir(os.path.join(self.themes_dir, theme)) and
                 not theme.startswith('.')]
         else:
             themes = []
 
+        if os.path.exists(self.builtin_themes_dir):
+            builtin_themes = [
+                'built-in-%s' % theme
+                for theme in os.listdir(self.builtin_themes_dir)
+                if os.path.isdir(os.path.join(
+                        self.builtin_themes_dir, theme)) and
+                not theme.startswith('.')]
+        else:
+            builtin_themes = []
+
+        self.set_header('Content-Type', 'application/json')
         self.write(tornado.escape.json_encode({
             'themes': sorted(themes),
-            'dir': themes_dir
+            'builtin_themes': sorted(builtin_themes),
+            'dir': self.themes_dir
         }))

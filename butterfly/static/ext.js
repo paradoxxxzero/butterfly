@@ -614,30 +614,37 @@
     }
     oReq = new XMLHttpRequest();
     oReq.addEventListener('load', function() {
-      var inner, j, len1, ref, response, theme, theme_list, themes, url;
+      var builtin_themes, inner, j, k, len1, len2, option, response, theme, theme_list, themes, url;
       response = JSON.parse(this.responseText);
+      builtin_themes = response.builtin_themes;
       themes = response.themes;
-      if (themes.length === 0) {
-        alert("No themes found in " + response.dir + ".\n Please install themes with butterfly.server.py --install-themes");
-        return;
-      }
       inner = "<form>\n  <h2>Pick a theme:</h2>\n  <select id=\"theme_list\">";
-      ref = ['default'].concat(themes);
-      for (j = 0, len1 = ref.length; j < len1; j++) {
-        theme = ref[j];
-        if (theme === 'default') {
-          url = "/static/main.css";
-        } else {
-          url = "/theme/" + theme + "/style.css";
-        }
+      option = function(url, theme) {
         inner += '<option ';
         if (_theme === url) {
           inner += 'selected ';
         }
         inner += "value=\"" + url + "\">";
         inner += theme;
-        inner += '</option>';
+        return inner += '</option>';
+      };
+      option("/static/main.css", 'default');
+      if (themes.length) {
+        inner += '<optgroup label="Local themes">';
+        for (j = 0, len1 = themes.length; j < len1; j++) {
+          theme = themes[j];
+          url = "/theme/" + theme + "/style.css";
+          option(url, theme);
+        }
+        inner += '</optgroup>';
       }
+      inner += '<optgroup label="Built-in themes">';
+      for (k = 0, len2 = builtin_themes.length; k < len2; k++) {
+        theme = builtin_themes[k];
+        url = "/theme/" + theme + "/style.css";
+        option(url, theme.slice('built-in-'.length));
+      }
+      inner += '</optgroup>';
       inner += "  </select>\n  <label>You can create yours in " + response.dir + ".</label>\n</form>";
       popup.open(inner);
       theme_list = document.getElementById('theme_list');

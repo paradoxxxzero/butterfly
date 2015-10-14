@@ -25,23 +25,20 @@ document.addEventListener 'keydown', (e) ->
   oReq = new XMLHttpRequest()
   oReq.addEventListener 'load', ->
     response = JSON.parse(@responseText)
+    builtin_themes = response.builtin_themes
     themes = response.themes
 
-    if themes.length is 0
-      alert("No themes found in #{response.dir}.\n
-      Please install themes with butterfly.server.py --install-themes")
-      return
+    # if themes.length is 0
+    #   alert("No themes found in #{response.dir}.\n
+    #   Please install themes with butterfly.server.py --install-themes")
+    #   return
 
     inner = """
         <form>
           <h2>Pick a theme:</h2>
           <select id="theme_list">
     """
-    for theme in ['default'].concat(themes)
-      if theme is 'default'
-        url = "/static/main.css"
-      else
-        url = "/theme/#{theme}/style.css"
+    option = (url, theme) ->
       inner += '<option '
 
       if _theme is url
@@ -50,6 +47,22 @@ document.addEventListener 'keydown', (e) ->
       inner += "value=\"#{url}\">"
       inner += theme
       inner += '</option>'
+
+    option "/static/main.css", 'default'
+
+    if themes.length
+      inner += '<optgroup label="Local themes">'
+      for theme in themes
+        url = "/theme/#{theme}/style.css"
+        option url, theme
+      inner += '</optgroup>'
+
+    inner += '<optgroup label="Built-in themes">'
+    for theme in builtin_themes
+      url = "/theme/#{theme}/style.css"
+      option url, theme.slice('built-in-'.length)
+    inner += '</optgroup>'
+
     inner += """
         </select>
         <label>You can create yours in #{response.dir}.</label>
