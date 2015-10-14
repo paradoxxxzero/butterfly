@@ -38,9 +38,8 @@ Butterfly is a xterm compliant terminal built with python and javascript.
 
 {title}Styling butterfly:{reset}
   To style butterfly in sass, you need to have the libsass python library installed.
-  Install official themes with {code}butterfly.server.py --install-themes{reset}
 
-  Theming is done by overiding the default sass files located in {code}{main}{reset} in a theme directory.
+  Theming is done by overriding the default sass files located in {code}{main}{reset} in your theme directory.
   This directory can include images and custom fonts.
   Please take a look at official themes here:  https://github.com/paradoxxxzero/butterfly-themes
   and submit your best themes as pull request!

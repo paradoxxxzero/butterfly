@@ -61,12 +61,6 @@ tornado.options.define("generate_current_user_pkcs", default=False,
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication "
                        "(Must be root to create for another user)")
-tornado.options.define("install_themes", default=False,
-                       help="Install or update themes from butterfly-themes")
-tornado.options.define("install_themes_from",
-                       default='https://github.com/paradoxxxzero/'
-                       'butterfly-themes/archive/master.zip',
-                       help="Url to download themes from")
 
 if os.getuid() == 0:
     ev = os.getenv('XDG_CONFIG_DIRS', '/etc')
@@ -117,49 +111,6 @@ for logger in ('tornado.access', 'tornado.application',
     logging.getLogger(logger).setLevel(level)
 
 log = logging.getLogger('butterfly')
-
-if options.install_themes:
-    from io import BytesIO
-    from shutil import move, rmtree
-    from zipfile import ZipFile
-    from tempfile import mkdtemp
-    try:
-        from urllib.request import urlopen
-    except ImportError:
-        from urllib import urlopen
-    try:
-        import sass as _
-        _.CompileError
-    except Exception:
-        print('You must install libsass to use themes '
-              '(run: pip install libsass)')
-        sys.exit(1)
-    themes_url = options.install_themes_from
-    print('Downloading %s...' % themes_url)
-    zip_ = ZipFile(BytesIO(urlopen(themes_url).read()))
-
-    print('Extracting in %s' % butterfly_dir)
-    zip_.extractall(butterfly_dir)
-
-    zip_dest = os.path.join(butterfly_dir, 'butterfly-themes-master')
-    theme_dir = os.path.join(butterfly_dir, 'themes')
-    if not os.path.exists(theme_dir):
-        os.makedirs(theme_dir)
-
-    tmp_dir = mkdtemp()
-    for dir_ in os.listdir(zip_dest):
-        if dir_ == 'README.md':
-            continue
-        new_dir = os.path.join(theme_dir, dir_)
-        if os.path.exists(new_dir):
-            move(new_dir, tmp_dir)
-            print('Old theme %s has been backed up in %s' % (
-                new_dir, tmp_dir))
-        move(os.path.join(zip_dest, dir_), theme_dir)
-
-    rmtree(zip_dest)
-    print('%s extracted.' % theme_dir)
-    sys.exit(0)
 
 host = options.host
 port = options.port

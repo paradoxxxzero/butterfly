@@ -29,8 +29,8 @@ options = dict(
     package_data={
         'butterfly': [
             'sass/*.sass',
-            'themes/*',
-            'themes/**/*',
+            'themes/*.*',
+            'themes/**/*.*',
             'static/fonts/*',
             'static/images/favicon.png',
             'static/main.css',
