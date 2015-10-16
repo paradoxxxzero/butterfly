@@ -288,10 +288,13 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         else:
             self.log.error(
                 'Socket with neither session nor terminal %r' % self)
-        if (self.application.systemd and
-            not len(TermWebSocket.sockets) and
-            not sum([len(sessions)
-                     for user, sessions in TermWebSocket.terminals.items()])):
+        opts = tornado.options.options
+        if opts.one_shot or (
+                self.application.systemd and
+                not len(TermWebSocket.sockets) and
+                not sum([
+                    len(sessions)
+                    for user, sessions in TermWebSocket.terminals.items()])):
             sys.exit(0)
 
 

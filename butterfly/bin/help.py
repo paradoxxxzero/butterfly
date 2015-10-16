@@ -6,12 +6,14 @@ import base64
 import shutil
 
 print(ansi_colors.white + "Welcome to the butterfly help." + ansi_colors.reset)
-with image('image/png'):
-    with open(
-            os.path.join(
-                os.path.abspath(os.path.dirname(__file__)),
-                '../static/images/favicon.png'), 'rb') as i:
-        print(base64.b64encode(i.read()).decode('ascii'))
+path = os.getenv('BUTTERFLY_PATH')
+if path:
+    path = os.path.join(path, '../static/images/favicon.png')
+
+if path and os.path.exists(path):
+    with image('image/png'):
+        with open(path, 'rb') as i:
+            print(base64.b64encode(i.read()).decode('ascii'))
 print("""
 Butterfly is a xterm compliant terminal built with python and javascript.
 
@@ -28,12 +30,13 @@ Butterfly is a xterm compliant terminal built with python and javascript.
 
 
 {title}Butterfly programs:{reset}
-  {strong}bcat     : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
-  {strong}bopen    : {reset}Open a new terminal at specified location.
-  {strong}bsession : {reset}Open or rattach a butterfly session. Multiplexing is supported.
-  {strong}b16M     : {reset}Test the 16M colors support in terminal.
-  {strong}bhr      : {reset}Put a html hr. This is a test for html output.
-  {strong}bcal     : {reset}Display current month using html. This is also a test for html output.
+  {strong}b          : {reset}Alias for {strong}butterfly{reset} executable. Takes a comand in parameter or launch a butterfly server for one shot use (if outside butterfly).
+  {strong}b cat      : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
+  {strong}b open     : {reset}Open a new terminal at specified location.
+  {strong}b session  : {reset}Open or rattach a butterfly session. Multiplexing is supported.
+  {strong}b colors   : {reset}Test the terminal colors (16, 256 and 16777216 colors)
+  {strong}b hr       : {reset}Put a html hr. This is a test for html output.
+  {strong}b calendar : {reset}Display current month using html. This is also a test for html output.
 
 
 {title}Styling butterfly:{reset}

@@ -310,16 +310,23 @@
     };
 
     Terminal.prototype.focus = function() {
+      var old_sl;
+      old_sl = this.scrollLock;
+      this.scrollLock = true;
       if (this.sendFocus) {
         this.send('\x1b[I');
       }
       this.showCursor();
       this.body.classList.add('focus');
       this.body.classList.remove('blur');
-      return this.resize();
+      this.resize();
+      return this.scrollLock = old_sl;
     };
 
     Terminal.prototype.blur = function() {
+      var old_sl;
+      old_sl = this.scrollLock;
+      this.scrollLock = true;
       this.cursorState = 1;
       this.screen[this.y + this.shift].dirty = true;
       this.refresh();
@@ -327,7 +334,8 @@
         this.send('\x1b[O');
       }
       this.body.classList.add('blur');
-      return this.body.classList.remove('focus');
+      this.body.classList.remove('focus');
+      return this.scrollLock = old_sl;
     };
 
     Terminal.prototype.initmouse = function() {
@@ -698,9 +706,7 @@
         }
         this.children = Array.prototype.slice.call(lines, -this.rows);
       }
-      if (!this.scrollLock) {
-        return this.nativeScrollTo();
-      }
+      return this.nativeScrollTo();
     };
 
     Terminal.prototype._cursorBlink = function() {
@@ -775,6 +781,9 @@
     Terminal.prototype.nativeScrollTo = function(scroll) {
       if (scroll == null) {
         scroll = 2000000000;
+      }
+      if (this.scrollLock) {
+        return;
       }
       return window.scrollTo(0, scroll);
     };

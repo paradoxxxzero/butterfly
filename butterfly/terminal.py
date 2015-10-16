@@ -159,8 +159,8 @@ class Terminal(object):
         env["LOCATION"] = "http%s://%s:%d/" % (
             "s" if not tornado.options.options.unsecure else "",
             tornado.options.options.host, tornado.options.options.port)
-        env["PATH"] = '%s:%s' % (os.path.abspath(os.path.join(
-            os.path.dirname(__file__), 'bin')), env.get("PATH"))
+        env['BUTTERFLY_PATH'] = os.path.abspath(os.path.join(
+            os.path.dirname(__file__), 'bin'))
 
         try:
             tty = os.ttyname(0).replace('/dev/', '')

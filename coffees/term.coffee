@@ -197,19 +197,29 @@ class Terminal
     erased
 
   focus: ->
+    old_sl = @scrollLock
+    @scrollLock = true
+
     @send('\x1b[I') if @sendFocus
     @showCursor()
     @body.classList.add('focus')
     @body.classList.remove('blur')
     @resize()
 
+    @scrollLock = old_sl
+
   blur: ->
+    old_sl = @scrollLock
+    @scrollLock = true
+
     @cursorState = 1
     @screen[@y + @shift].dirty = true
     @refresh()
     @send('\x1b[O') if @sendFocus
     @body.classList.add('blur')
     @body.classList.remove('focus')
+
+    @scrollLock = old_sl
 
   # XTerm mouse events
   # http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
@@ -538,7 +548,7 @@ class Terminal
       @children = Array.prototype.slice.call(
         lines, -@rows)
 
-    @nativeScrollTo() unless @scrollLock
+    @nativeScrollTo()
 
   _cursorBlink: ->
     @cursorState ^= 1
@@ -591,6 +601,7 @@ class Terminal
 
 
   nativeScrollTo: (scroll=2000000000) -> # ~ Max ff number
+    return if @scrollLock
     window.scrollTo 0, scroll
 
   scrollDisplay: (disp) ->

@@ -22,7 +22,7 @@ options = dict(
     url="http://github.com/paradoxxxzero/butterfly",
     license="GPLv3",
     platforms="Any",
-    scripts=['butterfly.server.py'],
+    scripts=['butterfly.server.py', 'scripts/butterfly', 'scripts/b'],
     packages=['butterfly'],
     install_requires=["tornado>=3.2", "pyOpenSSL", 'tornado_systemd'],
     extras_requires=["libsass"],

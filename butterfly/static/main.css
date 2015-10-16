@@ -2806,7 +2806,6 @@ body {
 html, body {
   margin: 0;
   padding: 0;
-  line-height: 1.2;
   background-color: #110f13;
   color: #f4ead5; }
 
@@ -2923,7 +2922,8 @@ body {
   color: #110f13;
   background-color: #f4ead5; }
 
-.blur .cursor.reverse-video {
+.blur .cursor {
+  border: 1px solid #f4ead5;
   background: none; }
 
 .inline-html {

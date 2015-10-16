@@ -22,6 +22,7 @@ import tornado.ioloop
 import tornado.httpserver
 import tornado_systemd
 import logging
+import webbrowser
 import uuid
 import ssl
 import getpass
@@ -39,6 +40,8 @@ tornado.options.define("unminified", default=False,
 
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
+tornado.options.define("one_shot", default=False,
+                       help="Run a one-shot instance. Quit at term close")
 tornado.options.define("shell", help="Shell to execute at login")
 tornado.options.define("motd", default='motd', help="Path to the motd file.")
 tornado.options.define("cmd",
@@ -66,7 +69,9 @@ if os.getuid() == 0:
     ev = os.getenv('XDG_CONFIG_DIRS', '/etc')
 else:
     ev = os.getenv(
-        'XDG_CONFIG_HOME', os.path.join(os.getenv('HOME'), '.config'))
+        'XDG_CONFIG_HOME', os.path.join(
+            os.getenv('HOME', os.path.expanduser('~')),
+            '.config'))
 
 butterfly_dir = os.path.join(ev, 'butterfly')
 conf_file = os.path.join(butterfly_dir, 'butterfly.conf')
@@ -114,6 +119,7 @@ log = logging.getLogger('butterfly')
 
 host = options.host
 port = options.port
+
 
 if not os.path.exists(options.ssl_dir):
     os.makedirs(options.ssl_dir)
@@ -301,7 +307,13 @@ log.info('Starting loop')
 
 ioloop = tornado.ioloop.IOLoop.instance()
 
+if port == 0:
+    port = list(http_server._sockets.values())[0].getsockname()[1]
+
 url = "http%s://%s:%d/" % (
     "s" if not options.unsecure else "", host, port)
-log.warn('Butterfly is ready, open your browser to: %s' % url)
+
+if not options.one_shot or not webbrowser.open(url):
+    log.warn('Butterfly is ready, open your browser to: %s' % url)
+
 ioloop.start()
