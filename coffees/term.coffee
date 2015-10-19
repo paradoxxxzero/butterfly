@@ -1564,7 +1564,10 @@ class Terminal
     px = h % @charSize.height
     @body.style['padding-bottom'] = "#{px}px"
 
+    @cols = Math.max 1, @cols
+    @rows = Math.max 1, @rows
     @nativeScrollTo()
+
     if (not x and not y) and oldCols == @cols and oldRows == @rows
       return
 
@@ -1636,7 +1639,7 @@ class Terminal
     @scrollBottom = @rows - 1
 
     @refresh(true)
-    @reset() if x or y
+    @reset() if not notif and (x or y)
 
   resizeWindowPlease: (cols) ->
     # This is only when running butterfly in app mode when resizeTo is available

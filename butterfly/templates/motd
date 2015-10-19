@@ -18,5 +18,5 @@
 {{ colors.white }}              Y                   Y               {{ colors.light_white }}From:{{ colors.white }}
               !                   !                  {{ colors.red if opts.unsecure else colors.green }}{{ butterfly.socket.remote_addr }}:{{ butterfly.socket.remote_port }}{{ colors.reset }}
 
-For more information type: {{ colors.white }}$ {{ colors.green }}butterfly help
+For more information type: {{ colors.white }}$ {{ colors.green }}butterfly help{{ colors.reset }}
 

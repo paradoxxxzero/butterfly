@@ -1688,6 +1688,8 @@
       this.rows = y || Math.floor(h / this.charSize.height);
       px = h % this.charSize.height;
       this.body.style['padding-bottom'] = px + "px";
+      this.cols = Math.max(1, this.cols);
+      this.rows = Math.max(1, this.rows);
       this.nativeScrollTo();
       if ((!x && !y) && oldCols === this.cols && oldRows === this.rows) {
         return;
@@ -1780,7 +1782,7 @@
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
       this.refresh(true);
-      if (x || y) {
+      if (!notif && (x || y)) {
         return this.reset();
       }
     };
