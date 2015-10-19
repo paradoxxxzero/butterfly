@@ -30,13 +30,14 @@ Butterfly is a xterm compliant terminal built with python and javascript.
 
 
 {title}Butterfly programs:{reset}
-  {strong}b          : {reset}Alias for {strong}butterfly{reset} executable. Takes a comand in parameter or launch a butterfly server for one shot use (if outside butterfly).
-  {strong}b cat      : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
-  {strong}b open     : {reset}Open a new terminal at specified location.
-  {strong}b session  : {reset}Open or rattach a butterfly session. Multiplexing is supported.
-  {strong}b colors   : {reset}Test the terminal colors (16, 256 and 16777216 colors)
-  {strong}b hr       : {reset}Put a html hr. This is a test for html output.
-  {strong}b calendar : {reset}Display current month using html. This is also a test for html output.
+  {strong}b         : {reset}Alias for {strong}butterfly{reset} executable. Takes a comand in parameter or launch a butterfly server for one shot use (if outside butterfly).
+  {strong}b cat     : {reset}A wrapper around cat allowing to display images as <img> instead of binary.
+  {strong}b open    : {reset}Open a new terminal at specified location.
+  {strong}b session : {reset}Open or rattach a butterfly session. Multiplexing is supported.
+  {strong}b colors  : {reset}Test the terminal colors (16, 256 and 16777216 colors)
+  {strong}b html    : {reset}Output in html standard input.
+
+  For more butterfly programs check out: https://github.com/paradoxxxzero/butterfly-demos
 
 
 {title}Styling butterfly:{reset}
