@@ -990,7 +990,7 @@ class Terminal
 
             # CSI Ps n    Device Status Report (DSR).
             when "n"
-              @deviceStatus @params unless @prefix
+              @deviceStatus @params
 
             # CSI Ps @
             # Insert Ps (Blank) Character(s) (default = 1) (ICH).
@@ -2063,6 +2063,19 @@ class Terminal
       if params[0] is 6
         # cursor position
         @send "\x1b[?" + (@y + 1) + ";" + (@x + 1) + "R"
+
+      # Custom DSR
+      if params[0] is 99
+        # Geo position
+        unless navigator.geolocation?.getCurrentPosition?
+          @send '\x1b[?R'
+          return
+        navigator.geolocation?.getCurrentPosition (position) =>
+          @send (
+            "\x1b[?" + position.coords.latitude + ";" +
+             position.coords.longitude + "R")
+        , (error) =>
+          @send '\x1b[?R'
 
 
   ## Additions ##

@@ -1167,9 +1167,7 @@
                 }
                 break;
               case "n":
-                if (!this.prefix) {
-                  this.deviceStatus(this.params);
-                }
+                this.deviceStatus(this.params);
                 break;
               case "@":
                 this.insertChars(this.params);
@@ -2145,6 +2143,7 @@
     };
 
     Terminal.prototype.deviceStatus = function(params) {
+      var ref, ref1;
       if (!this.prefix) {
         switch (params[0]) {
           case 5:
@@ -2154,7 +2153,22 @@
         }
       } else if (this.prefix === "?") {
         if (params[0] === 6) {
-          return this.send("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
+          this.send("\x1b[?" + (this.y + 1) + ";" + (this.x + 1) + "R");
+        }
+        if (params[0] === 99) {
+          if (((ref = navigator.geolocation) != null ? ref.getCurrentPosition : void 0) == null) {
+            this.send('\x1b[?R');
+            return;
+          }
+          return (ref1 = navigator.geolocation) != null ? ref1.getCurrentPosition((function(_this) {
+            return function(position) {
+              return _this.send("\x1b[?" + position.coords.latitude + ";" + position.coords.longitude + "R");
+            };
+          })(this), (function(_this) {
+            return function(error) {
+              return _this.send('\x1b[?R');
+            };
+          })(this)) : void 0;
         }
       }
     };
