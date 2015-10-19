@@ -207,19 +207,23 @@ def get_socket_env(inode):
     for pid in os.listdir("/proc/"):
         if not pid.isdigit():
             continue
-        with open('/proc/%s/cmdline' % pid) as c:
-            if c.read().split('\x00')[0] in [
-                    'gnome-session',
-                    'startkde',
-                    'xfce4-session']:
-                with open('/proc/%s/environ' % pid) as e:
-                    keyvals = e.read().split('\x00')
-                    env = {}
-                    for keyval in keyvals:
-                        if '=' in keyval:
-                            key, val = keyval.split('=', 1)
-                            env[key] = val
-                    return env
+        try:
+            with open('/proc/%s/cmdline' % pid) as c:
+                if c.read().split('\x00')[0].split('/')[-1] in [
+                        'gnome-session',
+                        'gnome-session-binary',
+                        'startkde',
+                        'xfce4-session']:
+                    with open('/proc/%s/environ' % pid) as e:
+                        keyvals = e.read().split('\x00')
+                        env = {}
+                        for keyval in keyvals:
+                            if '=' in keyval:
+                                key, val = keyval.split('=', 1)
+                                env[key] = val
+                        return env
+        except Exception:
+            continue
 
     for pid in os.listdir("/proc/"):
         if not pid.isdigit():
