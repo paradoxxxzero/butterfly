@@ -5,19 +5,48 @@
 
 ## Description
 
-Butterfly is a tornado web server written in python which powers a full featured web terminal.
+Butterfly is a xterm compatible terminal that runs in your browser.
 
-The js part is heavily based on [term.js](https://github.com/chjj/term.js/) which is heavily based on [jslinux](http://bellard.org/jslinux/).
 
+## Features
+
+* xterm compatible (support a lot of unused features!)
+* Native browser scroll and search
+* Theming in css / sass [(18 preset themes)](https://github.com/paradoxxxzero/butterfly-themes) endless possibilities!
+* HTML in your terminal! cat images and use <table>!
+* Multiple sessions support (à la screen -x) to simultaneously access a terminal from several places on the planet!
+* Secure authentication with X509 certificates!
+* 16,777,216 colors support!
+* Keyboard text selection!
+* Desktop notifications on terminal output!
+* Geolocation from browser!
+* May work on firefox too!
 
 ## Try it
 
 ```bash
     $ pip install butterfly
-    $ butterfly.server.py
+    $ pip install libsass  # If you want to use themes
+    $ butterfly
+    ```
+
+A new tab should appear in your browser. Then type
+
+```bash
+    $ butterfly help
 ```
 
-Then open [localhost:57575](http://localhost:57575) in your favorite browser and done.
+To get an overview of butterfly features.
+
+
+## Run it as a server
+
+```bash
+    $ butterfly.server.py --host=myhost --port=57575
+```
+
+The first time it will ask you to generate the certificates (see: [here](http://paradoxxxzero.github.io/2014/03/21/butterfly-with-ssl-auth.html))
+
 
 ## Run it with systemd (linux)
 
@@ -31,6 +60,8 @@ Systemd provides a way to automatically activate daemons when needed (socket act
     # systemctl start butterfly.socket
 ```
 
+Don't forget to update the /etc/butterfly/butterfly.conf file with your server options (host, port, shell, ...)
+
 ## Contribute
 
 and make the world better (or just butterfly).
@@ -41,9 +72,12 @@ If you don't know what to do go to the github issues and pick one you like.
 
 If you want to motivate me to continue working on this project you can tip me, see: http://paradoxxxzero.github.io/about/
 
-The dev requirements are coffee script and compass for the client side.
-Run `python dev.py --debug --port=12345` and you are set (yes you can launch it from your regular butterfly instance)
+Client side development use [grunt](http://gruntjs.com/) and [bower](http://bower.io/).
 
+
+## Credits
+
+The js part is based on [term.js](https://github.com/chjj/term.js/) which is based on [jslinux](http://bellard.org/jslinux/).
 ## Author
 
 [Florian Mounier](http://paradoxxxzero.github.io/)

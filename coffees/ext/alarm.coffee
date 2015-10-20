@@ -45,8 +45,7 @@ clean_ansi = (data) ->
 
 setAlarm = (notification, cond) ->
   alarm = (data) ->
-    message = clean_ansi data.data
-    console.log message
+    message = clean_ansi data.data.slice(1)
     return if cond isnt null and not cond.test(message)
 
     butterfly.body.classList.remove 'alarm'

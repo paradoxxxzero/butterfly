@@ -62,8 +62,7 @@
     var alarm;
     alarm = function(data) {
       var message, note, notif;
-      message = clean_ansi(data.data);
-      console.log(message);
+      message = clean_ansi(data.data.slice(1));
       if (cond !== null && !cond.test(message)) {
         return;
       }

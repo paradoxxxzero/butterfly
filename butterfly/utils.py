@@ -24,7 +24,6 @@ import struct
 from logging import getLogger
 from collections import namedtuple
 import subprocess
-import tornado.options
 import re
 
 log = getLogger('butterfly')
@@ -140,7 +139,7 @@ class Socket(object):
             try:
                 line = get_procfs_socket_line(get_hex_ip_port(pn[:2]))
                 self.user = User(uid=int(line[7]))
-                self.env = get_socket_env(line[9])
+                self.env = get_socket_env(line[9], self.user)
             except Exception:
                 log.debug('procfs was no good, aight', exc_info=True)
 
@@ -203,7 +202,7 @@ def get_procfs_socket_line(hex_ip_port):
 
 
 # Linux only browser environment far fetch
-def get_socket_env(inode):
+def get_socket_env(inode, user):
     for pid in os.listdir("/proc/"):
         if not pid.isdigit():
             continue
@@ -214,6 +213,16 @@ def get_socket_env(inode):
                         'gnome-session-binary',
                         'startkde',
                         'xfce4-session']:
+                    with open('/proc/%s/status' % pid) as e:
+                        uid = None
+                        for line in e.read().splitlines():
+                            parts = line.split('\t')
+                            if parts[0] == 'Uid:':
+                                uid = int(parts[1])
+                                break
+                        if not uid or uid != user.uid:
+                            continue
+
                     with open('/proc/%s/environ' % pid) as e:
                         keyvals = e.read().split('\x00')
                         env = {}
