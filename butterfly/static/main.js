@@ -912,6 +912,7 @@
                 this.state = State.ignore;
                 break;
               case "c":
+                this.clearScrollback();
                 this.reset();
                 break;
               case "E":
@@ -1925,6 +1926,25 @@
     Terminal.prototype.reset = function() {
       this.resetVars();
       return this.refresh(true);
+    };
+
+    Terminal.prototype.clearScrollback = function() {
+      var group, k, len, len1, line, lines, m, ref, ref1;
+      lines = document.querySelectorAll('.line');
+      if (lines.length > this.rows) {
+        ref = Array.prototype.slice.call(lines, 0, lines.length - this.rows);
+        for (k = 0, len = ref.length; k < len; k++) {
+          line = ref[k];
+          line.remove();
+        }
+        ref1 = document.querySelectorAll('.group:empty');
+        for (m = 0, len1 = ref1.length; m < len1; m++) {
+          group = ref1[m];
+          group.remove();
+        }
+        lines = document.querySelectorAll('.line');
+      }
+      return this.children = Array.prototype.slice.call(lines, -this.rows);
     };
 
     Terminal.prototype.tabSet = function() {

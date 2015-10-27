@@ -733,6 +733,7 @@ class Terminal
 
             # ESC c Full Reset (RIS).
             when "c"
+              @clearScrollback()
               @reset()
 
             # ESC E Next Line ( NEL is 0x85).
@@ -1730,6 +1731,21 @@ class Terminal
   reset: ->
     @resetVars()
     @refresh(true)
+
+  clearScrollback: ->
+    # In case of real hard reset
+    # Drop DOM history
+    lines = document.querySelectorAll('.line')
+    if lines.length > @rows
+      for line in Array.prototype.slice.call(
+        lines, 0, lines.length - @rows)
+          line.remove()
+      for group in document.querySelectorAll('.group:empty')
+        group.remove()
+      lines = document.querySelectorAll('.line')
+    @children = Array.prototype.slice.call(
+      lines, -@rows)
+
 
   # ESC H Tab Set (HTS is 0x88).
   tabSet: ->
