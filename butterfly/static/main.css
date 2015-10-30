@@ -2838,7 +2838,7 @@ body {
       color: #f4ead5;
       font-size: 1em; }
       body #popup form h2, body #popup > div h2 {
-        margin: 0 0.5em 0.5em 0.5em; }
+        margin: 0 .5em .5em .5em; }
       body #popup form select, body #popup > div select {
         min-width: 300px;
         padding: .5em;
