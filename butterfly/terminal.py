@@ -114,7 +114,7 @@ class Terminal(object):
             self.communicate()
 
     def determine_user(self):
-        if self.callee is None and (
+        if self.callee is None or (
                 tornado.options.options.unsecure and
                 tornado.options.options.login):
             # If callee is now known and we have unsecure connection
@@ -147,12 +147,15 @@ class Terminal(object):
                 "Can't chdir to %s" % (self.path or self.callee.dir),
                 exc_info=True)
 
-        env = os.environ
         # If local and local user is the same as login user
         # We set the env of the user from the browser
         # Usefull when running as root
         if self.caller == self.callee:
+            env = os.environ
             env.update(self.socket.env)
+        else:
+            # May need more?
+            env = {}
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "butterfly"
         env["HOME"] = self.callee.dir
@@ -167,7 +170,6 @@ class Terminal(object):
         except Exception:
             log.debug("Can't get ttyname", exc_info=True)
             tty = ''
-
         if self.caller != self.callee:
             try:
                 os.chown(os.ttyname(0), self.callee.uid, -1)
@@ -215,7 +217,6 @@ class Terminal(object):
 
             # In some cases some shells don't export SHELL var
             env['SHELL'] = args[0]
-
             os.execvpe(args[0], args, env)
             # This process has been replaced
 
@@ -244,6 +245,7 @@ class Terminal(object):
                 args.append('-s')
                 args.append(tornado.options.options.shell)
         args.append(self.callee.name)
+        env['LOGNAME'] = env['USER'] = self.callee.name
         os.execvpe(args[0], args, env)
 
     def communicate(self):
