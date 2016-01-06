@@ -1,6 +1,6 @@
-# ƸӜƷ butterfly
+# ƸӜƷ butterfly 2.0
 
-![](http://paradoxxxzero.github.io/assets/butterfly_1.gif)
+![](http://paradoxxxzero.github.io/assets/butterfly_2.0_1.gif)
 
 
 ## Description
@@ -13,7 +13,7 @@ Butterfly is a xterm compatible terminal that runs in your browser.
 * xterm compatible (support a lot of unused features!)
 * Native browser scroll and search
 * Theming in css / sass [(18 preset themes)](https://github.com/paradoxxxzero/butterfly-themes) endless possibilities!
-* HTML in your terminal! cat images and use <table>!
+* HTML in your terminal! cat images and use &lt;table&gt;
 * Multiple sessions support (à la screen -x) to simultaneously access a terminal from several places on the planet!
 * Secure authentication with X509 certificates!
 * 16,777,216 colors support!
@@ -28,7 +28,7 @@ Butterfly is a xterm compatible terminal that runs in your browser.
     $ pip install butterfly
     $ pip install libsass  # If you want to use themes
     $ butterfly
-    ```
+```
 
 A new tab should appear in your browser. Then type
 
