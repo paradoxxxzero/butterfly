@@ -239,13 +239,11 @@ class Terminal(object):
         else:
             args = ['/bin/su']
 
-        if sys.platform == 'linux':
-            args.append('-p')
-            if tornado.options.options.shell:
-                args.append('-s')
-                args.append(tornado.options.options.shell)
+        args.append('-l')
+        if sys.platform == 'linux' and tornado.options.options.shell:
+            args.append('-s')
+            args.append(tornado.options.options.shell)
         args.append(self.callee.name)
-        env['LOGNAME'] = env['USER'] = self.callee.name
         os.execvpe(args[0], args, env)
 
     def communicate(self):
