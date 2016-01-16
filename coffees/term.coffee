@@ -2456,7 +2456,7 @@ class Terminal
         when 25 # show cursor
           @cursorHidden = false
         # alt screen buffer cursor
-        #@saveCursor();
+        #@saveCursor()
         when 1049, 47, 1047 # alt screen buffer
           unless @normal
             normal =
