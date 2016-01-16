@@ -36,7 +36,7 @@ module.exports = (grunt) ->
 
     coffeelint:
       butterfly:
-        'coffees/*.coffee'
+        'coffees/**/*.coffee'
 
     watch:
       options:

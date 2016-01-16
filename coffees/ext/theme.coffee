@@ -3,7 +3,7 @@ _set_theme_href = (href) ->
   img = document.createElement('img')
   img.onerror = ->
     setTimeout (-> butterfly?.resize()), 250
-  img.src = href;
+  img.src = href
 
 _theme = localStorage?.getItem('theme')
 _set_theme_href(_theme) if _theme
