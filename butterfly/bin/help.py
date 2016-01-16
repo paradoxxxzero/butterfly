@@ -2,6 +2,7 @@
 from butterfly.escapes import image
 from butterfly.utils import ansi_colors
 import os
+import butterfly
 import base64
 import shutil
 import subprocess
@@ -59,5 +60,5 @@ Butterfly is a xterm compliant terminal built with python and javascript.
     reset=ansi_colors.reset,
     rcol=int(subprocess.check_output(['stty','size']).split()[1]) - 31,
     main=os.path.normpath(os.path.join(
-                os.path.abspath(os.path.dirname(__file__)),
-                '../sass/'))))
+                os.path.abspath(os.path.dirname(butterfly.__file__)),
+                'sass'))))
