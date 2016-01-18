@@ -1358,14 +1358,14 @@ class Terminal
         if @applicationKeypad
           key = "\x1bOH"
           break
-        key = "\x1bOH"
+        key = "\x1b[H"
 
       # end
       when 35
         if @applicationKeypad
           key = "\x1bOF"
           break
-        key = "\x1bOF"
+        key = "\x1b[F"
 
       # page up
       when 33

@@ -1468,14 +1468,14 @@
             key = "\x1bOH";
             break;
           }
-          key = "\x1bOH";
+          key = "\x1b[H";
           break;
         case 35:
           if (this.applicationKeypad) {
             key = "\x1bOF";
             break;
           }
-          key = "\x1bOF";
+          key = "\x1b[F";
           break;
         case 33:
           if (ev.shiftKey) {
