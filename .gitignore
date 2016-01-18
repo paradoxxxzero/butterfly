@@ -7,3 +7,4 @@ node_modules/
 *.map
 sass/scss
 *.egg-info/
+build/
