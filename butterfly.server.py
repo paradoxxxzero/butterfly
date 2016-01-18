@@ -79,10 +79,10 @@ ssl_dir = os.path.join(butterfly_dir, 'ssl')
 
 if not os.path.exists(conf_file):
     try:
+        import butterfly
         shutil.copy(
             os.path.join(
-                os.path.abspath(os.path.dirname(__file__)),
-                'butterfly',
+                os.path.abspath(os.path.dirname(butterfly.__file__)),
                 'butterfly.conf.default'), conf_file)
         print('butterfly.conf installed in %s' % conf_file)
     except:
