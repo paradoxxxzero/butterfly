@@ -114,10 +114,13 @@ class Terminal(object):
             self.communicate()
 
     def determine_user(self):
-        if self.callee is None or (
-                tornado.options.options.unsecure and
-                tornado.options.options.login):
-            # If callee is now known and we have unsecure connection
+        if not tornado.options.options.unsecure:
+            # Secure mode we must have already a callee
+            assert self.callee is not None
+            return
+
+        # If we should login, login
+        if tornado.options.options.login:
             user = ''
             while user == '':
                 try:
@@ -131,13 +134,12 @@ class Terminal(object):
             except Exception:
                 log.debug("Can't switch to user %s" % user, exc_info=True)
                 self.callee = utils.User(name='nobody')
-        elif (tornado.options.options.unsecure and not
-              tornado.options.options.login):
-            # if login is not required, we will use the same user as
-            # butterfly is executed
-            self.callee = utils.User()
+            return
 
-        assert self.callee is not None
+        # if login is not required, we will use the same user as
+        # butterfly is executed
+        self.callee = self.callee or utils.User()
+
 
     def shell(self):
         try:
