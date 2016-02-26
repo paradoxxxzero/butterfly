@@ -398,13 +398,17 @@ class Terminal
 
   linkify: (t) ->
     # http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
-    urlPattern = (
-      /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim)
-    pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim
+    urlPattern =///
+    (\b((https?|ftp):\/\/[A-Z0-9+&@#\/%?=~_|!:,.;]*)(?=&\w+;)|
+    \b((https?|ftp):\/\/[A-Z0-9+&@#\/%?=~_|!:,.;]*))
+    ///gim
+    pseudoUrlPattern = ///
+    ((.*)(\bwww\.\S+)(?=&\w+;)|(.*)\b(www\.[\S]*))
+    ///gim
     emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim
     (part
-      .replace(urlPattern, '<a href="$&">$&</a>')
-      .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
+      .replace(urlPattern, '<a href="$1">$1</a>')
+      .replace(pseudoUrlPattern, '$2$4<a href="http://$3$5">$3$5</a>')
       .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'
     ) for part in t.split('&nbsp;')).join('&nbsp;')
 
