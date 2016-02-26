@@ -48,7 +48,7 @@ tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
-tornado.options.define("login", default=True,
+tornado.options.define("login", default=False,
                        help="Use login screen at start")
 tornado.options.define("force_unicode_width",
                        default=False,
