@@ -328,7 +328,8 @@ class Terminal(object):
             log.debug('closing fd fail', exc_info=True)
 
         try:
-            os.kill(self.pid, signal.SIGKILL)
+            os.kill(self.pid, signal.SIGHUP)
+            os.kill(self.pid, signal.SIGCONT)
             os.waitpid(self.pid, 0)
         except Exception:
             log.debug('waitpid fail', exc_info=True)
