@@ -1,0 +1,22 @@
+
+{{ colors.blue }}                   `         '
+   ;,,,             `       '             ,,,;
+   `Y888888bo.       :     :       .od888888Y'
+     8888888888b.     :   :     .d8888888888
+     88888Y'  `Y8b.   `   '   .d8Y'  `Y88888
+    j88888  {{ colors.white }}.db.{{ colors.blue }}  Yb. '   ' .dY  {{ colors.white }}.db.{{ colors.blue }}  88888k
+      `888  {{ colors.white }}Y88Y{{ colors.blue }}    `b ( ) d'    {{ colors.white }}Y88Y{{ colors.blue }}  888'
+       888b  {{ colors.white }}'"{{ colors.blue }}        ,',        {{ colors.white }}"'{{ colors.blue }}  d888
+      j888888bd8gf"'   ':'   `"?g8bd888888k
+        {{ colors.white }}'Y'{{ colors.blue }}   .8'     d' 'b     '8.   {{ colors.white }}'Y'{{ colors.reset }}
+         {{ colors.white }}!{{ colors.blue }}   .8' {{ colors.white }}db{{ colors.blue }}  d'; ;`b  {{ colors.white }}db{{ colors.blue }} '8.   {{ colors.white }}!{{ colors.blue }}
+            d88  {{ colors.white }}`'{{ colors.blue }}  8 ; ; 8  {{ colors.white }}`'{{ colors.blue }}  88b             {{ colors.white }}butterfly {{ colors.yellow }}v {{ version }}{{ colors.blue }}
+           d888b   .g8 ',' 8g.   d888b
+          :888888888Y'     'Y888888888:           {{ colors.light_white }}Connecting to:{{ colors.blue }}
+          '! 8888888'       `8888888 !'              {{ colors.red if opts.unsecure else colors.green }}{{ butterfly.socket.local_addr }}:{{ butterfly.socket.local_port }}{{ colors.blue }}
+             '8Y  {{ colors.white }}`Y         Y'{{ colors.blue }}  Y8'
+{{ colors.white }}              Y                   Y               {{ colors.light_white }}From:{{ colors.white }}
+              !                   !                  {{ colors.red if opts.unsecure else colors.green }}{{ butterfly.socket.remote_addr }}:{{ butterfly.socket.remote_port }}{{ colors.reset }}
+
+For more information type: {{ colors.white }}$ {{ colors.green }}butterfly help{{ colors.reset }}
+

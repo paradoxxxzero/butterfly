@@ -10,12 +10,17 @@
     <link rel="shortcut icon" href="{{ static_url('images/favicon.png') }}">
 
     <title>Butterfly</title>
-    <link href="/style.css" rel="stylesheet">
+    <link href="{{ static_url('main.css') }}" rel="stylesheet" id="style">
   </head>
 
-  <body spellcheck="false">
-    <main id="wrapper"> </main>
+  <body spellcheck="false"
+        data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}">
+    <div id="popup" class="hidden">
+    </div>
+    <script src="{{ static_url('html-sanitizer.js') }}"></script>
     <script src="{{ static_url('main.%sjs' % (
+                 '' if options.unminified else 'min.')) }}"></script>
+    <script src="{{ static_url('ext.%sjs' % (
                  '' if options.unminified else 'min.')) }}"></script>
   </body>
 </html>

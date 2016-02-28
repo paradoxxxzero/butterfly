@@ -1,7 +1,7 @@
 # *-* coding: utf-8 *-*
 # This file is part of butterfly
 #
-# butterfly Copyright (C) 2014  Florian Mounier
+# butterfly Copyright (C) 2015  Florian Mounier
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -18,49 +18,45 @@
 
 import os
 import pwd
+import time
+import sys
+import struct
 from logging import getLogger
+from collections import namedtuple
 import subprocess
 import re
 
 log = getLogger('butterfly')
 
 
-def get_style():
-    style = None
-    for ext in ['css', 'scss', 'sass']:
-        for fn in [
-                '/etc/butterfly/style',
-                os.path.expanduser('~/.butterfly/style')]:
-            if os.path.exists('%s.%s' % (fn, ext)):
-                style = '%s.%s' % (fn, ext)
+def get_hex_ip_port(remote):
+    ip, port = remote
+    if ip.startswith('::ffff:'):
+        ip = ip[len('::ffff:'):]
+    splits = ip.split('.')
+    if ':' not in ip and len(splits) == 4:
+        # Must be an ipv4
+        return '%02X%02X%02X%02X:%04X' % (
+            int(splits[3]),
+            int(splits[2]),
+            int(splits[1]),
+            int(splits[0]),
+            int(port)
+        )
+    try:
+        import ipaddress
+    except ImportError:
+        print('Please install ipaddress backport for ipv6 user detection')
+        return ''
 
-    if style is None:
-        return
+    # Endian reverse:
+    ipv6_parts = ipaddress.IPv6Address(ip).exploded.split(':')
+    for i in range(0, 8, 2):
+        ipv6_parts[i], ipv6_parts[i + 1] = (
+            ipv6_parts[i + 1][2:] + ipv6_parts[i + 1][:2],
+            ipv6_parts[i][2:] + ipv6_parts[i][:2])
 
-    if style.endswith('.sass'):
-        log.error('SASS syntax is not yet supported (see: '
-                  'https://github.com/hcatlin/libsass/issues/16'
-                  ') please use SCSS')
-        return
-
-    if style.endswith('.scss'):
-        scss_path = os.path.join(
-            os.path.dirname(__file__), 'scss')
-        try:
-            import sass
-        except:
-            log.error('You must install libsass to use sass '
-                      '(pip install libsass)')
-            return
-
-        try:
-            return sass.compile(filename=style, include_paths=[scss_path])
-        except sass.CompileError:
-            log.error('Unable to compile style.scss', exc_info=True)
-            return
-
-    with open(style) as s:
-        return s.read()
+    return ''.join(ipv6_parts) + ':%04X' % port
 
 
 def parse_cert(cert):
@@ -124,9 +120,14 @@ class Socket(object):
         sn = socket.getsockname()
         self.local_addr = sn[0]
         self.local_port = sn[1]
-        pn = socket.getpeername()
-        self.remote_addr = pn[0]
-        self.remote_port = pn[1]
+        try:
+            pn = socket.getpeername()
+            self.remote_addr = pn[0]
+            self.remote_port = pn[1]
+        except Exception:
+            log.debug("Can't get peer name", exc_info=True)
+            self.remote_addr = '???'
+            self.remote_port = 0
         self.user = None
         self.env = {}
 
@@ -136,9 +137,9 @@ class Socket(object):
         # If there is procfs, get as much info as we can
         if os.path.exists('/proc/net'):
             try:
-                line = get_procfs_socket_line(self.remote_port)
+                line = get_procfs_socket_line(get_hex_ip_port(pn[:2]))
                 self.user = User(uid=int(line[7]))
-                self.env = get_socket_env(line[9])
+                self.env = get_socket_env(line[9], self.user)
             except Exception:
                 log.debug('procfs was no good, aight', exc_info=True)
 
@@ -152,7 +153,8 @@ class Socket(object):
 
     @property
     def local(self):
-        return self.remote_addr in ['127.0.0.1', '::1']
+        return (self.remote_addr in ['127.0.0.1', '::1', '::ffff:127.0.0.1'] or
+                self.local_addr == self.remote_addr)
 
     def __repr__(self):
         return '<Socket L: %s:%d R: %s:%d User: %r>' % (
@@ -179,33 +181,59 @@ def get_lsof_socket_line(addr, port):
 
 
 # Linux only socket line get
-def get_procfs_socket_line(port):
+def get_procfs_socket_line(hex_ip_port):
+    fn = None
+    if len(hex_ip_port) == 13:  # ipv4
+        fn = '/proc/net/tcp'
+    elif len(hex_ip_port) == 37:  # ipv6
+        fn = '/proc/net/tcp6'
+    if not fn:
+        return
     try:
-        with open('/proc/net/tcp') as k:
+        with open(fn) as k:
             lines = k.readlines()
         for line in lines:
             # Look for local address with peer port
-            if line.split()[1] == '0100007F:%X' % port:
+            if line.split()[1] == hex_ip_port:
                 # We got the socket
                 return line.split()
-    except:
-        log.debug('getting socket inet4 line fail', exc_info=True)
-
-    try:
-        with open('/proc/net/tcp6') as k:
-            lines = k.readlines()
-        for line in lines:
-            # Look for local address with peer port
-            if line.split()[1] == (
-                    '00000000000000000000000001000000:%X' % port):
-                # We got the socket
-                return line.split()
-    except:
-        log.debug('getting socket inet6 line fail', exc_info=True)
+    except Exception:
+        log.debug('getting socket %s line fail' % fn, exc_info=True)
 
 
 # Linux only browser environment far fetch
-def get_socket_env(inode):
+def get_socket_env(inode, user):
+    for pid in os.listdir("/proc/"):
+        if not pid.isdigit():
+            continue
+        try:
+            with open('/proc/%s/cmdline' % pid) as c:
+                if c.read().split('\x00')[0].split('/')[-1] in [
+                        'gnome-session',
+                        'gnome-session-binary',
+                        'startkde',
+                        'xfce4-session']:
+                    with open('/proc/%s/status' % pid) as e:
+                        uid = None
+                        for line in e.read().splitlines():
+                            parts = line.split('\t')
+                            if parts[0] == 'Uid:':
+                                uid = int(parts[1])
+                                break
+                        if not uid or uid != user.uid:
+                            continue
+
+                    with open('/proc/%s/environ' % pid) as e:
+                        keyvals = e.read().split('\x00')
+                        env = {}
+                        for keyval in keyvals:
+                            if '=' in keyval:
+                                key, val = keyval.split('=', 1)
+                                env[key] = val
+                        return env
+        except Exception:
+            continue
+
     for pid in os.listdir("/proc/"):
         if not pid.isdigit():
             continue
@@ -226,3 +254,153 @@ def get_socket_env(inode):
                                         key, val = keyval.split('=', 1)
                                         env[key] = val
                                 return env
+
+
+utmp_struct = struct.Struct('hi32s4s32s256shhiii4i20s')
+
+
+if sys.version_info[0] == 2:
+    b = lambda x: x
+else:
+    def b(x):
+        if isinstance(x, str):
+            return x.encode('utf-8')
+        return x
+
+
+def get_utmp_file():
+    for file in (
+            '/var/run/utmp',
+            '/var/adm/utmp',
+            '/var/adm/utmpx',
+            '/etc/utmp',
+            '/etc/utmpx',
+            '/var/run/utx.active'):
+        if os.path.exists(file):
+            return file
+
+
+def get_wtmp_file():
+    for file in (
+            '/var/log/wtmp',
+            '/var/adm/wtmp',
+            '/var/adm/wtmpx',
+            '/var/run/utx.log'):
+        if os.path.exists(file):
+            return file
+
+UTmp = namedtuple(
+            'UTmp',
+            ['type', 'pid', 'line', 'id', 'user', 'host',
+             'exit0', 'exit1', 'session',
+             'sec', 'usec', 'addr0', 'addr1', 'addr2', 'addr3', 'unused'])
+
+
+def utmp_line(id, type, pid, fd, user, host, ts):
+    return UTmp(
+        type,  # Type, 7 : user process
+        pid,  # pid
+        b(fd),  # line
+        b(id),  # id
+        b(user),  # user
+        b(host),  # host
+        0,  # exit 0
+        0,  # exit 1
+        0,  # session
+        int(ts),  # sec
+        int(10 ** 6 * (ts - int(ts))),  # usec
+        0,  # addr 0
+        0,  # addr 1
+        0,  # addr 2
+        0,  # addr 3
+        b('')  # unused
+    )
+
+
+def add_user_info(id, fd, pid, user, host):
+    # Freebsd format is not yet supported.
+    # Please submit PR
+    if sys.platform != 'linux':
+        return
+    utmp = utmp_line(id, 7, pid, fd, user, host, time.time())
+    for kind, file in {
+            'utmp': get_utmp_file(),
+            'wtmp': get_wtmp_file()}.items():
+        if not file:
+            continue
+        try:
+            with open(file, 'rb+') as f:
+                s = f.read(utmp_struct.size)
+                while s:
+                    entry = UTmp(*utmp_struct.unpack(s))
+                    if kind == 'utmp' and entry.id == utmp.id:
+                        # Same id recycling
+                        f.seek(f.tell() - utmp_struct.size)
+                        f.write(utmp_struct.pack(*utmp))
+                        break
+                    s = f.read(utmp_struct.size)
+                else:
+                    f.write(utmp_struct.pack(*utmp))
+        except Exception:
+            log.debug('Unable to write utmp info to ' + file, exc_info=True)
+
+
+def rm_user_info(id, pid):
+    if sys.platform != 'linux':
+        return
+    utmp = utmp_line(id, 8, pid, '', '', '', time.time())
+    for kind, file in {
+            'utmp': get_utmp_file(),
+            'wtmp': get_wtmp_file()}.items():
+        if not file:
+            continue
+        try:
+            with open(file, 'rb+') as f:
+                s = f.read(utmp_struct.size)
+                while s:
+                    entry = UTmp(*utmp_struct.unpack(s))
+                    if entry.id == utmp.id:
+                        if kind == 'utmp':
+                            # Same id closing
+                            f.seek(f.tell() - utmp_struct.size)
+                            f.write(utmp_struct.pack(*utmp))
+                            break
+                        else:
+                            utmp = utmp_line(
+                                id, 8, pid, entry.line, entry.user, '',
+                                time.time())
+
+                    s = f.read(utmp_struct.size)
+                else:
+                    f.write(utmp_struct.pack(*utmp))
+
+        except Exception:
+            log.debug('Unable to update utmp info to ' + file, exc_info=True)
+
+
+class AnsiColors(object):
+    colors = {
+        'black': 30,
+        'red': 31,
+        'green': 32,
+        'yellow': 33,
+        'blue': 34,
+        'magenta': 35,
+        'cyan': 36,
+        'white': 37
+    }
+
+    def __getattr__(self, key):
+        bold = True
+        if key.startswith('light_'):
+            bold = False
+            key = key[len('light_'):]
+        if key in self.colors:
+            return '\x1b[%d%sm' % (
+                self.colors[key],
+                ';1' if bold else '')
+        if key == 'reset':
+            return '\x1b[0m'
+        return ''
+
+ansi_colors = AnsiColors()

@@ -1,7 +1,7 @@
 # *-* coding: utf-8 *-*
 # This file is part of butterfly
 #
-# butterfly Copyright (C) 2014  Florian Mounier
+# butterfly Copyright (C) 2015  Florian Mounier
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '1.5.2'
+__version__ = '2.0.1'
 
 
 import os
@@ -43,12 +43,30 @@ class Route(tornado.web.RequestHandler):
     def log(self):
         return log
 
+    @property
+    def builtin_themes_dir(self):
+        return os.path.join(
+                os.path.dirname(__file__), 'themes')
 
-application = tornado.web.Application(
-    static_path=os.path.join(os.path.dirname(__file__), "static"),
-    template_path=os.path.join(os.path.dirname(__file__), "templates"),
-    debug=tornado.options.options.debug
-)
+    @property
+    def themes_dir(self):
+        return os.path.join(
+            self.application.butterfly_dir, 'themes')
+
+    def get_theme_dir(self, theme):
+        if theme.startswith('built-in-'):
+            return os.path.join(
+                self.builtin_themes_dir, theme[len('built-in-'):])
+        return os.path.join(
+            self.themes_dir, theme)
 
 
-import butterfly.routes
+# Imported from executable
+if hasattr(tornado.options.options, 'debug'):
+    application = tornado.web.Application(
+        static_path=os.path.join(os.path.dirname(__file__), "static"),
+        template_path=os.path.join(os.path.dirname(__file__), "templates"),
+        debug=tornado.options.options.debug
+    )
+
+    import butterfly.routes

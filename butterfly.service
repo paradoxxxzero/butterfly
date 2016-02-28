@@ -1,10 +1,5 @@
 [Unit]
 Description=Butterfly Terminal Server
-After=network.target
 
 [Service]
 ExecStart=/usr/bin/butterfly.server.py
-Restart=on-abort
-
-[Install]
-WantedBy=multi-user.target

@@ -22,17 +22,25 @@ options = dict(
     url="http://github.com/paradoxxxzero/butterfly",
     license="GPLv3",
     platforms="Any",
-    scripts=['butterfly.server.py'],
+    scripts=['butterfly.server.py', 'scripts/butterfly', 'scripts/b'],
     packages=['butterfly'],
-    install_requires=["tornado>=3.2", "pyOpenSSL"],
+    install_requires=["tornado>=3.2", "pyOpenSSL", 'tornado_systemd'],
+    extras_requires=["libsass"],
     package_data={
         'butterfly': [
-            'scss/*.scss',
+            'sass/*.sass',
+            'themes/*.*',
+            'themes/*/*.*',
+            'themes/*/*/*.*',
             'static/fonts/*',
             'static/images/favicon.png',
             'static/main.css',
-            'static/main.min.js',
-            'templates/index.html'
+            'static/html-sanitizer.js',
+            'static/*.min.js',
+            'templates/index.html',
+            'bin/*',
+            'templates/motd',
+            'butterfly.conf.default'
         ]
     },
     classifiers=[

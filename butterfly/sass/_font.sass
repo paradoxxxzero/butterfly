@@ -1,0 +1,32 @@
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
+$weights: (ExtraLight 100) (Light 300) (Regular 400) (Medium 500) (Semibold 600) (Bold 700) (Black 900)
+
+@if $font-family == "SourceCodePro"
+  @each $weight in $weights
+    $weight_name: nth($weight, 1)
+
+    @font-face
+      font-family: "SourceCodePro"
+      src: url("/static/fonts/SourceCodePro-#{$weight_name}.otf") format("woff")
+      font-weight: nth($weight, 2)
+
+body
+  font-family: $font-family
+  font-size: $font-size
+  line-height: $font-line-height

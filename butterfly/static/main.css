@@ -1,3 +1,73 @@
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Theses are the various imported style files */
+/* THIS NEEDS the python `libsass` library to be installed. */
+/* You can copy the imported files in the theme dir, they will be imported prioritarily. */
+/* These a the default variables */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* Variables */
+/** Font */
+/** Colors */
+/* Foreground */
+/* Background */
+/* 16 Colors in this orders: Black, Red, Green, Yellow, Blue, Magenta, Cyan, White, Bright Black, Bright Red, Bright Green, Bright Yellow, Bright Blue, Bright Magenta, Bright Cyan, Bright White */
+/** Text effects */
+/* The shadow is the size of the blur (in px for instance) */
+/* The shadow alpha is the opacity of the shadow */
+/** Scroll */
+/** Popup */
+/* These are all imported files */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Theses are the various imported style files */
+/* THIS NEEDS the python `libsass` library to be installed. */
+/* You can copy the imported files in the theme dir, they will be imported prioritarily. */
+/* You can change this file to import any webfont: */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 @font-face {
   font-family: "SourceCodePro";
   src: url("/static/fonts/SourceCodePro-ExtraLight.otf") format("woff");
@@ -35,34 +105,42 @@
 
 body {
   font-family: "SourceCodePro";
+  font-size: 1em;
   line-height: 1.2; }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  line-height: 1.2; }
-
-#wrapper {
-  height: 100%;
-  overflow: hidden;
-  white-space: nowrap; }
-
-.terminal {
-  outline: none; }
-
-.terminal {
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
-  transition: 200ms; }
-  .terminal.bell {
-    -webkit-filter: blur(2px); }
-  .terminal.skip {
-    -webkit-filter: sepia(1); }
-  .terminal.selection {
-    -webkit-filter: saturate(2); }
-  .terminal.dead {
-    -webkit-filter: grayscale(1); }
-    .terminal.dead:after {
+/* You can comment / uncomment the following to enable/disable terminal effects. */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+body {
+  transition: 200ms;
+  transform-origin: bottom; }
+  body.bell {
+    -webkit-filter: blur(2px);
+    filter: blur(2px); }
+  body.skip {
+    -webkit-filter: sepia(1);
+    filter: sepia(1); }
+  body.selection {
+    -webkit-filter: saturate(2);
+    filter: saturate(2); }
+  body.alarm {
+    -webkit-filter: hue-rotate(150deg);
+    filter: hue-rotate(150deg); }
+  body.dead {
+    -webkit-filter: grayscale(1);
+    filter: grayscale(1); }
+    body.dead:after {
       content: "CLOSED";
       font-size: 15em;
       display: flex;
@@ -74,24 +152,56 @@ html, body {
       width: 100%;
       height: 100%;
       transform: rotate(-45deg);
-      opacity: 0.2;
+      opacity: .2;
       font-weight: 900; }
+  body.stopped {
+    -webkit-filter: brightness(50%);
+    filter: brightness(50%); }
+  body.locked::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 0, 0.7); }
+  body.locked::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 0, 0, 0.8); }
 
-#wrapper {
-  background-color: #110f13; }
+/* Comment this one to remove the blurry text: */
+body {
+  text-shadow: 0 0 0 rgba(244, 234, 213, 0); }
 
-.terminal {
-  background-color: #110f13;
-  color: #f4ead5; }
-
+/* @import all_fx */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* The color theme is defined in this one: */
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Here are the 16 "normal" colors for theming */
 .bg-color-0 {
   background-color: #2e3436; }
   .bg-color-0.reverse-video {
     color: #2e3436 !important; }
 
 .fg-color-0 {
-  color: #2e3436;
-  text-shadow: 0 0 6px rgba(46, 52, 54, 0.5); }
+  color: #2e3436; }
   .fg-color-0.reverse-video {
     background-color: #2e3436 !important; }
 
@@ -100,10 +210,9 @@ html, body {
   .bg-color-1.reverse-video {
     color: #cc0000 !important; }
 
-.fg-color-1 {
-  color: #cc0000;
-  text-shadow: 0 0 6px rgba(204, 0, 0, 0.5); }
-  .fg-color-1.reverse-video {
+.fg-color-1, .nbsp {
+  color: #cc0000; }
+  .fg-color-1.reverse-video, .reverse-video.nbsp {
     background-color: #cc0000 !important; }
 
 .bg-color-2 {
@@ -112,8 +221,7 @@ html, body {
     color: #4e9a06 !important; }
 
 .fg-color-2 {
-  color: #4e9a06;
-  text-shadow: 0 0 6px rgba(78, 154, 6, 0.5); }
+  color: #4e9a06; }
   .fg-color-2.reverse-video {
     background-color: #4e9a06 !important; }
 
@@ -123,8 +231,7 @@ html, body {
     color: #c4a000 !important; }
 
 .fg-color-3 {
-  color: #c4a000;
-  text-shadow: 0 0 6px rgba(196, 160, 0, 0.5); }
+  color: #c4a000; }
   .fg-color-3.reverse-video {
     background-color: #c4a000 !important; }
 
@@ -134,8 +241,7 @@ html, body {
     color: #3465a4 !important; }
 
 .fg-color-4 {
-  color: #3465a4;
-  text-shadow: 0 0 6px rgba(52, 101, 164, 0.5); }
+  color: #3465a4; }
   .fg-color-4.reverse-video {
     background-color: #3465a4 !important; }
 
@@ -145,8 +251,7 @@ html, body {
     color: #75507b !important; }
 
 .fg-color-5 {
-  color: #75507b;
-  text-shadow: 0 0 6px rgba(117, 80, 123, 0.5); }
+  color: #75507b; }
   .fg-color-5.reverse-video {
     background-color: #75507b !important; }
 
@@ -156,8 +261,7 @@ html, body {
     color: #06989a !important; }
 
 .fg-color-6 {
-  color: #06989a;
-  text-shadow: 0 0 6px rgba(6, 152, 154, 0.5); }
+  color: #06989a; }
   .fg-color-6.reverse-video {
     background-color: #06989a !important; }
 
@@ -167,8 +271,7 @@ html, body {
     color: #d3d7cf !important; }
 
 .fg-color-7 {
-  color: #d3d7cf;
-  text-shadow: 0 0 6px rgba(211, 215, 207, 0.5); }
+  color: #d3d7cf; }
   .fg-color-7.reverse-video {
     background-color: #d3d7cf !important; }
 
@@ -178,8 +281,7 @@ html, body {
     color: #555753 !important; }
 
 .fg-color-8 {
-  color: #555753;
-  text-shadow: 0 0 6px rgba(85, 87, 83, 0.5); }
+  color: #555753; }
   .fg-color-8.reverse-video {
     background-color: #555753 !important; }
 
@@ -189,8 +291,7 @@ html, body {
     color: #ef2929 !important; }
 
 .fg-color-9 {
-  color: #ef2929;
-  text-shadow: 0 0 6px rgba(239, 41, 41, 0.5); }
+  color: #ef2929; }
   .fg-color-9.reverse-video {
     background-color: #ef2929 !important; }
 
@@ -200,8 +301,7 @@ html, body {
     color: #8ae234 !important; }
 
 .fg-color-10 {
-  color: #8ae234;
-  text-shadow: 0 0 6px rgba(138, 226, 52, 0.5); }
+  color: #8ae234; }
   .fg-color-10.reverse-video {
     background-color: #8ae234 !important; }
 
@@ -211,8 +311,7 @@ html, body {
     color: #fce94f !important; }
 
 .fg-color-11 {
-  color: #fce94f;
-  text-shadow: 0 0 6px rgba(252, 233, 79, 0.5); }
+  color: #fce94f; }
   .fg-color-11.reverse-video {
     background-color: #fce94f !important; }
 
@@ -222,8 +321,7 @@ html, body {
     color: #729fcf !important; }
 
 .fg-color-12 {
-  color: #729fcf;
-  text-shadow: 0 0 6px rgba(114, 159, 207, 0.5); }
+  color: #729fcf; }
   .fg-color-12.reverse-video {
     background-color: #729fcf !important; }
 
@@ -233,8 +331,7 @@ html, body {
     color: #ad7fa8 !important; }
 
 .fg-color-13 {
-  color: #ad7fa8;
-  text-shadow: 0 0 6px rgba(173, 127, 168, 0.5); }
+  color: #ad7fa8; }
   .fg-color-13.reverse-video {
     background-color: #ad7fa8 !important; }
 
@@ -244,8 +341,7 @@ html, body {
     color: #34e2e2 !important; }
 
 .fg-color-14 {
-  color: #34e2e2;
-  text-shadow: 0 0 6px rgba(52, 226, 226, 0.5); }
+  color: #34e2e2; }
   .fg-color-14.reverse-video {
     background-color: #34e2e2 !important; }
 
@@ -255,19 +351,32 @@ html, body {
     color: #eeeeec !important; }
 
 .fg-color-15 {
-  color: #eeeeec;
-  text-shadow: 0 0 6px rgba(238, 238, 236, 0.5); }
+  color: #eeeeec; }
   .fg-color-15.reverse-video {
     background-color: #eeeeec !important; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+/* Here are the 240 xterm colors */
+/* See http://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg */
 .bg-color-16 {
   background-color: black; }
   .bg-color-16.reverse-video {
     color: black !important; }
 
 .fg-color-16 {
-  color: black;
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.5); }
+  color: black; }
   .fg-color-16.reverse-video {
     background-color: black !important; }
 
@@ -277,8 +386,7 @@ html, body {
     color: #00005f !important; }
 
 .fg-color-17 {
-  color: #00005f;
-  text-shadow: 0 0 6px rgba(0, 0, 95, 0.5); }
+  color: #00005f; }
   .fg-color-17.reverse-video {
     background-color: #00005f !important; }
 
@@ -288,8 +396,7 @@ html, body {
     color: #000087 !important; }
 
 .fg-color-18 {
-  color: #000087;
-  text-shadow: 0 0 6px rgba(0, 0, 135, 0.5); }
+  color: #000087; }
   .fg-color-18.reverse-video {
     background-color: #000087 !important; }
 
@@ -299,8 +406,7 @@ html, body {
     color: #0000af !important; }
 
 .fg-color-19 {
-  color: #0000af;
-  text-shadow: 0 0 6px rgba(0, 0, 175, 0.5); }
+  color: #0000af; }
   .fg-color-19.reverse-video {
     background-color: #0000af !important; }
 
@@ -310,8 +416,7 @@ html, body {
     color: #0000d7 !important; }
 
 .fg-color-20 {
-  color: #0000d7;
-  text-shadow: 0 0 6px rgba(0, 0, 215, 0.5); }
+  color: #0000d7; }
   .fg-color-20.reverse-video {
     background-color: #0000d7 !important; }
 
@@ -321,8 +426,7 @@ html, body {
     color: blue !important; }
 
 .fg-color-21 {
-  color: blue;
-  text-shadow: 0 0 6px rgba(0, 0, 255, 0.5); }
+  color: blue; }
   .fg-color-21.reverse-video {
     background-color: blue !important; }
 
@@ -332,8 +436,7 @@ html, body {
     color: #005f00 !important; }
 
 .fg-color-22 {
-  color: #005f00;
-  text-shadow: 0 0 6px rgba(0, 95, 0, 0.5); }
+  color: #005f00; }
   .fg-color-22.reverse-video {
     background-color: #005f00 !important; }
 
@@ -343,8 +446,7 @@ html, body {
     color: #005f5f !important; }
 
 .fg-color-23 {
-  color: #005f5f;
-  text-shadow: 0 0 6px rgba(0, 95, 95, 0.5); }
+  color: #005f5f; }
   .fg-color-23.reverse-video {
     background-color: #005f5f !important; }
 
@@ -354,8 +456,7 @@ html, body {
     color: #005f87 !important; }
 
 .fg-color-24 {
-  color: #005f87;
-  text-shadow: 0 0 6px rgba(0, 95, 135, 0.5); }
+  color: #005f87; }
   .fg-color-24.reverse-video {
     background-color: #005f87 !important; }
 
@@ -365,8 +466,7 @@ html, body {
     color: #005faf !important; }
 
 .fg-color-25 {
-  color: #005faf;
-  text-shadow: 0 0 6px rgba(0, 95, 175, 0.5); }
+  color: #005faf; }
   .fg-color-25.reverse-video {
     background-color: #005faf !important; }
 
@@ -376,8 +476,7 @@ html, body {
     color: #005fd7 !important; }
 
 .fg-color-26 {
-  color: #005fd7;
-  text-shadow: 0 0 6px rgba(0, 95, 215, 0.5); }
+  color: #005fd7; }
   .fg-color-26.reverse-video {
     background-color: #005fd7 !important; }
 
@@ -387,8 +486,7 @@ html, body {
     color: #005fff !important; }
 
 .fg-color-27 {
-  color: #005fff;
-  text-shadow: 0 0 6px rgba(0, 95, 255, 0.5); }
+  color: #005fff; }
   .fg-color-27.reverse-video {
     background-color: #005fff !important; }
 
@@ -398,8 +496,7 @@ html, body {
     color: #008700 !important; }
 
 .fg-color-28 {
-  color: #008700;
-  text-shadow: 0 0 6px rgba(0, 135, 0, 0.5); }
+  color: #008700; }
   .fg-color-28.reverse-video {
     background-color: #008700 !important; }
 
@@ -409,8 +506,7 @@ html, body {
     color: #00875f !important; }
 
 .fg-color-29 {
-  color: #00875f;
-  text-shadow: 0 0 6px rgba(0, 135, 95, 0.5); }
+  color: #00875f; }
   .fg-color-29.reverse-video {
     background-color: #00875f !important; }
 
@@ -420,8 +516,7 @@ html, body {
     color: #008787 !important; }
 
 .fg-color-30 {
-  color: #008787;
-  text-shadow: 0 0 6px rgba(0, 135, 135, 0.5); }
+  color: #008787; }
   .fg-color-30.reverse-video {
     background-color: #008787 !important; }
 
@@ -431,8 +526,7 @@ html, body {
     color: #0087af !important; }
 
 .fg-color-31 {
-  color: #0087af;
-  text-shadow: 0 0 6px rgba(0, 135, 175, 0.5); }
+  color: #0087af; }
   .fg-color-31.reverse-video {
     background-color: #0087af !important; }
 
@@ -442,8 +536,7 @@ html, body {
     color: #0087d7 !important; }
 
 .fg-color-32 {
-  color: #0087d7;
-  text-shadow: 0 0 6px rgba(0, 135, 215, 0.5); }
+  color: #0087d7; }
   .fg-color-32.reverse-video {
     background-color: #0087d7 !important; }
 
@@ -453,8 +546,7 @@ html, body {
     color: #0087ff !important; }
 
 .fg-color-33 {
-  color: #0087ff;
-  text-shadow: 0 0 6px rgba(0, 135, 255, 0.5); }
+  color: #0087ff; }
   .fg-color-33.reverse-video {
     background-color: #0087ff !important; }
 
@@ -464,8 +556,7 @@ html, body {
     color: #00af00 !important; }
 
 .fg-color-34 {
-  color: #00af00;
-  text-shadow: 0 0 6px rgba(0, 175, 0, 0.5); }
+  color: #00af00; }
   .fg-color-34.reverse-video {
     background-color: #00af00 !important; }
 
@@ -475,8 +566,7 @@ html, body {
     color: #00af5f !important; }
 
 .fg-color-35 {
-  color: #00af5f;
-  text-shadow: 0 0 6px rgba(0, 175, 95, 0.5); }
+  color: #00af5f; }
   .fg-color-35.reverse-video {
     background-color: #00af5f !important; }
 
@@ -486,8 +576,7 @@ html, body {
     color: #00af87 !important; }
 
 .fg-color-36 {
-  color: #00af87;
-  text-shadow: 0 0 6px rgba(0, 175, 135, 0.5); }
+  color: #00af87; }
   .fg-color-36.reverse-video {
     background-color: #00af87 !important; }
 
@@ -497,8 +586,7 @@ html, body {
     color: #00afaf !important; }
 
 .fg-color-37 {
-  color: #00afaf;
-  text-shadow: 0 0 6px rgba(0, 175, 175, 0.5); }
+  color: #00afaf; }
   .fg-color-37.reverse-video {
     background-color: #00afaf !important; }
 
@@ -508,8 +596,7 @@ html, body {
     color: #00afd7 !important; }
 
 .fg-color-38 {
-  color: #00afd7;
-  text-shadow: 0 0 6px rgba(0, 175, 215, 0.5); }
+  color: #00afd7; }
   .fg-color-38.reverse-video {
     background-color: #00afd7 !important; }
 
@@ -519,8 +606,7 @@ html, body {
     color: #00afff !important; }
 
 .fg-color-39 {
-  color: #00afff;
-  text-shadow: 0 0 6px rgba(0, 175, 255, 0.5); }
+  color: #00afff; }
   .fg-color-39.reverse-video {
     background-color: #00afff !important; }
 
@@ -530,8 +616,7 @@ html, body {
     color: #00d700 !important; }
 
 .fg-color-40 {
-  color: #00d700;
-  text-shadow: 0 0 6px rgba(0, 215, 0, 0.5); }
+  color: #00d700; }
   .fg-color-40.reverse-video {
     background-color: #00d700 !important; }
 
@@ -541,8 +626,7 @@ html, body {
     color: #00d75f !important; }
 
 .fg-color-41 {
-  color: #00d75f;
-  text-shadow: 0 0 6px rgba(0, 215, 95, 0.5); }
+  color: #00d75f; }
   .fg-color-41.reverse-video {
     background-color: #00d75f !important; }
 
@@ -552,8 +636,7 @@ html, body {
     color: #00d787 !important; }
 
 .fg-color-42 {
-  color: #00d787;
-  text-shadow: 0 0 6px rgba(0, 215, 135, 0.5); }
+  color: #00d787; }
   .fg-color-42.reverse-video {
     background-color: #00d787 !important; }
 
@@ -563,8 +646,7 @@ html, body {
     color: #00d7af !important; }
 
 .fg-color-43 {
-  color: #00d7af;
-  text-shadow: 0 0 6px rgba(0, 215, 175, 0.5); }
+  color: #00d7af; }
   .fg-color-43.reverse-video {
     background-color: #00d7af !important; }
 
@@ -574,8 +656,7 @@ html, body {
     color: #00d7d7 !important; }
 
 .fg-color-44 {
-  color: #00d7d7;
-  text-shadow: 0 0 6px rgba(0, 215, 215, 0.5); }
+  color: #00d7d7; }
   .fg-color-44.reverse-video {
     background-color: #00d7d7 !important; }
 
@@ -585,8 +666,7 @@ html, body {
     color: #00d7ff !important; }
 
 .fg-color-45 {
-  color: #00d7ff;
-  text-shadow: 0 0 6px rgba(0, 215, 255, 0.5); }
+  color: #00d7ff; }
   .fg-color-45.reverse-video {
     background-color: #00d7ff !important; }
 
@@ -596,8 +676,7 @@ html, body {
     color: lime !important; }
 
 .fg-color-46 {
-  color: lime;
-  text-shadow: 0 0 6px rgba(0, 255, 0, 0.5); }
+  color: lime; }
   .fg-color-46.reverse-video {
     background-color: lime !important; }
 
@@ -607,8 +686,7 @@ html, body {
     color: #00ff5f !important; }
 
 .fg-color-47 {
-  color: #00ff5f;
-  text-shadow: 0 0 6px rgba(0, 255, 95, 0.5); }
+  color: #00ff5f; }
   .fg-color-47.reverse-video {
     background-color: #00ff5f !important; }
 
@@ -618,8 +696,7 @@ html, body {
     color: #00ff87 !important; }
 
 .fg-color-48 {
-  color: #00ff87;
-  text-shadow: 0 0 6px rgba(0, 255, 135, 0.5); }
+  color: #00ff87; }
   .fg-color-48.reverse-video {
     background-color: #00ff87 !important; }
 
@@ -629,8 +706,7 @@ html, body {
     color: #00ffaf !important; }
 
 .fg-color-49 {
-  color: #00ffaf;
-  text-shadow: 0 0 6px rgba(0, 255, 175, 0.5); }
+  color: #00ffaf; }
   .fg-color-49.reverse-video {
     background-color: #00ffaf !important; }
 
@@ -640,8 +716,7 @@ html, body {
     color: #00ffd7 !important; }
 
 .fg-color-50 {
-  color: #00ffd7;
-  text-shadow: 0 0 6px rgba(0, 255, 215, 0.5); }
+  color: #00ffd7; }
   .fg-color-50.reverse-video {
     background-color: #00ffd7 !important; }
 
@@ -651,8 +726,7 @@ html, body {
     color: cyan !important; }
 
 .fg-color-51 {
-  color: cyan;
-  text-shadow: 0 0 6px rgba(0, 255, 255, 0.5); }
+  color: cyan; }
   .fg-color-51.reverse-video {
     background-color: cyan !important; }
 
@@ -662,8 +736,7 @@ html, body {
     color: #5f0000 !important; }
 
 .fg-color-52 {
-  color: #5f0000;
-  text-shadow: 0 0 6px rgba(95, 0, 0, 0.5); }
+  color: #5f0000; }
   .fg-color-52.reverse-video {
     background-color: #5f0000 !important; }
 
@@ -673,8 +746,7 @@ html, body {
     color: #5f005f !important; }
 
 .fg-color-53 {
-  color: #5f005f;
-  text-shadow: 0 0 6px rgba(95, 0, 95, 0.5); }
+  color: #5f005f; }
   .fg-color-53.reverse-video {
     background-color: #5f005f !important; }
 
@@ -684,8 +756,7 @@ html, body {
     color: #5f0087 !important; }
 
 .fg-color-54 {
-  color: #5f0087;
-  text-shadow: 0 0 6px rgba(95, 0, 135, 0.5); }
+  color: #5f0087; }
   .fg-color-54.reverse-video {
     background-color: #5f0087 !important; }
 
@@ -695,8 +766,7 @@ html, body {
     color: #5f00af !important; }
 
 .fg-color-55 {
-  color: #5f00af;
-  text-shadow: 0 0 6px rgba(95, 0, 175, 0.5); }
+  color: #5f00af; }
   .fg-color-55.reverse-video {
     background-color: #5f00af !important; }
 
@@ -706,8 +776,7 @@ html, body {
     color: #5f00d7 !important; }
 
 .fg-color-56 {
-  color: #5f00d7;
-  text-shadow: 0 0 6px rgba(95, 0, 215, 0.5); }
+  color: #5f00d7; }
   .fg-color-56.reverse-video {
     background-color: #5f00d7 !important; }
 
@@ -717,8 +786,7 @@ html, body {
     color: #5f00ff !important; }
 
 .fg-color-57 {
-  color: #5f00ff;
-  text-shadow: 0 0 6px rgba(95, 0, 255, 0.5); }
+  color: #5f00ff; }
   .fg-color-57.reverse-video {
     background-color: #5f00ff !important; }
 
@@ -728,8 +796,7 @@ html, body {
     color: #5f5f00 !important; }
 
 .fg-color-58 {
-  color: #5f5f00;
-  text-shadow: 0 0 6px rgba(95, 95, 0, 0.5); }
+  color: #5f5f00; }
   .fg-color-58.reverse-video {
     background-color: #5f5f00 !important; }
 
@@ -739,8 +806,7 @@ html, body {
     color: #5f5f5f !important; }
 
 .fg-color-59 {
-  color: #5f5f5f;
-  text-shadow: 0 0 6px rgba(95, 95, 95, 0.5); }
+  color: #5f5f5f; }
   .fg-color-59.reverse-video {
     background-color: #5f5f5f !important; }
 
@@ -750,8 +816,7 @@ html, body {
     color: #5f5f87 !important; }
 
 .fg-color-60 {
-  color: #5f5f87;
-  text-shadow: 0 0 6px rgba(95, 95, 135, 0.5); }
+  color: #5f5f87; }
   .fg-color-60.reverse-video {
     background-color: #5f5f87 !important; }
 
@@ -761,8 +826,7 @@ html, body {
     color: #5f5faf !important; }
 
 .fg-color-61 {
-  color: #5f5faf;
-  text-shadow: 0 0 6px rgba(95, 95, 175, 0.5); }
+  color: #5f5faf; }
   .fg-color-61.reverse-video {
     background-color: #5f5faf !important; }
 
@@ -772,8 +836,7 @@ html, body {
     color: #5f5fd7 !important; }
 
 .fg-color-62 {
-  color: #5f5fd7;
-  text-shadow: 0 0 6px rgba(95, 95, 215, 0.5); }
+  color: #5f5fd7; }
   .fg-color-62.reverse-video {
     background-color: #5f5fd7 !important; }
 
@@ -783,8 +846,7 @@ html, body {
     color: #5f5fff !important; }
 
 .fg-color-63 {
-  color: #5f5fff;
-  text-shadow: 0 0 6px rgba(95, 95, 255, 0.5); }
+  color: #5f5fff; }
   .fg-color-63.reverse-video {
     background-color: #5f5fff !important; }
 
@@ -794,8 +856,7 @@ html, body {
     color: #5f8700 !important; }
 
 .fg-color-64 {
-  color: #5f8700;
-  text-shadow: 0 0 6px rgba(95, 135, 0, 0.5); }
+  color: #5f8700; }
   .fg-color-64.reverse-video {
     background-color: #5f8700 !important; }
 
@@ -805,8 +866,7 @@ html, body {
     color: #5f875f !important; }
 
 .fg-color-65 {
-  color: #5f875f;
-  text-shadow: 0 0 6px rgba(95, 135, 95, 0.5); }
+  color: #5f875f; }
   .fg-color-65.reverse-video {
     background-color: #5f875f !important; }
 
@@ -816,8 +876,7 @@ html, body {
     color: #5f8787 !important; }
 
 .fg-color-66 {
-  color: #5f8787;
-  text-shadow: 0 0 6px rgba(95, 135, 135, 0.5); }
+  color: #5f8787; }
   .fg-color-66.reverse-video {
     background-color: #5f8787 !important; }
 
@@ -827,8 +886,7 @@ html, body {
     color: #5f87af !important; }
 
 .fg-color-67 {
-  color: #5f87af;
-  text-shadow: 0 0 6px rgba(95, 135, 175, 0.5); }
+  color: #5f87af; }
   .fg-color-67.reverse-video {
     background-color: #5f87af !important; }
 
@@ -838,8 +896,7 @@ html, body {
     color: #5f87d7 !important; }
 
 .fg-color-68 {
-  color: #5f87d7;
-  text-shadow: 0 0 6px rgba(95, 135, 215, 0.5); }
+  color: #5f87d7; }
   .fg-color-68.reverse-video {
     background-color: #5f87d7 !important; }
 
@@ -849,8 +906,7 @@ html, body {
     color: #5f87ff !important; }
 
 .fg-color-69 {
-  color: #5f87ff;
-  text-shadow: 0 0 6px rgba(95, 135, 255, 0.5); }
+  color: #5f87ff; }
   .fg-color-69.reverse-video {
     background-color: #5f87ff !important; }
 
@@ -860,8 +916,7 @@ html, body {
     color: #5faf00 !important; }
 
 .fg-color-70 {
-  color: #5faf00;
-  text-shadow: 0 0 6px rgba(95, 175, 0, 0.5); }
+  color: #5faf00; }
   .fg-color-70.reverse-video {
     background-color: #5faf00 !important; }
 
@@ -871,8 +926,7 @@ html, body {
     color: #5faf5f !important; }
 
 .fg-color-71 {
-  color: #5faf5f;
-  text-shadow: 0 0 6px rgba(95, 175, 95, 0.5); }
+  color: #5faf5f; }
   .fg-color-71.reverse-video {
     background-color: #5faf5f !important; }
 
@@ -882,8 +936,7 @@ html, body {
     color: #5faf87 !important; }
 
 .fg-color-72 {
-  color: #5faf87;
-  text-shadow: 0 0 6px rgba(95, 175, 135, 0.5); }
+  color: #5faf87; }
   .fg-color-72.reverse-video {
     background-color: #5faf87 !important; }
 
@@ -893,8 +946,7 @@ html, body {
     color: #5fafaf !important; }
 
 .fg-color-73 {
-  color: #5fafaf;
-  text-shadow: 0 0 6px rgba(95, 175, 175, 0.5); }
+  color: #5fafaf; }
   .fg-color-73.reverse-video {
     background-color: #5fafaf !important; }
 
@@ -904,8 +956,7 @@ html, body {
     color: #5fafd7 !important; }
 
 .fg-color-74 {
-  color: #5fafd7;
-  text-shadow: 0 0 6px rgba(95, 175, 215, 0.5); }
+  color: #5fafd7; }
   .fg-color-74.reverse-video {
     background-color: #5fafd7 !important; }
 
@@ -915,8 +966,7 @@ html, body {
     color: #5fafff !important; }
 
 .fg-color-75 {
-  color: #5fafff;
-  text-shadow: 0 0 6px rgba(95, 175, 255, 0.5); }
+  color: #5fafff; }
   .fg-color-75.reverse-video {
     background-color: #5fafff !important; }
 
@@ -926,8 +976,7 @@ html, body {
     color: #5fd700 !important; }
 
 .fg-color-76 {
-  color: #5fd700;
-  text-shadow: 0 0 6px rgba(95, 215, 0, 0.5); }
+  color: #5fd700; }
   .fg-color-76.reverse-video {
     background-color: #5fd700 !important; }
 
@@ -937,8 +986,7 @@ html, body {
     color: #5fd75f !important; }
 
 .fg-color-77 {
-  color: #5fd75f;
-  text-shadow: 0 0 6px rgba(95, 215, 95, 0.5); }
+  color: #5fd75f; }
   .fg-color-77.reverse-video {
     background-color: #5fd75f !important; }
 
@@ -948,8 +996,7 @@ html, body {
     color: #5fd787 !important; }
 
 .fg-color-78 {
-  color: #5fd787;
-  text-shadow: 0 0 6px rgba(95, 215, 135, 0.5); }
+  color: #5fd787; }
   .fg-color-78.reverse-video {
     background-color: #5fd787 !important; }
 
@@ -959,8 +1006,7 @@ html, body {
     color: #5fd7af !important; }
 
 .fg-color-79 {
-  color: #5fd7af;
-  text-shadow: 0 0 6px rgba(95, 215, 175, 0.5); }
+  color: #5fd7af; }
   .fg-color-79.reverse-video {
     background-color: #5fd7af !important; }
 
@@ -970,8 +1016,7 @@ html, body {
     color: #5fd7d7 !important; }
 
 .fg-color-80 {
-  color: #5fd7d7;
-  text-shadow: 0 0 6px rgba(95, 215, 215, 0.5); }
+  color: #5fd7d7; }
   .fg-color-80.reverse-video {
     background-color: #5fd7d7 !important; }
 
@@ -981,8 +1026,7 @@ html, body {
     color: #5fd7ff !important; }
 
 .fg-color-81 {
-  color: #5fd7ff;
-  text-shadow: 0 0 6px rgba(95, 215, 255, 0.5); }
+  color: #5fd7ff; }
   .fg-color-81.reverse-video {
     background-color: #5fd7ff !important; }
 
@@ -992,8 +1036,7 @@ html, body {
     color: #5fff00 !important; }
 
 .fg-color-82 {
-  color: #5fff00;
-  text-shadow: 0 0 6px rgba(95, 255, 0, 0.5); }
+  color: #5fff00; }
   .fg-color-82.reverse-video {
     background-color: #5fff00 !important; }
 
@@ -1003,8 +1046,7 @@ html, body {
     color: #5fff5f !important; }
 
 .fg-color-83 {
-  color: #5fff5f;
-  text-shadow: 0 0 6px rgba(95, 255, 95, 0.5); }
+  color: #5fff5f; }
   .fg-color-83.reverse-video {
     background-color: #5fff5f !important; }
 
@@ -1014,8 +1056,7 @@ html, body {
     color: #5fff87 !important; }
 
 .fg-color-84 {
-  color: #5fff87;
-  text-shadow: 0 0 6px rgba(95, 255, 135, 0.5); }
+  color: #5fff87; }
   .fg-color-84.reverse-video {
     background-color: #5fff87 !important; }
 
@@ -1025,8 +1066,7 @@ html, body {
     color: #5fffaf !important; }
 
 .fg-color-85 {
-  color: #5fffaf;
-  text-shadow: 0 0 6px rgba(95, 255, 175, 0.5); }
+  color: #5fffaf; }
   .fg-color-85.reverse-video {
     background-color: #5fffaf !important; }
 
@@ -1036,8 +1076,7 @@ html, body {
     color: #5fffd7 !important; }
 
 .fg-color-86 {
-  color: #5fffd7;
-  text-shadow: 0 0 6px rgba(95, 255, 215, 0.5); }
+  color: #5fffd7; }
   .fg-color-86.reverse-video {
     background-color: #5fffd7 !important; }
 
@@ -1047,8 +1086,7 @@ html, body {
     color: #5fffff !important; }
 
 .fg-color-87 {
-  color: #5fffff;
-  text-shadow: 0 0 6px rgba(95, 255, 255, 0.5); }
+  color: #5fffff; }
   .fg-color-87.reverse-video {
     background-color: #5fffff !important; }
 
@@ -1058,8 +1096,7 @@ html, body {
     color: #870000 !important; }
 
 .fg-color-88 {
-  color: #870000;
-  text-shadow: 0 0 6px rgba(135, 0, 0, 0.5); }
+  color: #870000; }
   .fg-color-88.reverse-video {
     background-color: #870000 !important; }
 
@@ -1069,8 +1106,7 @@ html, body {
     color: #87005f !important; }
 
 .fg-color-89 {
-  color: #87005f;
-  text-shadow: 0 0 6px rgba(135, 0, 95, 0.5); }
+  color: #87005f; }
   .fg-color-89.reverse-video {
     background-color: #87005f !important; }
 
@@ -1080,8 +1116,7 @@ html, body {
     color: #870087 !important; }
 
 .fg-color-90 {
-  color: #870087;
-  text-shadow: 0 0 6px rgba(135, 0, 135, 0.5); }
+  color: #870087; }
   .fg-color-90.reverse-video {
     background-color: #870087 !important; }
 
@@ -1091,8 +1126,7 @@ html, body {
     color: #8700af !important; }
 
 .fg-color-91 {
-  color: #8700af;
-  text-shadow: 0 0 6px rgba(135, 0, 175, 0.5); }
+  color: #8700af; }
   .fg-color-91.reverse-video {
     background-color: #8700af !important; }
 
@@ -1102,8 +1136,7 @@ html, body {
     color: #8700d7 !important; }
 
 .fg-color-92 {
-  color: #8700d7;
-  text-shadow: 0 0 6px rgba(135, 0, 215, 0.5); }
+  color: #8700d7; }
   .fg-color-92.reverse-video {
     background-color: #8700d7 !important; }
 
@@ -1113,8 +1146,7 @@ html, body {
     color: #8700ff !important; }
 
 .fg-color-93 {
-  color: #8700ff;
-  text-shadow: 0 0 6px rgba(135, 0, 255, 0.5); }
+  color: #8700ff; }
   .fg-color-93.reverse-video {
     background-color: #8700ff !important; }
 
@@ -1124,8 +1156,7 @@ html, body {
     color: #875f00 !important; }
 
 .fg-color-94 {
-  color: #875f00;
-  text-shadow: 0 0 6px rgba(135, 95, 0, 0.5); }
+  color: #875f00; }
   .fg-color-94.reverse-video {
     background-color: #875f00 !important; }
 
@@ -1135,8 +1166,7 @@ html, body {
     color: #875f5f !important; }
 
 .fg-color-95 {
-  color: #875f5f;
-  text-shadow: 0 0 6px rgba(135, 95, 95, 0.5); }
+  color: #875f5f; }
   .fg-color-95.reverse-video {
     background-color: #875f5f !important; }
 
@@ -1146,8 +1176,7 @@ html, body {
     color: #875f87 !important; }
 
 .fg-color-96 {
-  color: #875f87;
-  text-shadow: 0 0 6px rgba(135, 95, 135, 0.5); }
+  color: #875f87; }
   .fg-color-96.reverse-video {
     background-color: #875f87 !important; }
 
@@ -1157,8 +1186,7 @@ html, body {
     color: #875faf !important; }
 
 .fg-color-97 {
-  color: #875faf;
-  text-shadow: 0 0 6px rgba(135, 95, 175, 0.5); }
+  color: #875faf; }
   .fg-color-97.reverse-video {
     background-color: #875faf !important; }
 
@@ -1168,8 +1196,7 @@ html, body {
     color: #875fd7 !important; }
 
 .fg-color-98 {
-  color: #875fd7;
-  text-shadow: 0 0 6px rgba(135, 95, 215, 0.5); }
+  color: #875fd7; }
   .fg-color-98.reverse-video {
     background-color: #875fd7 !important; }
 
@@ -1179,8 +1206,7 @@ html, body {
     color: #875fff !important; }
 
 .fg-color-99 {
-  color: #875fff;
-  text-shadow: 0 0 6px rgba(135, 95, 255, 0.5); }
+  color: #875fff; }
   .fg-color-99.reverse-video {
     background-color: #875fff !important; }
 
@@ -1190,8 +1216,7 @@ html, body {
     color: #878700 !important; }
 
 .fg-color-100 {
-  color: #878700;
-  text-shadow: 0 0 6px rgba(135, 135, 0, 0.5); }
+  color: #878700; }
   .fg-color-100.reverse-video {
     background-color: #878700 !important; }
 
@@ -1201,8 +1226,7 @@ html, body {
     color: #87875f !important; }
 
 .fg-color-101 {
-  color: #87875f;
-  text-shadow: 0 0 6px rgba(135, 135, 95, 0.5); }
+  color: #87875f; }
   .fg-color-101.reverse-video {
     background-color: #87875f !important; }
 
@@ -1212,8 +1236,7 @@ html, body {
     color: #878787 !important; }
 
 .fg-color-102 {
-  color: #878787;
-  text-shadow: 0 0 6px rgba(135, 135, 135, 0.5); }
+  color: #878787; }
   .fg-color-102.reverse-video {
     background-color: #878787 !important; }
 
@@ -1223,8 +1246,7 @@ html, body {
     color: #8787af !important; }
 
 .fg-color-103 {
-  color: #8787af;
-  text-shadow: 0 0 6px rgba(135, 135, 175, 0.5); }
+  color: #8787af; }
   .fg-color-103.reverse-video {
     background-color: #8787af !important; }
 
@@ -1234,8 +1256,7 @@ html, body {
     color: #8787d7 !important; }
 
 .fg-color-104 {
-  color: #8787d7;
-  text-shadow: 0 0 6px rgba(135, 135, 215, 0.5); }
+  color: #8787d7; }
   .fg-color-104.reverse-video {
     background-color: #8787d7 !important; }
 
@@ -1245,8 +1266,7 @@ html, body {
     color: #8787ff !important; }
 
 .fg-color-105 {
-  color: #8787ff;
-  text-shadow: 0 0 6px rgba(135, 135, 255, 0.5); }
+  color: #8787ff; }
   .fg-color-105.reverse-video {
     background-color: #8787ff !important; }
 
@@ -1256,8 +1276,7 @@ html, body {
     color: #87af00 !important; }
 
 .fg-color-106 {
-  color: #87af00;
-  text-shadow: 0 0 6px rgba(135, 175, 0, 0.5); }
+  color: #87af00; }
   .fg-color-106.reverse-video {
     background-color: #87af00 !important; }
 
@@ -1267,8 +1286,7 @@ html, body {
     color: #87af5f !important; }
 
 .fg-color-107 {
-  color: #87af5f;
-  text-shadow: 0 0 6px rgba(135, 175, 95, 0.5); }
+  color: #87af5f; }
   .fg-color-107.reverse-video {
     background-color: #87af5f !important; }
 
@@ -1278,8 +1296,7 @@ html, body {
     color: #87af87 !important; }
 
 .fg-color-108 {
-  color: #87af87;
-  text-shadow: 0 0 6px rgba(135, 175, 135, 0.5); }
+  color: #87af87; }
   .fg-color-108.reverse-video {
     background-color: #87af87 !important; }
 
@@ -1289,8 +1306,7 @@ html, body {
     color: #87afaf !important; }
 
 .fg-color-109 {
-  color: #87afaf;
-  text-shadow: 0 0 6px rgba(135, 175, 175, 0.5); }
+  color: #87afaf; }
   .fg-color-109.reverse-video {
     background-color: #87afaf !important; }
 
@@ -1300,8 +1316,7 @@ html, body {
     color: #87afd7 !important; }
 
 .fg-color-110 {
-  color: #87afd7;
-  text-shadow: 0 0 6px rgba(135, 175, 215, 0.5); }
+  color: #87afd7; }
   .fg-color-110.reverse-video {
     background-color: #87afd7 !important; }
 
@@ -1311,8 +1326,7 @@ html, body {
     color: #87afff !important; }
 
 .fg-color-111 {
-  color: #87afff;
-  text-shadow: 0 0 6px rgba(135, 175, 255, 0.5); }
+  color: #87afff; }
   .fg-color-111.reverse-video {
     background-color: #87afff !important; }
 
@@ -1322,8 +1336,7 @@ html, body {
     color: #87d700 !important; }
 
 .fg-color-112 {
-  color: #87d700;
-  text-shadow: 0 0 6px rgba(135, 215, 0, 0.5); }
+  color: #87d700; }
   .fg-color-112.reverse-video {
     background-color: #87d700 !important; }
 
@@ -1333,8 +1346,7 @@ html, body {
     color: #87d75f !important; }
 
 .fg-color-113 {
-  color: #87d75f;
-  text-shadow: 0 0 6px rgba(135, 215, 95, 0.5); }
+  color: #87d75f; }
   .fg-color-113.reverse-video {
     background-color: #87d75f !important; }
 
@@ -1344,8 +1356,7 @@ html, body {
     color: #87d787 !important; }
 
 .fg-color-114 {
-  color: #87d787;
-  text-shadow: 0 0 6px rgba(135, 215, 135, 0.5); }
+  color: #87d787; }
   .fg-color-114.reverse-video {
     background-color: #87d787 !important; }
 
@@ -1355,8 +1366,7 @@ html, body {
     color: #87d7af !important; }
 
 .fg-color-115 {
-  color: #87d7af;
-  text-shadow: 0 0 6px rgba(135, 215, 175, 0.5); }
+  color: #87d7af; }
   .fg-color-115.reverse-video {
     background-color: #87d7af !important; }
 
@@ -1366,8 +1376,7 @@ html, body {
     color: #87d7d7 !important; }
 
 .fg-color-116 {
-  color: #87d7d7;
-  text-shadow: 0 0 6px rgba(135, 215, 215, 0.5); }
+  color: #87d7d7; }
   .fg-color-116.reverse-video {
     background-color: #87d7d7 !important; }
 
@@ -1377,8 +1386,7 @@ html, body {
     color: #87d7ff !important; }
 
 .fg-color-117 {
-  color: #87d7ff;
-  text-shadow: 0 0 6px rgba(135, 215, 255, 0.5); }
+  color: #87d7ff; }
   .fg-color-117.reverse-video {
     background-color: #87d7ff !important; }
 
@@ -1388,8 +1396,7 @@ html, body {
     color: #87ff00 !important; }
 
 .fg-color-118 {
-  color: #87ff00;
-  text-shadow: 0 0 6px rgba(135, 255, 0, 0.5); }
+  color: #87ff00; }
   .fg-color-118.reverse-video {
     background-color: #87ff00 !important; }
 
@@ -1399,8 +1406,7 @@ html, body {
     color: #87ff5f !important; }
 
 .fg-color-119 {
-  color: #87ff5f;
-  text-shadow: 0 0 6px rgba(135, 255, 95, 0.5); }
+  color: #87ff5f; }
   .fg-color-119.reverse-video {
     background-color: #87ff5f !important; }
 
@@ -1410,8 +1416,7 @@ html, body {
     color: #87ff87 !important; }
 
 .fg-color-120 {
-  color: #87ff87;
-  text-shadow: 0 0 6px rgba(135, 255, 135, 0.5); }
+  color: #87ff87; }
   .fg-color-120.reverse-video {
     background-color: #87ff87 !important; }
 
@@ -1421,8 +1426,7 @@ html, body {
     color: #87ffaf !important; }
 
 .fg-color-121 {
-  color: #87ffaf;
-  text-shadow: 0 0 6px rgba(135, 255, 175, 0.5); }
+  color: #87ffaf; }
   .fg-color-121.reverse-video {
     background-color: #87ffaf !important; }
 
@@ -1432,8 +1436,7 @@ html, body {
     color: #87ffd7 !important; }
 
 .fg-color-122 {
-  color: #87ffd7;
-  text-shadow: 0 0 6px rgba(135, 255, 215, 0.5); }
+  color: #87ffd7; }
   .fg-color-122.reverse-video {
     background-color: #87ffd7 !important; }
 
@@ -1443,8 +1446,7 @@ html, body {
     color: #87ffff !important; }
 
 .fg-color-123 {
-  color: #87ffff;
-  text-shadow: 0 0 6px rgba(135, 255, 255, 0.5); }
+  color: #87ffff; }
   .fg-color-123.reverse-video {
     background-color: #87ffff !important; }
 
@@ -1454,8 +1456,7 @@ html, body {
     color: #af0000 !important; }
 
 .fg-color-124 {
-  color: #af0000;
-  text-shadow: 0 0 6px rgba(175, 0, 0, 0.5); }
+  color: #af0000; }
   .fg-color-124.reverse-video {
     background-color: #af0000 !important; }
 
@@ -1465,8 +1466,7 @@ html, body {
     color: #af005f !important; }
 
 .fg-color-125 {
-  color: #af005f;
-  text-shadow: 0 0 6px rgba(175, 0, 95, 0.5); }
+  color: #af005f; }
   .fg-color-125.reverse-video {
     background-color: #af005f !important; }
 
@@ -1476,8 +1476,7 @@ html, body {
     color: #af0087 !important; }
 
 .fg-color-126 {
-  color: #af0087;
-  text-shadow: 0 0 6px rgba(175, 0, 135, 0.5); }
+  color: #af0087; }
   .fg-color-126.reverse-video {
     background-color: #af0087 !important; }
 
@@ -1487,8 +1486,7 @@ html, body {
     color: #af00af !important; }
 
 .fg-color-127 {
-  color: #af00af;
-  text-shadow: 0 0 6px rgba(175, 0, 175, 0.5); }
+  color: #af00af; }
   .fg-color-127.reverse-video {
     background-color: #af00af !important; }
 
@@ -1498,8 +1496,7 @@ html, body {
     color: #af00d7 !important; }
 
 .fg-color-128 {
-  color: #af00d7;
-  text-shadow: 0 0 6px rgba(175, 0, 215, 0.5); }
+  color: #af00d7; }
   .fg-color-128.reverse-video {
     background-color: #af00d7 !important; }
 
@@ -1509,8 +1506,7 @@ html, body {
     color: #af00ff !important; }
 
 .fg-color-129 {
-  color: #af00ff;
-  text-shadow: 0 0 6px rgba(175, 0, 255, 0.5); }
+  color: #af00ff; }
   .fg-color-129.reverse-video {
     background-color: #af00ff !important; }
 
@@ -1520,8 +1516,7 @@ html, body {
     color: #af5f00 !important; }
 
 .fg-color-130 {
-  color: #af5f00;
-  text-shadow: 0 0 6px rgba(175, 95, 0, 0.5); }
+  color: #af5f00; }
   .fg-color-130.reverse-video {
     background-color: #af5f00 !important; }
 
@@ -1531,8 +1526,7 @@ html, body {
     color: #af5f5f !important; }
 
 .fg-color-131 {
-  color: #af5f5f;
-  text-shadow: 0 0 6px rgba(175, 95, 95, 0.5); }
+  color: #af5f5f; }
   .fg-color-131.reverse-video {
     background-color: #af5f5f !important; }
 
@@ -1542,8 +1536,7 @@ html, body {
     color: #af5f87 !important; }
 
 .fg-color-132 {
-  color: #af5f87;
-  text-shadow: 0 0 6px rgba(175, 95, 135, 0.5); }
+  color: #af5f87; }
   .fg-color-132.reverse-video {
     background-color: #af5f87 !important; }
 
@@ -1553,8 +1546,7 @@ html, body {
     color: #af5faf !important; }
 
 .fg-color-133 {
-  color: #af5faf;
-  text-shadow: 0 0 6px rgba(175, 95, 175, 0.5); }
+  color: #af5faf; }
   .fg-color-133.reverse-video {
     background-color: #af5faf !important; }
 
@@ -1564,8 +1556,7 @@ html, body {
     color: #af5fd7 !important; }
 
 .fg-color-134 {
-  color: #af5fd7;
-  text-shadow: 0 0 6px rgba(175, 95, 215, 0.5); }
+  color: #af5fd7; }
   .fg-color-134.reverse-video {
     background-color: #af5fd7 !important; }
 
@@ -1575,8 +1566,7 @@ html, body {
     color: #af5fff !important; }
 
 .fg-color-135 {
-  color: #af5fff;
-  text-shadow: 0 0 6px rgba(175, 95, 255, 0.5); }
+  color: #af5fff; }
   .fg-color-135.reverse-video {
     background-color: #af5fff !important; }
 
@@ -1586,8 +1576,7 @@ html, body {
     color: #af8700 !important; }
 
 .fg-color-136 {
-  color: #af8700;
-  text-shadow: 0 0 6px rgba(175, 135, 0, 0.5); }
+  color: #af8700; }
   .fg-color-136.reverse-video {
     background-color: #af8700 !important; }
 
@@ -1597,8 +1586,7 @@ html, body {
     color: #af875f !important; }
 
 .fg-color-137 {
-  color: #af875f;
-  text-shadow: 0 0 6px rgba(175, 135, 95, 0.5); }
+  color: #af875f; }
   .fg-color-137.reverse-video {
     background-color: #af875f !important; }
 
@@ -1608,8 +1596,7 @@ html, body {
     color: #af8787 !important; }
 
 .fg-color-138 {
-  color: #af8787;
-  text-shadow: 0 0 6px rgba(175, 135, 135, 0.5); }
+  color: #af8787; }
   .fg-color-138.reverse-video {
     background-color: #af8787 !important; }
 
@@ -1619,8 +1606,7 @@ html, body {
     color: #af87af !important; }
 
 .fg-color-139 {
-  color: #af87af;
-  text-shadow: 0 0 6px rgba(175, 135, 175, 0.5); }
+  color: #af87af; }
   .fg-color-139.reverse-video {
     background-color: #af87af !important; }
 
@@ -1630,8 +1616,7 @@ html, body {
     color: #af87d7 !important; }
 
 .fg-color-140 {
-  color: #af87d7;
-  text-shadow: 0 0 6px rgba(175, 135, 215, 0.5); }
+  color: #af87d7; }
   .fg-color-140.reverse-video {
     background-color: #af87d7 !important; }
 
@@ -1641,8 +1626,7 @@ html, body {
     color: #af87ff !important; }
 
 .fg-color-141 {
-  color: #af87ff;
-  text-shadow: 0 0 6px rgba(175, 135, 255, 0.5); }
+  color: #af87ff; }
   .fg-color-141.reverse-video {
     background-color: #af87ff !important; }
 
@@ -1652,8 +1636,7 @@ html, body {
     color: #afaf00 !important; }
 
 .fg-color-142 {
-  color: #afaf00;
-  text-shadow: 0 0 6px rgba(175, 175, 0, 0.5); }
+  color: #afaf00; }
   .fg-color-142.reverse-video {
     background-color: #afaf00 !important; }
 
@@ -1663,8 +1646,7 @@ html, body {
     color: #afaf5f !important; }
 
 .fg-color-143 {
-  color: #afaf5f;
-  text-shadow: 0 0 6px rgba(175, 175, 95, 0.5); }
+  color: #afaf5f; }
   .fg-color-143.reverse-video {
     background-color: #afaf5f !important; }
 
@@ -1674,8 +1656,7 @@ html, body {
     color: #afaf87 !important; }
 
 .fg-color-144 {
-  color: #afaf87;
-  text-shadow: 0 0 6px rgba(175, 175, 135, 0.5); }
+  color: #afaf87; }
   .fg-color-144.reverse-video {
     background-color: #afaf87 !important; }
 
@@ -1685,8 +1666,7 @@ html, body {
     color: #afafaf !important; }
 
 .fg-color-145 {
-  color: #afafaf;
-  text-shadow: 0 0 6px rgba(175, 175, 175, 0.5); }
+  color: #afafaf; }
   .fg-color-145.reverse-video {
     background-color: #afafaf !important; }
 
@@ -1696,8 +1676,7 @@ html, body {
     color: #afafd7 !important; }
 
 .fg-color-146 {
-  color: #afafd7;
-  text-shadow: 0 0 6px rgba(175, 175, 215, 0.5); }
+  color: #afafd7; }
   .fg-color-146.reverse-video {
     background-color: #afafd7 !important; }
 
@@ -1707,8 +1686,7 @@ html, body {
     color: #afafff !important; }
 
 .fg-color-147 {
-  color: #afafff;
-  text-shadow: 0 0 6px rgba(175, 175, 255, 0.5); }
+  color: #afafff; }
   .fg-color-147.reverse-video {
     background-color: #afafff !important; }
 
@@ -1718,8 +1696,7 @@ html, body {
     color: #afd700 !important; }
 
 .fg-color-148 {
-  color: #afd700;
-  text-shadow: 0 0 6px rgba(175, 215, 0, 0.5); }
+  color: #afd700; }
   .fg-color-148.reverse-video {
     background-color: #afd700 !important; }
 
@@ -1729,8 +1706,7 @@ html, body {
     color: #afd75f !important; }
 
 .fg-color-149 {
-  color: #afd75f;
-  text-shadow: 0 0 6px rgba(175, 215, 95, 0.5); }
+  color: #afd75f; }
   .fg-color-149.reverse-video {
     background-color: #afd75f !important; }
 
@@ -1740,8 +1716,7 @@ html, body {
     color: #afd787 !important; }
 
 .fg-color-150 {
-  color: #afd787;
-  text-shadow: 0 0 6px rgba(175, 215, 135, 0.5); }
+  color: #afd787; }
   .fg-color-150.reverse-video {
     background-color: #afd787 !important; }
 
@@ -1751,8 +1726,7 @@ html, body {
     color: #afd7af !important; }
 
 .fg-color-151 {
-  color: #afd7af;
-  text-shadow: 0 0 6px rgba(175, 215, 175, 0.5); }
+  color: #afd7af; }
   .fg-color-151.reverse-video {
     background-color: #afd7af !important; }
 
@@ -1762,8 +1736,7 @@ html, body {
     color: #afd7d7 !important; }
 
 .fg-color-152 {
-  color: #afd7d7;
-  text-shadow: 0 0 6px rgba(175, 215, 215, 0.5); }
+  color: #afd7d7; }
   .fg-color-152.reverse-video {
     background-color: #afd7d7 !important; }
 
@@ -1773,8 +1746,7 @@ html, body {
     color: #afd7ff !important; }
 
 .fg-color-153 {
-  color: #afd7ff;
-  text-shadow: 0 0 6px rgba(175, 215, 255, 0.5); }
+  color: #afd7ff; }
   .fg-color-153.reverse-video {
     background-color: #afd7ff !important; }
 
@@ -1784,8 +1756,7 @@ html, body {
     color: #afff00 !important; }
 
 .fg-color-154 {
-  color: #afff00;
-  text-shadow: 0 0 6px rgba(175, 255, 0, 0.5); }
+  color: #afff00; }
   .fg-color-154.reverse-video {
     background-color: #afff00 !important; }
 
@@ -1795,8 +1766,7 @@ html, body {
     color: #afff5f !important; }
 
 .fg-color-155 {
-  color: #afff5f;
-  text-shadow: 0 0 6px rgba(175, 255, 95, 0.5); }
+  color: #afff5f; }
   .fg-color-155.reverse-video {
     background-color: #afff5f !important; }
 
@@ -1806,8 +1776,7 @@ html, body {
     color: #afff87 !important; }
 
 .fg-color-156 {
-  color: #afff87;
-  text-shadow: 0 0 6px rgba(175, 255, 135, 0.5); }
+  color: #afff87; }
   .fg-color-156.reverse-video {
     background-color: #afff87 !important; }
 
@@ -1817,8 +1786,7 @@ html, body {
     color: #afffaf !important; }
 
 .fg-color-157 {
-  color: #afffaf;
-  text-shadow: 0 0 6px rgba(175, 255, 175, 0.5); }
+  color: #afffaf; }
   .fg-color-157.reverse-video {
     background-color: #afffaf !important; }
 
@@ -1828,8 +1796,7 @@ html, body {
     color: #afffd7 !important; }
 
 .fg-color-158 {
-  color: #afffd7;
-  text-shadow: 0 0 6px rgba(175, 255, 215, 0.5); }
+  color: #afffd7; }
   .fg-color-158.reverse-video {
     background-color: #afffd7 !important; }
 
@@ -1839,8 +1806,7 @@ html, body {
     color: #afffff !important; }
 
 .fg-color-159 {
-  color: #afffff;
-  text-shadow: 0 0 6px rgba(175, 255, 255, 0.5); }
+  color: #afffff; }
   .fg-color-159.reverse-video {
     background-color: #afffff !important; }
 
@@ -1850,8 +1816,7 @@ html, body {
     color: #d70000 !important; }
 
 .fg-color-160 {
-  color: #d70000;
-  text-shadow: 0 0 6px rgba(215, 0, 0, 0.5); }
+  color: #d70000; }
   .fg-color-160.reverse-video {
     background-color: #d70000 !important; }
 
@@ -1861,8 +1826,7 @@ html, body {
     color: #d7005f !important; }
 
 .fg-color-161 {
-  color: #d7005f;
-  text-shadow: 0 0 6px rgba(215, 0, 95, 0.5); }
+  color: #d7005f; }
   .fg-color-161.reverse-video {
     background-color: #d7005f !important; }
 
@@ -1872,8 +1836,7 @@ html, body {
     color: #d70087 !important; }
 
 .fg-color-162 {
-  color: #d70087;
-  text-shadow: 0 0 6px rgba(215, 0, 135, 0.5); }
+  color: #d70087; }
   .fg-color-162.reverse-video {
     background-color: #d70087 !important; }
 
@@ -1883,8 +1846,7 @@ html, body {
     color: #d700af !important; }
 
 .fg-color-163 {
-  color: #d700af;
-  text-shadow: 0 0 6px rgba(215, 0, 175, 0.5); }
+  color: #d700af; }
   .fg-color-163.reverse-video {
     background-color: #d700af !important; }
 
@@ -1894,8 +1856,7 @@ html, body {
     color: #d700d7 !important; }
 
 .fg-color-164 {
-  color: #d700d7;
-  text-shadow: 0 0 6px rgba(215, 0, 215, 0.5); }
+  color: #d700d7; }
   .fg-color-164.reverse-video {
     background-color: #d700d7 !important; }
 
@@ -1905,8 +1866,7 @@ html, body {
     color: #d700ff !important; }
 
 .fg-color-165 {
-  color: #d700ff;
-  text-shadow: 0 0 6px rgba(215, 0, 255, 0.5); }
+  color: #d700ff; }
   .fg-color-165.reverse-video {
     background-color: #d700ff !important; }
 
@@ -1916,8 +1876,7 @@ html, body {
     color: #d75f00 !important; }
 
 .fg-color-166 {
-  color: #d75f00;
-  text-shadow: 0 0 6px rgba(215, 95, 0, 0.5); }
+  color: #d75f00; }
   .fg-color-166.reverse-video {
     background-color: #d75f00 !important; }
 
@@ -1927,8 +1886,7 @@ html, body {
     color: #d75f5f !important; }
 
 .fg-color-167 {
-  color: #d75f5f;
-  text-shadow: 0 0 6px rgba(215, 95, 95, 0.5); }
+  color: #d75f5f; }
   .fg-color-167.reverse-video {
     background-color: #d75f5f !important; }
 
@@ -1938,8 +1896,7 @@ html, body {
     color: #d75f87 !important; }
 
 .fg-color-168 {
-  color: #d75f87;
-  text-shadow: 0 0 6px rgba(215, 95, 135, 0.5); }
+  color: #d75f87; }
   .fg-color-168.reverse-video {
     background-color: #d75f87 !important; }
 
@@ -1949,8 +1906,7 @@ html, body {
     color: #d75faf !important; }
 
 .fg-color-169 {
-  color: #d75faf;
-  text-shadow: 0 0 6px rgba(215, 95, 175, 0.5); }
+  color: #d75faf; }
   .fg-color-169.reverse-video {
     background-color: #d75faf !important; }
 
@@ -1960,8 +1916,7 @@ html, body {
     color: #d75fd7 !important; }
 
 .fg-color-170 {
-  color: #d75fd7;
-  text-shadow: 0 0 6px rgba(215, 95, 215, 0.5); }
+  color: #d75fd7; }
   .fg-color-170.reverse-video {
     background-color: #d75fd7 !important; }
 
@@ -1971,8 +1926,7 @@ html, body {
     color: #d75fff !important; }
 
 .fg-color-171 {
-  color: #d75fff;
-  text-shadow: 0 0 6px rgba(215, 95, 255, 0.5); }
+  color: #d75fff; }
   .fg-color-171.reverse-video {
     background-color: #d75fff !important; }
 
@@ -1982,8 +1936,7 @@ html, body {
     color: #d78700 !important; }
 
 .fg-color-172 {
-  color: #d78700;
-  text-shadow: 0 0 6px rgba(215, 135, 0, 0.5); }
+  color: #d78700; }
   .fg-color-172.reverse-video {
     background-color: #d78700 !important; }
 
@@ -1993,8 +1946,7 @@ html, body {
     color: #d7875f !important; }
 
 .fg-color-173 {
-  color: #d7875f;
-  text-shadow: 0 0 6px rgba(215, 135, 95, 0.5); }
+  color: #d7875f; }
   .fg-color-173.reverse-video {
     background-color: #d7875f !important; }
 
@@ -2004,8 +1956,7 @@ html, body {
     color: #d78787 !important; }
 
 .fg-color-174 {
-  color: #d78787;
-  text-shadow: 0 0 6px rgba(215, 135, 135, 0.5); }
+  color: #d78787; }
   .fg-color-174.reverse-video {
     background-color: #d78787 !important; }
 
@@ -2015,8 +1966,7 @@ html, body {
     color: #d787af !important; }
 
 .fg-color-175 {
-  color: #d787af;
-  text-shadow: 0 0 6px rgba(215, 135, 175, 0.5); }
+  color: #d787af; }
   .fg-color-175.reverse-video {
     background-color: #d787af !important; }
 
@@ -2026,8 +1976,7 @@ html, body {
     color: #d787d7 !important; }
 
 .fg-color-176 {
-  color: #d787d7;
-  text-shadow: 0 0 6px rgba(215, 135, 215, 0.5); }
+  color: #d787d7; }
   .fg-color-176.reverse-video {
     background-color: #d787d7 !important; }
 
@@ -2037,8 +1986,7 @@ html, body {
     color: #d787ff !important; }
 
 .fg-color-177 {
-  color: #d787ff;
-  text-shadow: 0 0 6px rgba(215, 135, 255, 0.5); }
+  color: #d787ff; }
   .fg-color-177.reverse-video {
     background-color: #d787ff !important; }
 
@@ -2048,8 +1996,7 @@ html, body {
     color: #d7af00 !important; }
 
 .fg-color-178 {
-  color: #d7af00;
-  text-shadow: 0 0 6px rgba(215, 175, 0, 0.5); }
+  color: #d7af00; }
   .fg-color-178.reverse-video {
     background-color: #d7af00 !important; }
 
@@ -2059,8 +2006,7 @@ html, body {
     color: #d7af5f !important; }
 
 .fg-color-179 {
-  color: #d7af5f;
-  text-shadow: 0 0 6px rgba(215, 175, 95, 0.5); }
+  color: #d7af5f; }
   .fg-color-179.reverse-video {
     background-color: #d7af5f !important; }
 
@@ -2070,8 +2016,7 @@ html, body {
     color: #d7af87 !important; }
 
 .fg-color-180 {
-  color: #d7af87;
-  text-shadow: 0 0 6px rgba(215, 175, 135, 0.5); }
+  color: #d7af87; }
   .fg-color-180.reverse-video {
     background-color: #d7af87 !important; }
 
@@ -2081,8 +2026,7 @@ html, body {
     color: #d7afaf !important; }
 
 .fg-color-181 {
-  color: #d7afaf;
-  text-shadow: 0 0 6px rgba(215, 175, 175, 0.5); }
+  color: #d7afaf; }
   .fg-color-181.reverse-video {
     background-color: #d7afaf !important; }
 
@@ -2092,8 +2036,7 @@ html, body {
     color: #d7afd7 !important; }
 
 .fg-color-182 {
-  color: #d7afd7;
-  text-shadow: 0 0 6px rgba(215, 175, 215, 0.5); }
+  color: #d7afd7; }
   .fg-color-182.reverse-video {
     background-color: #d7afd7 !important; }
 
@@ -2103,8 +2046,7 @@ html, body {
     color: #d7afff !important; }
 
 .fg-color-183 {
-  color: #d7afff;
-  text-shadow: 0 0 6px rgba(215, 175, 255, 0.5); }
+  color: #d7afff; }
   .fg-color-183.reverse-video {
     background-color: #d7afff !important; }
 
@@ -2114,8 +2056,7 @@ html, body {
     color: #d7d700 !important; }
 
 .fg-color-184 {
-  color: #d7d700;
-  text-shadow: 0 0 6px rgba(215, 215, 0, 0.5); }
+  color: #d7d700; }
   .fg-color-184.reverse-video {
     background-color: #d7d700 !important; }
 
@@ -2125,8 +2066,7 @@ html, body {
     color: #d7d75f !important; }
 
 .fg-color-185 {
-  color: #d7d75f;
-  text-shadow: 0 0 6px rgba(215, 215, 95, 0.5); }
+  color: #d7d75f; }
   .fg-color-185.reverse-video {
     background-color: #d7d75f !important; }
 
@@ -2136,8 +2076,7 @@ html, body {
     color: #d7d787 !important; }
 
 .fg-color-186 {
-  color: #d7d787;
-  text-shadow: 0 0 6px rgba(215, 215, 135, 0.5); }
+  color: #d7d787; }
   .fg-color-186.reverse-video {
     background-color: #d7d787 !important; }
 
@@ -2147,8 +2086,7 @@ html, body {
     color: #d7d7af !important; }
 
 .fg-color-187 {
-  color: #d7d7af;
-  text-shadow: 0 0 6px rgba(215, 215, 175, 0.5); }
+  color: #d7d7af; }
   .fg-color-187.reverse-video {
     background-color: #d7d7af !important; }
 
@@ -2158,8 +2096,7 @@ html, body {
     color: #d7d7d7 !important; }
 
 .fg-color-188 {
-  color: #d7d7d7;
-  text-shadow: 0 0 6px rgba(215, 215, 215, 0.5); }
+  color: #d7d7d7; }
   .fg-color-188.reverse-video {
     background-color: #d7d7d7 !important; }
 
@@ -2169,8 +2106,7 @@ html, body {
     color: #d7d7ff !important; }
 
 .fg-color-189 {
-  color: #d7d7ff;
-  text-shadow: 0 0 6px rgba(215, 215, 255, 0.5); }
+  color: #d7d7ff; }
   .fg-color-189.reverse-video {
     background-color: #d7d7ff !important; }
 
@@ -2180,8 +2116,7 @@ html, body {
     color: #d7ff00 !important; }
 
 .fg-color-190 {
-  color: #d7ff00;
-  text-shadow: 0 0 6px rgba(215, 255, 0, 0.5); }
+  color: #d7ff00; }
   .fg-color-190.reverse-video {
     background-color: #d7ff00 !important; }
 
@@ -2191,8 +2126,7 @@ html, body {
     color: #d7ff5f !important; }
 
 .fg-color-191 {
-  color: #d7ff5f;
-  text-shadow: 0 0 6px rgba(215, 255, 95, 0.5); }
+  color: #d7ff5f; }
   .fg-color-191.reverse-video {
     background-color: #d7ff5f !important; }
 
@@ -2202,8 +2136,7 @@ html, body {
     color: #d7ff87 !important; }
 
 .fg-color-192 {
-  color: #d7ff87;
-  text-shadow: 0 0 6px rgba(215, 255, 135, 0.5); }
+  color: #d7ff87; }
   .fg-color-192.reverse-video {
     background-color: #d7ff87 !important; }
 
@@ -2213,8 +2146,7 @@ html, body {
     color: #d7ffaf !important; }
 
 .fg-color-193 {
-  color: #d7ffaf;
-  text-shadow: 0 0 6px rgba(215, 255, 175, 0.5); }
+  color: #d7ffaf; }
   .fg-color-193.reverse-video {
     background-color: #d7ffaf !important; }
 
@@ -2224,8 +2156,7 @@ html, body {
     color: #d7ffd7 !important; }
 
 .fg-color-194 {
-  color: #d7ffd7;
-  text-shadow: 0 0 6px rgba(215, 255, 215, 0.5); }
+  color: #d7ffd7; }
   .fg-color-194.reverse-video {
     background-color: #d7ffd7 !important; }
 
@@ -2235,8 +2166,7 @@ html, body {
     color: #d7ffff !important; }
 
 .fg-color-195 {
-  color: #d7ffff;
-  text-shadow: 0 0 6px rgba(215, 255, 255, 0.5); }
+  color: #d7ffff; }
   .fg-color-195.reverse-video {
     background-color: #d7ffff !important; }
 
@@ -2246,8 +2176,7 @@ html, body {
     color: red !important; }
 
 .fg-color-196 {
-  color: red;
-  text-shadow: 0 0 6px rgba(255, 0, 0, 0.5); }
+  color: red; }
   .fg-color-196.reverse-video {
     background-color: red !important; }
 
@@ -2257,8 +2186,7 @@ html, body {
     color: #ff005f !important; }
 
 .fg-color-197 {
-  color: #ff005f;
-  text-shadow: 0 0 6px rgba(255, 0, 95, 0.5); }
+  color: #ff005f; }
   .fg-color-197.reverse-video {
     background-color: #ff005f !important; }
 
@@ -2268,8 +2196,7 @@ html, body {
     color: #ff0087 !important; }
 
 .fg-color-198 {
-  color: #ff0087;
-  text-shadow: 0 0 6px rgba(255, 0, 135, 0.5); }
+  color: #ff0087; }
   .fg-color-198.reverse-video {
     background-color: #ff0087 !important; }
 
@@ -2279,8 +2206,7 @@ html, body {
     color: #ff00af !important; }
 
 .fg-color-199 {
-  color: #ff00af;
-  text-shadow: 0 0 6px rgba(255, 0, 175, 0.5); }
+  color: #ff00af; }
   .fg-color-199.reverse-video {
     background-color: #ff00af !important; }
 
@@ -2290,8 +2216,7 @@ html, body {
     color: #ff00d7 !important; }
 
 .fg-color-200 {
-  color: #ff00d7;
-  text-shadow: 0 0 6px rgba(255, 0, 215, 0.5); }
+  color: #ff00d7; }
   .fg-color-200.reverse-video {
     background-color: #ff00d7 !important; }
 
@@ -2301,8 +2226,7 @@ html, body {
     color: magenta !important; }
 
 .fg-color-201 {
-  color: magenta;
-  text-shadow: 0 0 6px rgba(255, 0, 255, 0.5); }
+  color: magenta; }
   .fg-color-201.reverse-video {
     background-color: magenta !important; }
 
@@ -2312,8 +2236,7 @@ html, body {
     color: #ff5f00 !important; }
 
 .fg-color-202 {
-  color: #ff5f00;
-  text-shadow: 0 0 6px rgba(255, 95, 0, 0.5); }
+  color: #ff5f00; }
   .fg-color-202.reverse-video {
     background-color: #ff5f00 !important; }
 
@@ -2323,8 +2246,7 @@ html, body {
     color: #ff5f5f !important; }
 
 .fg-color-203 {
-  color: #ff5f5f;
-  text-shadow: 0 0 6px rgba(255, 95, 95, 0.5); }
+  color: #ff5f5f; }
   .fg-color-203.reverse-video {
     background-color: #ff5f5f !important; }
 
@@ -2334,8 +2256,7 @@ html, body {
     color: #ff5f87 !important; }
 
 .fg-color-204 {
-  color: #ff5f87;
-  text-shadow: 0 0 6px rgba(255, 95, 135, 0.5); }
+  color: #ff5f87; }
   .fg-color-204.reverse-video {
     background-color: #ff5f87 !important; }
 
@@ -2345,8 +2266,7 @@ html, body {
     color: #ff5faf !important; }
 
 .fg-color-205 {
-  color: #ff5faf;
-  text-shadow: 0 0 6px rgba(255, 95, 175, 0.5); }
+  color: #ff5faf; }
   .fg-color-205.reverse-video {
     background-color: #ff5faf !important; }
 
@@ -2356,8 +2276,7 @@ html, body {
     color: #ff5fd7 !important; }
 
 .fg-color-206 {
-  color: #ff5fd7;
-  text-shadow: 0 0 6px rgba(255, 95, 215, 0.5); }
+  color: #ff5fd7; }
   .fg-color-206.reverse-video {
     background-color: #ff5fd7 !important; }
 
@@ -2367,8 +2286,7 @@ html, body {
     color: #ff5fff !important; }
 
 .fg-color-207 {
-  color: #ff5fff;
-  text-shadow: 0 0 6px rgba(255, 95, 255, 0.5); }
+  color: #ff5fff; }
   .fg-color-207.reverse-video {
     background-color: #ff5fff !important; }
 
@@ -2378,8 +2296,7 @@ html, body {
     color: #ff8700 !important; }
 
 .fg-color-208 {
-  color: #ff8700;
-  text-shadow: 0 0 6px rgba(255, 135, 0, 0.5); }
+  color: #ff8700; }
   .fg-color-208.reverse-video {
     background-color: #ff8700 !important; }
 
@@ -2389,8 +2306,7 @@ html, body {
     color: #ff875f !important; }
 
 .fg-color-209 {
-  color: #ff875f;
-  text-shadow: 0 0 6px rgba(255, 135, 95, 0.5); }
+  color: #ff875f; }
   .fg-color-209.reverse-video {
     background-color: #ff875f !important; }
 
@@ -2400,8 +2316,7 @@ html, body {
     color: #ff8787 !important; }
 
 .fg-color-210 {
-  color: #ff8787;
-  text-shadow: 0 0 6px rgba(255, 135, 135, 0.5); }
+  color: #ff8787; }
   .fg-color-210.reverse-video {
     background-color: #ff8787 !important; }
 
@@ -2411,8 +2326,7 @@ html, body {
     color: #ff87af !important; }
 
 .fg-color-211 {
-  color: #ff87af;
-  text-shadow: 0 0 6px rgba(255, 135, 175, 0.5); }
+  color: #ff87af; }
   .fg-color-211.reverse-video {
     background-color: #ff87af !important; }
 
@@ -2422,8 +2336,7 @@ html, body {
     color: #ff87d7 !important; }
 
 .fg-color-212 {
-  color: #ff87d7;
-  text-shadow: 0 0 6px rgba(255, 135, 215, 0.5); }
+  color: #ff87d7; }
   .fg-color-212.reverse-video {
     background-color: #ff87d7 !important; }
 
@@ -2433,8 +2346,7 @@ html, body {
     color: #ff87ff !important; }
 
 .fg-color-213 {
-  color: #ff87ff;
-  text-shadow: 0 0 6px rgba(255, 135, 255, 0.5); }
+  color: #ff87ff; }
   .fg-color-213.reverse-video {
     background-color: #ff87ff !important; }
 
@@ -2444,8 +2356,7 @@ html, body {
     color: #ffaf00 !important; }
 
 .fg-color-214 {
-  color: #ffaf00;
-  text-shadow: 0 0 6px rgba(255, 175, 0, 0.5); }
+  color: #ffaf00; }
   .fg-color-214.reverse-video {
     background-color: #ffaf00 !important; }
 
@@ -2455,8 +2366,7 @@ html, body {
     color: #ffaf5f !important; }
 
 .fg-color-215 {
-  color: #ffaf5f;
-  text-shadow: 0 0 6px rgba(255, 175, 95, 0.5); }
+  color: #ffaf5f; }
   .fg-color-215.reverse-video {
     background-color: #ffaf5f !important; }
 
@@ -2466,8 +2376,7 @@ html, body {
     color: #ffaf87 !important; }
 
 .fg-color-216 {
-  color: #ffaf87;
-  text-shadow: 0 0 6px rgba(255, 175, 135, 0.5); }
+  color: #ffaf87; }
   .fg-color-216.reverse-video {
     background-color: #ffaf87 !important; }
 
@@ -2477,8 +2386,7 @@ html, body {
     color: #ffafaf !important; }
 
 .fg-color-217 {
-  color: #ffafaf;
-  text-shadow: 0 0 6px rgba(255, 175, 175, 0.5); }
+  color: #ffafaf; }
   .fg-color-217.reverse-video {
     background-color: #ffafaf !important; }
 
@@ -2488,8 +2396,7 @@ html, body {
     color: #ffafd7 !important; }
 
 .fg-color-218 {
-  color: #ffafd7;
-  text-shadow: 0 0 6px rgba(255, 175, 215, 0.5); }
+  color: #ffafd7; }
   .fg-color-218.reverse-video {
     background-color: #ffafd7 !important; }
 
@@ -2499,8 +2406,7 @@ html, body {
     color: #ffafff !important; }
 
 .fg-color-219 {
-  color: #ffafff;
-  text-shadow: 0 0 6px rgba(255, 175, 255, 0.5); }
+  color: #ffafff; }
   .fg-color-219.reverse-video {
     background-color: #ffafff !important; }
 
@@ -2510,8 +2416,7 @@ html, body {
     color: gold !important; }
 
 .fg-color-220 {
-  color: gold;
-  text-shadow: 0 0 6px rgba(255, 215, 0, 0.5); }
+  color: gold; }
   .fg-color-220.reverse-video {
     background-color: gold !important; }
 
@@ -2521,8 +2426,7 @@ html, body {
     color: #ffd75f !important; }
 
 .fg-color-221 {
-  color: #ffd75f;
-  text-shadow: 0 0 6px rgba(255, 215, 95, 0.5); }
+  color: #ffd75f; }
   .fg-color-221.reverse-video {
     background-color: #ffd75f !important; }
 
@@ -2532,8 +2436,7 @@ html, body {
     color: #ffd787 !important; }
 
 .fg-color-222 {
-  color: #ffd787;
-  text-shadow: 0 0 6px rgba(255, 215, 135, 0.5); }
+  color: #ffd787; }
   .fg-color-222.reverse-video {
     background-color: #ffd787 !important; }
 
@@ -2543,8 +2446,7 @@ html, body {
     color: #ffd7af !important; }
 
 .fg-color-223 {
-  color: #ffd7af;
-  text-shadow: 0 0 6px rgba(255, 215, 175, 0.5); }
+  color: #ffd7af; }
   .fg-color-223.reverse-video {
     background-color: #ffd7af !important; }
 
@@ -2554,8 +2456,7 @@ html, body {
     color: #ffd7d7 !important; }
 
 .fg-color-224 {
-  color: #ffd7d7;
-  text-shadow: 0 0 6px rgba(255, 215, 215, 0.5); }
+  color: #ffd7d7; }
   .fg-color-224.reverse-video {
     background-color: #ffd7d7 !important; }
 
@@ -2565,8 +2466,7 @@ html, body {
     color: #ffd7ff !important; }
 
 .fg-color-225 {
-  color: #ffd7ff;
-  text-shadow: 0 0 6px rgba(255, 215, 255, 0.5); }
+  color: #ffd7ff; }
   .fg-color-225.reverse-video {
     background-color: #ffd7ff !important; }
 
@@ -2576,8 +2476,7 @@ html, body {
     color: yellow !important; }
 
 .fg-color-226 {
-  color: yellow;
-  text-shadow: 0 0 6px rgba(255, 255, 0, 0.5); }
+  color: yellow; }
   .fg-color-226.reverse-video {
     background-color: yellow !important; }
 
@@ -2587,8 +2486,7 @@ html, body {
     color: #ffff5f !important; }
 
 .fg-color-227 {
-  color: #ffff5f;
-  text-shadow: 0 0 6px rgba(255, 255, 95, 0.5); }
+  color: #ffff5f; }
   .fg-color-227.reverse-video {
     background-color: #ffff5f !important; }
 
@@ -2598,8 +2496,7 @@ html, body {
     color: #ffff87 !important; }
 
 .fg-color-228 {
-  color: #ffff87;
-  text-shadow: 0 0 6px rgba(255, 255, 135, 0.5); }
+  color: #ffff87; }
   .fg-color-228.reverse-video {
     background-color: #ffff87 !important; }
 
@@ -2609,8 +2506,7 @@ html, body {
     color: #ffffaf !important; }
 
 .fg-color-229 {
-  color: #ffffaf;
-  text-shadow: 0 0 6px rgba(255, 255, 175, 0.5); }
+  color: #ffffaf; }
   .fg-color-229.reverse-video {
     background-color: #ffffaf !important; }
 
@@ -2620,8 +2516,7 @@ html, body {
     color: #ffffd7 !important; }
 
 .fg-color-230 {
-  color: #ffffd7;
-  text-shadow: 0 0 6px rgba(255, 255, 215, 0.5); }
+  color: #ffffd7; }
   .fg-color-230.reverse-video {
     background-color: #ffffd7 !important; }
 
@@ -2631,8 +2526,7 @@ html, body {
     color: white !important; }
 
 .fg-color-231 {
-  color: white;
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.5); }
+  color: white; }
   .fg-color-231.reverse-video {
     background-color: white !important; }
 
@@ -2642,8 +2536,7 @@ html, body {
     color: #080808 !important; }
 
 .fg-color-232 {
-  color: #080808;
-  text-shadow: 0 0 6px rgba(8, 8, 8, 0.5); }
+  color: #080808; }
   .fg-color-232.reverse-video {
     background-color: #080808 !important; }
 
@@ -2653,8 +2546,7 @@ html, body {
     color: #121212 !important; }
 
 .fg-color-233 {
-  color: #121212;
-  text-shadow: 0 0 6px rgba(18, 18, 18, 0.5); }
+  color: #121212; }
   .fg-color-233.reverse-video {
     background-color: #121212 !important; }
 
@@ -2664,8 +2556,7 @@ html, body {
     color: #1c1c1c !important; }
 
 .fg-color-234 {
-  color: #1c1c1c;
-  text-shadow: 0 0 6px rgba(28, 28, 28, 0.5); }
+  color: #1c1c1c; }
   .fg-color-234.reverse-video {
     background-color: #1c1c1c !important; }
 
@@ -2675,8 +2566,7 @@ html, body {
     color: #262626 !important; }
 
 .fg-color-235 {
-  color: #262626;
-  text-shadow: 0 0 6px rgba(38, 38, 38, 0.5); }
+  color: #262626; }
   .fg-color-235.reverse-video {
     background-color: #262626 !important; }
 
@@ -2686,8 +2576,7 @@ html, body {
     color: #303030 !important; }
 
 .fg-color-236 {
-  color: #303030;
-  text-shadow: 0 0 6px rgba(48, 48, 48, 0.5); }
+  color: #303030; }
   .fg-color-236.reverse-video {
     background-color: #303030 !important; }
 
@@ -2697,8 +2586,7 @@ html, body {
     color: #3a3a3a !important; }
 
 .fg-color-237 {
-  color: #3a3a3a;
-  text-shadow: 0 0 6px rgba(58, 58, 58, 0.5); }
+  color: #3a3a3a; }
   .fg-color-237.reverse-video {
     background-color: #3a3a3a !important; }
 
@@ -2708,8 +2596,7 @@ html, body {
     color: #444444 !important; }
 
 .fg-color-238 {
-  color: #444444;
-  text-shadow: 0 0 6px rgba(68, 68, 68, 0.5); }
+  color: #444444; }
   .fg-color-238.reverse-video {
     background-color: #444444 !important; }
 
@@ -2719,8 +2606,7 @@ html, body {
     color: #4e4e4e !important; }
 
 .fg-color-239 {
-  color: #4e4e4e;
-  text-shadow: 0 0 6px rgba(78, 78, 78, 0.5); }
+  color: #4e4e4e; }
   .fg-color-239.reverse-video {
     background-color: #4e4e4e !important; }
 
@@ -2730,8 +2616,7 @@ html, body {
     color: #585858 !important; }
 
 .fg-color-240 {
-  color: #585858;
-  text-shadow: 0 0 6px rgba(88, 88, 88, 0.5); }
+  color: #585858; }
   .fg-color-240.reverse-video {
     background-color: #585858 !important; }
 
@@ -2741,8 +2626,7 @@ html, body {
     color: #626262 !important; }
 
 .fg-color-241 {
-  color: #626262;
-  text-shadow: 0 0 6px rgba(98, 98, 98, 0.5); }
+  color: #626262; }
   .fg-color-241.reverse-video {
     background-color: #626262 !important; }
 
@@ -2752,8 +2636,7 @@ html, body {
     color: #6c6c6c !important; }
 
 .fg-color-242 {
-  color: #6c6c6c;
-  text-shadow: 0 0 6px rgba(108, 108, 108, 0.5); }
+  color: #6c6c6c; }
   .fg-color-242.reverse-video {
     background-color: #6c6c6c !important; }
 
@@ -2763,21 +2646,19 @@ html, body {
     color: #767676 !important; }
 
 .fg-color-243 {
-  color: #767676;
-  text-shadow: 0 0 6px rgba(118, 118, 118, 0.5); }
+  color: #767676; }
   .fg-color-243.reverse-video {
     background-color: #767676 !important; }
 
 .bg-color-244 {
-  background-color: grey; }
+  background-color: gray; }
   .bg-color-244.reverse-video {
-    color: grey !important; }
+    color: gray !important; }
 
 .fg-color-244 {
-  color: grey;
-  text-shadow: 0 0 6px rgba(128, 128, 128, 0.5); }
+  color: gray; }
   .fg-color-244.reverse-video {
-    background-color: grey !important; }
+    background-color: gray !important; }
 
 .bg-color-245 {
   background-color: #8a8a8a; }
@@ -2785,8 +2666,7 @@ html, body {
     color: #8a8a8a !important; }
 
 .fg-color-245 {
-  color: #8a8a8a;
-  text-shadow: 0 0 6px rgba(138, 138, 138, 0.5); }
+  color: #8a8a8a; }
   .fg-color-245.reverse-video {
     background-color: #8a8a8a !important; }
 
@@ -2796,8 +2676,7 @@ html, body {
     color: #949494 !important; }
 
 .fg-color-246 {
-  color: #949494;
-  text-shadow: 0 0 6px rgba(148, 148, 148, 0.5); }
+  color: #949494; }
   .fg-color-246.reverse-video {
     background-color: #949494 !important; }
 
@@ -2807,8 +2686,7 @@ html, body {
     color: #9e9e9e !important; }
 
 .fg-color-247 {
-  color: #9e9e9e;
-  text-shadow: 0 0 6px rgba(158, 158, 158, 0.5); }
+  color: #9e9e9e; }
   .fg-color-247.reverse-video {
     background-color: #9e9e9e !important; }
 
@@ -2818,8 +2696,7 @@ html, body {
     color: #a8a8a8 !important; }
 
 .fg-color-248 {
-  color: #a8a8a8;
-  text-shadow: 0 0 6px rgba(168, 168, 168, 0.5); }
+  color: #a8a8a8; }
   .fg-color-248.reverse-video {
     background-color: #a8a8a8 !important; }
 
@@ -2829,8 +2706,7 @@ html, body {
     color: #b2b2b2 !important; }
 
 .fg-color-249 {
-  color: #b2b2b2;
-  text-shadow: 0 0 6px rgba(178, 178, 178, 0.5); }
+  color: #b2b2b2; }
   .fg-color-249.reverse-video {
     background-color: #b2b2b2 !important; }
 
@@ -2840,8 +2716,7 @@ html, body {
     color: #bcbcbc !important; }
 
 .fg-color-250 {
-  color: #bcbcbc;
-  text-shadow: 0 0 6px rgba(188, 188, 188, 0.5); }
+  color: #bcbcbc; }
   .fg-color-250.reverse-video {
     background-color: #bcbcbc !important; }
 
@@ -2851,8 +2726,7 @@ html, body {
     color: #c6c6c6 !important; }
 
 .fg-color-251 {
-  color: #c6c6c6;
-  text-shadow: 0 0 6px rgba(198, 198, 198, 0.5); }
+  color: #c6c6c6; }
   .fg-color-251.reverse-video {
     background-color: #c6c6c6 !important; }
 
@@ -2862,8 +2736,7 @@ html, body {
     color: #d0d0d0 !important; }
 
 .fg-color-252 {
-  color: #d0d0d0;
-  text-shadow: 0 0 6px rgba(208, 208, 208, 0.5); }
+  color: #d0d0d0; }
   .fg-color-252.reverse-video {
     background-color: #d0d0d0 !important; }
 
@@ -2873,8 +2746,7 @@ html, body {
     color: #dadada !important; }
 
 .fg-color-253 {
-  color: #dadada;
-  text-shadow: 0 0 6px rgba(218, 218, 218, 0.5); }
+  color: #dadada; }
   .fg-color-253.reverse-video {
     background-color: #dadada !important; }
 
@@ -2884,8 +2756,7 @@ html, body {
     color: #e4e4e4 !important; }
 
 .fg-color-254 {
-  color: #e4e4e4;
-  text-shadow: 0 0 6px rgba(228, 228, 228, 0.5); }
+  color: #e4e4e4; }
   .fg-color-254.reverse-video {
     background-color: #e4e4e4 !important; }
 
@@ -2895,21 +2766,19 @@ html, body {
     color: #eeeeee !important; }
 
 .fg-color-255 {
-  color: #eeeeee;
-  text-shadow: 0 0 6px rgba(238, 238, 238, 0.5); }
+  color: #eeeeee; }
   .fg-color-255.reverse-video {
     background-color: #eeeeee !important; }
 
 .bg-color-256 {
-  background-color: #110f13; }
+  background-color: transparent; }
   .bg-color-256.reverse-video {
     color: #110f13 !important; }
 
 .fg-color-256 {
-  color: #110f13;
-  text-shadow: 0 0 6px rgba(17, 15, 19, 0.5); }
+  color: transparent; }
   .fg-color-256.reverse-video {
-    background-color: #110f13 !important; }
+    background-color: transparent !important; }
 
 .bg-color-257 {
   background-color: #f4ead5; }
@@ -2917,25 +2786,134 @@ html, body {
     color: #f4ead5 !important; }
 
 .fg-color-257 {
-  color: #f4ead5;
-  text-shadow: 0 0 6px rgba(244, 234, 213, 0.5); }
+  color: #f4ead5; }
   .fg-color-257.reverse-video {
     background-color: #f4ead5 !important; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #110f13;
+  color: #f4ead5; }
+
+body {
+  white-space: nowrap;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  /* Pop ups */ }
+  body .line.active {
+    background-color: transparent; }
+  body::-webkit-scrollbar {
+    background: #110f13;
+    width: 0.75em; }
+  body::-webkit-scrollbar-thumb {
+    background: rgba(244, 234, 213, 0.1); }
+  body::-webkit-scrollbar-thumb:hover {
+    background: rgba(244, 234, 213, 0.1); }
+  body .hidden {
+    display: none !important; }
+  body #popup {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%; }
+    body #popup form, body #popup > div {
+      padding: 1.5em;
+      background: rgba(127, 127, 127, 0.5);
+      color: #f4ead5;
+      font-size: 1em; }
+      body #popup form h2, body #popup > div h2 {
+        margin: 0 .5em .5em .5em; }
+      body #popup form select, body #popup > div select {
+        min-width: 300px;
+        padding: .5em;
+        width: 100%; }
+      body #popup form label, body #popup > div label {
+        display: block;
+        padding: .5em;
+        font-size: .75em; }
+
+.terminal {
+  outline: none; }
+
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .focus .cursor {
   transition: 300ms; }
 
 .cursor.reverse-video {
-  box-shadow: 0 0 0.5 #f4ead5; }
+  box-shadow: 0 0 0 #f4ead5; }
 
+/* *-* coding: utf-8 *-* */
+/* This file is part of butterfly */
+/* butterfly Copyright (C) 2015  Florian Mounier */
+/* This program is free software: you can redistribute it and/or modify */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or */
+/* (at your option) any later version. */
+/* This program is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the */
+/* GNU General Public License for more details. */
+/* You should have received a copy of the GNU General Public License */
+/* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 .bold {
   font-weight: bold; }
 
-.underline {
+.underline, .nbsp {
   text-decoration: underline; }
 
+.italic {
+  font-style: italic; }
+
+.faint {
+  opacity: .6; }
+
+.crossed {
+  text-decoration: line-through; }
+
+/* Not supported, emulated */
+/* .blink */
+/*   text-decoration: blink */
 .blink {
-  text-decoration: blink; }
+  animation: blink 1s ease-in-out infinite; }
+
+.blink-fast {
+  animation: blink 250ms ease-in-out infinite; }
+
+@keyframes blink {
+  0% {
+    opacity: 1; }
+  50% {
+    opacity: 0; }
+  100% {
+    opacity: 1; } }
 
 .invisible {
   visibility: hidden; }
@@ -2944,5 +2922,16 @@ html, body {
   color: #110f13;
   background-color: #f4ead5; }
 
-.blur .cursor.reverse-video {
+.blur .cursor {
+  border: 1px solid #f4ead5;
   background: none; }
+
+.inline-html {
+  overflow: hidden; }
+
+.inline-image {
+  max-width: 100%;
+  max-height: 50vh; }
+
+a {
+  color: inherit; }

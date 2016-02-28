@@ -1,7 +1,7 @@
 # *-* coding: utf-8 *-*
 # This file is part of butterfly
 #
-# butterfly Copyright (C) 2014  Florian Mounier
+# butterfly Copyright (C) 2015  Florian Mounier
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -17,76 +17,108 @@
 
 cols = rows = null
 quit = false
-open_ts = (new Date()).getTime()
+openTs = (new Date()).getTime()
 
 $ = document.querySelectorAll.bind(document)
 
-send = (data) ->
-  ws.send 'S' + data
+document.addEventListener 'DOMContentLoaded', ->
+  term = null
+  send = (data) ->
+    ws.send 'S' + data
 
-ctl = (type, args...) ->
-  params = args.join(',')
-  if type == 'Resize'
-    ws.send 'R' + params
+  ctl = (type, args...) ->
+    params = args.join(',')
+    if type == 'Resize'
+      ws.send 'R' + params
 
-if location.protocol == 'https:'
-  ws_url = 'wss://'
-else
-  ws_url = 'ws://'
+  if location.protocol == 'https:'
+    wsUrl = 'wss://'
+  else
+    wsUrl = 'ws://'
 
-ws_url += document.location.host + '/ws' + location.pathname
-ws = new WebSocket ws_url
+  wsUrl += document.location.host + '/ws' + location.pathname
+  ws = new WebSocket wsUrl
 
-ws.addEventListener 'open', ->
-  console.log "WebSocket open", arguments
-  ws.send 'R' + term.cols + ',' + term.rows
-  open_ts = (new Date()).getTime()
+  ws.addEventListener 'open', ->
+    console.log "WebSocket open", arguments
+    term = new Terminal document.body, send, ctl
+    term.ws = ws
+    window.butterfly = term
+    ws.send 'R' + term.cols + ',' + term.rows
+    openTs = (new Date()).getTime()
 
-ws.addEventListener 'error', ->
-  console.log "WebSocket error", arguments
+  ws.addEventListener 'error', ->
+    console.log "WebSocket error", arguments
 
-ws.addEventListener 'message', (e) ->
-  setTimeout ->
-    term.write e.data
-  , 1
+  lastData = ''
+  t_queue = null
 
-ws.addEventListener 'close', ->
-  console.log "WebSocket closed", arguments
-  setTimeout ->
-    term.write 'Closed'
-    # Allow quick reload
-    term.skipNextKey = true
-    term.element.classList.add('dead')
-  , 1
-  quit = true
-  # Don't autoclose if websocket didn't last 1 minute
-  if (new Date()).getTime() - open_ts > 60 * 1000
-    open('','_self').close()
+  queue = ''
+  ws.addEventListener 'message', (e) ->
+    if e.data[0] is 'R'
+      [cols, rows] = e.data.slice(1).split(',')
+      term.resize cols, rows, true
+      return
 
-term = new Terminal $('#wrapper')[0], send, ctl
-addEventListener 'beforeunload', ->
-  if not quit
-    'This will exit the terminal session'
+    if e.data[0] isnt 'S'
+      console.error 'Garbage message'
+      return
 
-bench = (n=100000000) ->
-  rnd = ''
-  while rnd.length < n
-    rnd += Math.random().toString(36).substring(2)
+    clearTimeout t_queue if t_queue
+    queue += e.data.slice(1)
+    if term.stop
+      queue = queue.slice -10 * 1024
 
-  t0 = (new Date()).getTime()
-  term.write rnd
-  console.log "#{n} chars in #{(new Date()).getTime() - t0} ms"
+    if queue.length > term.buffSize
+      treat()
+    else
+      t_queue = setTimeout treat, 1
+
+  treat = ->
+    term.write queue
+    if term.stop
+      term.stop = false
+      term.body.classList.remove 'stopped'
+    queue = ''
+
+  ws.addEventListener 'close', ->
+    console.log "WebSocket closed", arguments
+    setTimeout ->
+      term.write 'Closed'
+      # Allow quick reload
+      term.skipNextKey = true
+      term.body.classList.add('dead')
+      # Don't autoclose if websocket didn't last 1 minute
+      if (new Date()).getTime() - openTs > 60 * 1000
+        open('','_self').close()
+    , 1
+    quit = true
+
+  addEventListener 'beforeunload', ->
+    if not quit
+      'This will exit the terminal session'
 
 
-cbench = (n=100000000) ->
-  rnd = ''
-  while rnd.length < n
-    rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
-    rnd += Math.random().toString(36).substring(2)
+  window.bench = (n=100000000) ->
+    rnd = ''
+    while rnd.length < n
+      rnd += Math.random().toString(36).substring(2)
 
-  t0 = (new Date()).getTime()
-  term.write rnd
-  console.log "#{n} chars + colors in #{(new Date()).getTime() - t0} ms"
+    console.time('bench')
+    console.profile('bench')
+    term.write rnd
+    console.profileEnd()
+    console.timeEnd('bench')
 
 
-window.butterfly = term
+  window.cbench = (n=100000000) ->
+    rnd = ''
+    while rnd.length < n
+      rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
+      rnd += Math.random().toString(36).substring(2)
+
+    console.time('cbench')
+    console.profile('cbench')
+    term.write rnd
+    console.profileEnd()
+    console.timeEnd('cbench')

@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+import os
+import sys
+import argparse
+
+if (os.getenv('COLORTERM', '') != 'butterfly' and
+    len(sys.argv) == 1) or (
+        os.getenv('COLORTERM', '') == 'butterfly' and
+        len(sys.argv) > 1 and sys.argv[1] == 'run'):
+    os.execvp('butterfly.server.py', [
+        'butterfly', '--unsecure', '--port=0', '--one-shot'])
+
+path = os.getenv('BUTTERFLY_PATH')
+if not path:
+    try:
+        import butterfly
+        path = os.path.join(
+            os.path.dirname(butterfly.__file__), 'bin')
+    except Exception:
+        pass
+    os.putenv('BUTTERFLY_PATH', path)
+if path is None:
+    print("Can't get butterfly path. Aborting.")
+    sys.exit(1)
+
+parser = argparse.ArgumentParser(
+    add_help=False,
+    description='Butterfly launcher. Please specify a command')
+parser.add_argument('-h', '--help', action="store_true",
+                    help="show this help message and exit")
+parser.add_argument(
+    'command',
+    nargs='?',
+    choices=[x[:-3] for x in os.listdir(path) if x.endswith('.py')])
+
+args, _ = parser.parse_known_args()
+
+if not args.command:
+    parser.print_help()
+else:
+    file_ = os.path.join(path, '%s.py' % args.command)
+    sys.argv = sys.argv[1:]
+    exec(compile(open(file_).read(), file_, 'exec'))

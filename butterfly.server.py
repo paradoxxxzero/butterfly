@@ -3,7 +3,7 @@
 
 # This file is part of butterfly
 #
-# butterfly Copyright (C) 2014  Florian Mounier
+# butterfly Copyright (C) 2015  Florian Mounier
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -20,64 +20,113 @@
 import tornado.options
 import tornado.ioloop
 import tornado.httpserver
+import tornado_systemd
+import logging
+import webbrowser
 import uuid
 import ssl
 import getpass
 import os
+import shutil
 import stat
 import socket
 import sys
 
-
 tornado.options.define("debug", default=False, help="Debug mode")
 tornado.options.define("more", default=False,
                        help="Debug mode with more verbosity")
-tornado.options.define("host", default='localhost', help="Server host")
-tornado.options.define("port", default=57575, type=int, help="Server port")
-tornado.options.define("shell", help="Shell to execute at login")
-tornado.options.define("unsecure", default=False,
-                       help="Don't use ssl not recommended")
-tornado.options.define("login", default=True,
-                       help="Use login screen at start")
-
-tornado.options.define("generate_certs", default=False,
-                       help="Generate butterfly certificates")
-tornado.options.define("generate_user_pkcs", default='',
-                       help="Generate user pfx for client authentication")
-
 tornado.options.define("unminified", default=False,
                        help="Use the unminified js (for development only)")
 
+tornado.options.define("host", default='localhost', help="Server host")
+tornado.options.define("port", default=57575, type=int, help="Server port")
+tornado.options.define("one_shot", default=False,
+                       help="Run a one-shot instance. Quit at term close")
+tornado.options.define("shell", help="Shell to execute at login")
+tornado.options.define("motd", default='motd', help="Path to the motd file.")
+tornado.options.define("cmd",
+                       help="Command to run instead of shell, f.i.: 'ls -l'")
+tornado.options.define("unsecure", default=False,
+                       help="Don't use ssl not recommended")
+tornado.options.define("login", default=False,
+                       help="Use login screen at start")
+tornado.options.define("force_unicode_width",
+                       default=False,
+                       help="Force all unicode characters to the same width."
+                       "Useful for avoiding layout mess.")
+tornado.options.define("ssl_version", default=None,
+                       help="SSL protocol version")
+tornado.options.define("generate_certs", default=False,
+                       help="Generate butterfly certificates")
+tornado.options.define("generate_current_user_pkcs", default=False,
+                       help="Generate current user pfx for client "
+                       "authentication")
+tornado.options.define("generate_user_pkcs", default='',
+                       help="Generate user pfx for client authentication "
+                       "(Must be root to create for another user)")
+
+if os.getuid() == 0:
+    ev = os.getenv('XDG_CONFIG_DIRS', '/etc')
+else:
+    ev = os.getenv(
+        'XDG_CONFIG_HOME', os.path.join(
+            os.getenv('HOME', os.path.expanduser('~')),
+            '.config'))
+
+butterfly_dir = os.path.join(ev, 'butterfly')
+conf_file = os.path.join(butterfly_dir, 'butterfly.conf')
+ssl_dir = os.path.join(butterfly_dir, 'ssl')
+
+if not os.path.exists(conf_file):
+    try:
+        import butterfly
+        shutil.copy(
+            os.path.join(
+                os.path.abspath(os.path.dirname(butterfly.__file__)),
+                'butterfly.conf.default'), conf_file)
+        print('butterfly.conf installed in %s' % conf_file)
+    except:
+        pass
+
+tornado.options.define("conf", default=conf_file,
+                       help="Butterfly configuration file. "
+                       "Contains the same options as command line.")
+
+tornado.options.define("ssl_dir", default=ssl_dir,
+                       help="Force SSL directory location")
+
+# Do it once to get the conf path
 tornado.options.parse_command_line()
 
+if os.path.exists(tornado.options.options.conf):
+    tornado.options.parse_config_file(tornado.options.options.conf)
 
-import logging
+# Do it again to overwrite conf with args
+tornado.options.parse_command_line()
+
+options = tornado.options.options
+
 for logger in ('tornado.access', 'tornado.application',
                'tornado.general', 'butterfly'):
     level = logging.WARNING
-    if tornado.options.options.debug:
+    if options.debug:
         level = logging.INFO
-        if tornado.options.options.more:
+        if options.more:
             level = logging.DEBUG
     logging.getLogger(logger).setLevel(level)
 
 log = logging.getLogger('butterfly')
-log.info('Starting server')
 
-host = tornado.options.options.host
-port = tornado.options.options.port
+host = options.host
+port = options.port
 
-if os.getuid() == 0:
-    ssl_dir = os.path.join(os.path.abspath(os.sep), 'etc', 'butterfly', 'ssl')
-else:
-    ssl_dir = os.path.join(os.path.expanduser('~'), '.butterfly', 'ssl')
 
-if not os.path.exists(ssl_dir):
-    os.makedirs(ssl_dir)
+if not os.path.exists(options.ssl_dir):
+    os.makedirs(options.ssl_dir)
 
 
 def to_abs(file):
-    return os.path.join(ssl_dir, file)
+    return os.path.join(options.ssl_dir, file)
 
 ca, ca_key, cert, cert_key, pkcs12 = map(to_abs, [
     'butterfly_ca.crt', 'butterfly_ca.key',
@@ -104,7 +153,7 @@ def read(file):
     with open(file, 'rb') as fd:
         return fd.read()
 
-if tornado.options.options.generate_certs:
+if options.generate_certs:
     from OpenSSL import crypto
     print('Generating certificates for %s (change it with --host)\n' % host)
 
@@ -120,7 +169,7 @@ if tornado.options.options.generate_certs:
         ca_cert.gmtime_adj_notAfter(315360000)  # to 10y
         ca_cert.set_issuer(ca_cert.get_subject())  # Self signed
         ca_cert.set_pubkey(ca_pk)
-        ca_cert.sign(ca_pk, 'sha1')
+        ca_cert.sign(ca_pk, 'sha512')
 
         write(ca, crypto.dump_certificate(crypto.FILETYPE_PEM, ca_cert))
         write(ca_key, crypto.dump_privatekey(crypto.FILETYPE_PEM, ca_pk))
@@ -140,7 +189,7 @@ if tornado.options.options.generate_certs:
     server_cert.gmtime_adj_notAfter(315360000)  # to 10y
     server_cert.set_issuer(ca_cert.get_subject())  # Signed by ca
     server_cert.set_pubkey(server_pk)
-    server_cert.sign(ca_pk, 'sha1')
+    server_cert.sign(ca_pk, 'sha512')
 
     write(cert % host, crypto.dump_certificate(
         crypto.FILETYPE_PEM, server_cert))
@@ -153,13 +202,29 @@ if tornado.options.options.generate_certs:
     sys.exit(0)
 
 
-if tornado.options.options.generate_user_pkcs:
+if (options.generate_current_user_pkcs or
+        options.generate_user_pkcs):
+    from butterfly import utils
+    try:
+        current_user = utils.User()
+    except Exception:
+        current_user = None
+
     from OpenSSL import crypto
     if not all(map(os.path.exists, [ca, ca_key])):
         print('Please generate certificates using --generate-certs before')
         sys.exit(1)
 
-    user = tornado.options.options.generate_user_pkcs
+    if options.generate_current_user_pkcs:
+        user = current_user.name
+    else:
+        user = options.generate_user_pkcs
+
+    if user != current_user.name and current_user.uid != 0:
+        print('Cannot create certificate for another user with '
+              'current privileges.')
+        sys.exit(1)
+
     ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, read(ca))
     ca_pk = crypto.load_privatekey(crypto.FILETYPE_PEM, read(ca_key))
 
@@ -174,8 +239,8 @@ if tornado.options.options.generate_user_pkcs:
     client_cert.gmtime_adj_notAfter(315360000)  # to 10y
     client_cert.set_issuer(ca_cert.get_subject())  # Signed by ca
     client_cert.set_pubkey(client_pk)
-    client_cert.sign(client_pk, 'sha1')
-    client_cert.sign(ca_pk, 'sha1')
+    client_cert.sign(client_pk, 'sha512')
+    client_cert.sign(ca_pk, 'sha512')
 
     pfx = crypto.PKCS12()
     pfx.set_certificate(client_cert)
@@ -196,7 +261,7 @@ if tornado.options.options.generate_user_pkcs:
     sys.exit(0)
 
 
-if tornado.options.options.unsecure:
+if options.unsecure:
     ssl_opts = None
 else:
     if not all(map(os.path.exists, [cert % host, cert_key % host, ca])):
@@ -217,29 +282,38 @@ else:
         'ca_certs': ca,
         'cert_reqs': ssl.CERT_REQUIRED
     }
-
+    if options.ssl_version is not None:
+        if not hasattr(
+                ssl, 'PROTOCOL_%s' % options.ssl_version):
+            print(
+                "Unknown SSL protocol %s" %
+                options.ssl_version)
+            sys.exit(1)
+        ssl_opts['ssl_version'] = getattr(
+            ssl, 'PROTOCOL_%s' % options.ssl_version)
 
 from butterfly import application
-http_server = tornado.httpserver.HTTPServer(application, ssl_options=ssl_opts)
+application.butterfly_dir = butterfly_dir
+log.info('Starting server')
+http_server = tornado_systemd.SystemdHTTPServer(
+    application, ssl_options=ssl_opts)
 http_server.listen(port, address=host)
 
-url = "http%s://%s:%d/*" % (
-    "s" if not tornado.options.options.unsecure else "", host, port)
-
-# This is for debugging purpose
-try:
-    from wsreload.client import sporadic_reload, watch
-except ImportError:
-    log.debug('wsreload not found')
-else:
-    sporadic_reload({'url': url})
-
-    files = ['butterfly/static/javascripts/',
-             'butterfly/static/stylesheets/',
-             'butterfly/templates/']
-    watch({'url': url}, files, unwatch_at_exit=True)
+if http_server.systemd:
+    os.environ.pop('LISTEN_PID')
+    os.environ.pop('LISTEN_FDS')
 
 log.info('Starting loop')
 
 ioloop = tornado.ioloop.IOLoop.instance()
+
+if port == 0:
+    port = list(http_server._sockets.values())[0].getsockname()[1]
+
+url = "http%s://%s:%d/" % (
+    "s" if not options.unsecure else "", host, port)
+
+if not options.one_shot or not webbrowser.open(url):
+    log.warn('Butterfly is ready, open your browser to: %s' % url)
+
 ioloop.start()
