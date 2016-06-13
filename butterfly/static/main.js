@@ -12,7 +12,7 @@
   $ = document.querySelectorAll.bind(document);
 
   document.addEventListener('DOMContentLoaded', function() {
-    var ctl, lastData, queue, send, t_queue, term, treat, ws, wsUrl;
+    var ctl, lastData, queue, root_path, send, t_queue, term, treat, ws, wsUrl;
     term = null;
     send = function(data) {
       return ws.send('S' + data);
@@ -30,7 +30,11 @@
     } else {
       wsUrl = 'ws://';
     }
-    wsUrl += document.location.host + '/ws' + location.pathname;
+    root_path = document.body.getAttribute('data-root-path');
+    if (root_path.length) {
+      root_path = "/" + root_path;
+    }
+    wsUrl += document.location.host + root_path + '/ws' + location.pathname;
     ws = new WebSocket(wsUrl);
     ws.addEventListener('open', function() {
       console.log("WebSocket open", arguments);

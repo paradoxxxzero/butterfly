@@ -36,7 +36,11 @@ document.addEventListener 'DOMContentLoaded', ->
   else
     wsUrl = 'ws://'
 
-  wsUrl += document.location.host + '/ws' + location.pathname
+  root_path = document.body.getAttribute('data-root-path')
+  if root_path.length
+    root_path = "/#{root_path}"
+
+  wsUrl += document.location.host + root_path + '/ws' + location.pathname
   ws = new WebSocket wsUrl
 
   ws.addEventListener 'open', ->
