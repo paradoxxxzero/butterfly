@@ -1370,7 +1370,7 @@
 
     Terminal.prototype.keyUp = function(ev) {
       if (ev.keyCode === 19) {
-        if (!this.stop) {
+        if (this.stop == null) {
           return;
         }
         this.body.classList.remove('stopped');
@@ -1385,7 +1385,7 @@
         return true;
       }
       if (ev.keyCode === 19) {
-        if (this.stop) {
+        if (this.stop != null) {
           return;
         }
         this.body.classList.add('stopped');

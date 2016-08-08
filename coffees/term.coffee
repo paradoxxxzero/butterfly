@@ -1260,7 +1260,7 @@ class Terminal
 
   keyUp: (ev) ->
     if ev.keyCode is 19  # Pause break
-      return unless @stop
+      return unless @stop?
       @body.classList.remove 'stopped'
       @stop = null
       @out '\x03\n'
@@ -1272,7 +1272,7 @@ class Terminal
     return true if ev.keyCode > 15 and ev.keyCode < 19
 
     if ev.keyCode is 19  # Pause break
-      return if @stop
+      return if @stop?
       @body.classList.add 'stopped'
       @stop = 0
       @out '\x03'
