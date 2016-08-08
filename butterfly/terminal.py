@@ -190,8 +190,7 @@ class Terminal(object):
             # User has been auth with ssl or is the same user as server
             # or login is explicitly turned off
             if (
-                    not tornado.options.options.unsecure and
-                    tornado.options.options.login and not (
+                    not tornado.options.options.unsecure and not (
                         self.socket.local and
                         self.caller == self.callee and
                         server == self.callee
