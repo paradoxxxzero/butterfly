@@ -140,7 +140,6 @@ class Terminal(object):
         # butterfly is executed
         self.callee = self.callee or utils.User()
 
-
     def shell(self):
         try:
             os.chdir(self.path or self.callee.dir)
@@ -191,7 +190,8 @@ class Terminal(object):
             # User has been auth with ssl or is the same user as server
             # or login is explicitly turned off
             if (
-                    not tornado.options.options.unsecure and not (
+                    not tornado.options.options.unsecure and
+                    tornado.options.options.login and not (
                         self.socket.local and
                         self.caller == self.callee and
                         server == self.callee

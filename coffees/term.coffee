@@ -80,14 +80,14 @@ class Terminal
     @termName = 'xterm'
     @cursorBlink = true
     @cursorState = 0
-    @stop = false
-    @lastcc = 0
+
     @resetVars()
 
     @focus()
 
     @startBlink()
     addEventListener 'keydown', @keyDown.bind(@)
+    addEventListener 'keyup', @keyUp.bind(@)
     addEventListener 'keypress', @keyPress.bind(@)
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
@@ -1258,11 +1258,25 @@ class Terminal
   writeln: (data) ->
     @write "#{data}\r\n"
 
+  keyUp: (ev) ->
+    if ev.keyCode is 19  # Pause break
+      return unless @stop
+      @body.classList.remove 'stopped'
+      @stop = null
+      @out '\x03\n'
+
   keyDown: (ev) ->
     # Key Resources:
     # https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
     # Don't handle modifiers alone
     return true if ev.keyCode > 15 and ev.keyCode < 19
+
+    if ev.keyCode is 19  # Pause break
+      return if @stop
+      @body.classList.add 'stopped'
+      @stop = 0
+      @out '\x03'
+      return false
 
     # Handle shift insert and ctrl insert
     # copy/paste usefull for typematrix keyboard
@@ -1446,21 +1460,9 @@ class Terminal
         # a-z and space
         if ev.ctrlKey
           if ev.keyCode >= 65 and ev.keyCode <= 90
-            if ev.keyCode is 67
-              t = (new Date()).getTime()
-              if (t - @lastcc) < 500 and not @stop
-                id = (setTimeout ->)
-                (clearTimeout id if id not in [
-                  @t_bell, @t_queue, @t_blink]) while id--
-                @body.classList.add 'stopped'
-                @stop = true
-                return @send ' \x7f'
-              else if @stop
-                return true
-              @lastcc = t
             key = String.fromCharCode(ev.keyCode - 64)
-          else if ev.keyCode is 32
 
+          else if ev.keyCode is 32
             # NUL
             key = String.fromCharCode(0)
           else if ev.keyCode >= 51 and ev.keyCode <= 55

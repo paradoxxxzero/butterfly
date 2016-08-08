@@ -18,6 +18,10 @@
 cols = rows = null
 quit = false
 openTs = (new Date()).getTime()
+cutMessage = '\r\nCutting...... 8< ...... 8< ...... ' +
+             '\r\nYou can release when there is no more output.' +
+             '\r\nCutting...... 8< ...... 8< ......' +
+             '\r\nCutting...... 8< ...... 8< ......'
 
 $ = document.querySelectorAll.bind(document)
 
@@ -54,10 +58,6 @@ document.addEventListener 'DOMContentLoaded', ->
   ws.addEventListener 'error', ->
     console.log "WebSocket error", arguments
 
-  lastData = ''
-  t_queue = null
-
-  queue = ''
   ws.addEventListener 'message', (e) ->
     if e.data[0] is 'R'
       [cols, rows] = e.data.slice(1).split(',')
@@ -68,22 +68,14 @@ document.addEventListener 'DOMContentLoaded', ->
       console.error 'Garbage message'
       return
 
-    clearTimeout t_queue if t_queue
-    queue += e.data.slice(1)
-    if term.stop
-      queue = queue.slice -10 * 1024
-
-    if queue.length > term.buffSize
-      treat()
+    unless term.stop?
+      term.write e.data.slice(1)
     else
-      t_queue = setTimeout treat, 1
-
-  treat = ->
-    term.write queue
-    if term.stop
-      term.stop = false
-      term.body.classList.remove 'stopped'
-    queue = ''
+      if term.stop < cutMessage.length
+        letter = cutMessage[term.stop++]
+      else
+        letter = '.'
+      term.write letter
 
   ws.addEventListener 'close', ->
     console.log "WebSocket closed", arguments
@@ -101,7 +93,6 @@ document.addEventListener 'DOMContentLoaded', ->
   addEventListener 'beforeunload', ->
     if not quit
       'This will exit the terminal session'
-
 
   window.bench = (n=100000000) ->
     rnd = ''
