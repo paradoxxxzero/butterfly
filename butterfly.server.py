@@ -64,6 +64,9 @@ tornado.options.define("generate_current_user_pkcs", default=False,
 tornado.options.define("generate_user_pkcs", default='',
                        help="Generate user pfx for client authentication "
                        "(Must be root to create for another user)")
+tornado.options.define("uri_root_path", default='',
+                       help="Sets the servier root path: "
+                       "example.com/<uri_root_path>/static/")
 
 if os.getuid() == 0:
     ev = os.getenv('XDG_CONFIG_DIRS', '/etc')
@@ -296,7 +299,8 @@ from butterfly import application
 application.butterfly_dir = butterfly_dir
 log.info('Starting server')
 http_server = tornado_systemd.SystemdHTTPServer(
-    application, ssl_options=ssl_opts)
+    application,
+    ssl_options=ssl_opts)
 http_server.listen(port, address=host)
 
 if http_server.systemd:

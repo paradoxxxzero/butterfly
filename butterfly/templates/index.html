@@ -14,7 +14,8 @@
   </head>
 
   <body spellcheck="false"
-        data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}">
+        data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}"
+        data-root-path="{{ options.uri_root_path }}">
     <div id="popup" class="hidden">
     </div>
     <script src="{{ static_url('html-sanitizer.js') }}"></script>

@@ -1,5 +1,5 @@
 (function() {
-  var $, State, Terminal, cancel, cols, openTs, quit, rows, s,
+  var $, State, Terminal, cancel, cols, cutMessage, openTs, quit, rows, s,
     slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -9,10 +9,12 @@
 
   openTs = (new Date()).getTime();
 
+  cutMessage = '\r\nCutting...... 8< ...... 8< ...... ' + '\r\nYou can release when there is no more output.' + '\r\nCutting...... 8< ...... 8< ......' + '\r\nCutting...... 8< ...... 8< ......';
+
   $ = document.querySelectorAll.bind(document);
 
   document.addEventListener('DOMContentLoaded', function() {
-    var ctl, lastData, queue, send, t_queue, term, treat, ws, wsUrl;
+    var ctl, root_path, send, term, ws, wsUrl;
     term = null;
     send = function(data) {
       return ws.send('S' + data);
@@ -30,7 +32,11 @@
     } else {
       wsUrl = 'ws://';
     }
-    wsUrl += document.location.host + '/ws' + location.pathname;
+    root_path = document.body.getAttribute('data-root-path');
+    if (root_path.length) {
+      root_path = "/" + root_path;
+    }
+    wsUrl += document.location.host + root_path + '/ws' + location.pathname;
     ws = new WebSocket(wsUrl);
     ws.addEventListener('open', function() {
       console.log("WebSocket open", arguments);
@@ -43,11 +49,8 @@
     ws.addEventListener('error', function() {
       return console.log("WebSocket error", arguments);
     });
-    lastData = '';
-    t_queue = null;
-    queue = '';
     ws.addEventListener('message', function(e) {
-      var ref;
+      var letter, ref;
       if (e.data[0] === 'R') {
         ref = e.data.slice(1).split(','), cols = ref[0], rows = ref[1];
         term.resize(cols, rows, true);
@@ -57,27 +60,17 @@
         console.error('Garbage message');
         return;
       }
-      if (t_queue) {
-        clearTimeout(t_queue);
-      }
-      queue += e.data.slice(1);
-      if (term.stop) {
-        queue = queue.slice(-10 * 1024);
-      }
-      if (queue.length > term.buffSize) {
-        return treat();
+      if (term.stop == null) {
+        return term.write(e.data.slice(1));
       } else {
-        return t_queue = setTimeout(treat, 1);
+        if (term.stop < cutMessage.length) {
+          letter = cutMessage[term.stop++];
+        } else {
+          letter = '.';
+        }
+        return term.write(letter);
       }
     });
-    treat = function() {
-      term.write(queue);
-      if (term.stop) {
-        term.stop = false;
-        term.body.classList.remove('stopped');
-      }
-      return queue = '';
-    };
     ws.addEventListener('close', function() {
       console.log("WebSocket closed", arguments);
       setTimeout(function() {
@@ -181,12 +174,11 @@
       this.termName = 'xterm';
       this.cursorBlink = true;
       this.cursorState = 0;
-      this.stop = false;
-      this.lastcc = 0;
       this.resetVars();
       this.focus();
       this.startBlink();
       addEventListener('keydown', this.keyDown.bind(this));
+      addEventListener('keyup', this.keyUp.bind(this));
       addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));
@@ -1376,10 +1368,30 @@
       return this.write(data + "\r\n");
     };
 
+    Terminal.prototype.keyUp = function(ev) {
+      if (ev.keyCode === 19) {
+        if (this.stop == null) {
+          return;
+        }
+        this.body.classList.remove('stopped');
+        this.stop = null;
+        return this.out('\x03\n');
+      }
+    };
+
     Terminal.prototype.keyDown = function(ev) {
-      var id, key, ref, t;
+      var key, ref;
       if (ev.keyCode > 15 && ev.keyCode < 19) {
         return true;
+      }
+      if (ev.keyCode === 19) {
+        if (this.stop != null) {
+          return;
+        }
+        this.body.classList.add('stopped');
+        this.stop = 0;
+        this.out('\x03');
+        return false;
       }
       if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
         return true;
@@ -1546,23 +1558,6 @@
         default:
           if (ev.ctrlKey) {
             if (ev.keyCode >= 65 && ev.keyCode <= 90) {
-              if (ev.keyCode === 67) {
-                t = (new Date()).getTime();
-                if ((t - this.lastcc) < 500 && !this.stop) {
-                  id = setTimeout(function() {});
-                  while (id--) {
-                    if (id !== this.t_bell && id !== this.t_queue && id !== this.t_blink) {
-                      clearTimeout(id);
-                    }
-                  }
-                  this.body.classList.add('stopped');
-                  this.stop = true;
-                  return this.send(' \x7f');
-                } else if (this.stop) {
-                  return true;
-                }
-                this.lastcc = t;
-              }
               key = String.fromCharCode(ev.keyCode - 64);
             } else if (ev.keyCode === 32) {
               key = String.fromCharCode(0);

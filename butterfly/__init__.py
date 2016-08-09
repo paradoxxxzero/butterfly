@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '2.0.1'
+__version__ = '2.0.3'
 
 
 import os
@@ -66,7 +66,10 @@ if hasattr(tornado.options.options, 'debug'):
     application = tornado.web.Application(
         static_path=os.path.join(os.path.dirname(__file__), "static"),
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
-        debug=tornado.options.options.debug
+        debug=tornado.options.options.debug,
+        static_url_prefix='%s/static/' % (
+            '/%s' % tornado.options.options.uri_root_path
+            if tornado.options.options.uri_root_path else '')
     )
 
     import butterfly.routes
