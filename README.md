@@ -114,7 +114,7 @@ Starting with login and password
 docker run \
 --env PASSWORD=password \
 -p 57575:57575 \
--d garland/butterfly --unsecure --host=0.0.0.0 --port=57575 --login
+-d garland/butterfly --port=57575 --login
 ```
 
 Starting with no password
@@ -123,5 +123,5 @@ Starting with no password
 docker run \
 --env PORT=57575 \
 -p 57575:57575 \
--d garland/butterfly --unsecure --host=0.0.0.0 --port=57575
+-d garland/butterfly --port=57575
 ```
