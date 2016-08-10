@@ -102,15 +102,28 @@ The js part is based on [term.js](https://github.com/chjj/term.js/) which is bas
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
 
-## Docker Usage
+## Docker
 There is a docker repository created for this project that is set to automatically rebuild when there is a push
 into this repository: https://registry.hub.docker.com/u/garland/butterfly/
 
-### Starting
+### Example usage
 
-        docker run \
-        --env PASSWORD=password \
-        --env PORT=57575 \
-        -p 57575:57575 \
-        -d garland/butterfly
+Starting with login and password
 
+```
+docker run \
+--env PASSWORD=password \
+--env PORT=57575 \
+-p 57575:57575 \
+-d garland/butterfly --unsecure --host=0.0.0.0 --port=57575 --login
+```
+
+Starting with no password
+
+```
+docker run \
+--env PASSWORD=password \
+--env PORT=57575 \
+-p 57575:57575 \
+-d garland/butterfly --unsecure --host=0.0.0.0 --port=57575 --login
+```
