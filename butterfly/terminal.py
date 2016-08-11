@@ -213,7 +213,7 @@ class Terminal(object):
                 args = tornado.options.options.cmd.split(' ')
             else:
                 args = [tornado.options.options.shell or self.callee.shell]
-                args.append('-i')
+                args.append('-il')
 
             # In some cases some shells don't export SHELL var
             env['SHELL'] = args[0]
