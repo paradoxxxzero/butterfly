@@ -22,63 +22,67 @@ cutMessage = '\r\nCutting...... 8< ...... 8< ...... ' +
              '\r\nYou can release when there is no more output.' +
              '\r\nCutting...... 8< ...... 8< ......' +
              '\r\nCutting...... 8< ...... 8< ......'
+ws =
+  shell: null
+  termctl: null
 
 $ = document.querySelectorAll.bind(document)
+
+uuid = ->
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace /[xy]/g, (c) ->
+    r = Math.random() * 16 | 0
+    v = if c is 'x' then r else (r & 0x3|0x8)
+    v.toString(16)
 
 document.addEventListener 'DOMContentLoaded', ->
   term = null
   send = (data) ->
-    ws.send 'S' + data
+    ws.shell.send data
 
   ctl = (type, args...) ->
-    params = args.join(',')
     if type == 'Resize'
-      ws.send 'R' + params
+      ws.termctl.send JSON.stringify(
+        cmd: 'size', cols: args[0], rows: args[1])
 
   if location.protocol == 'https:'
     wsUrl = 'wss://'
   else
     wsUrl = 'ws://'
 
-  root_path = document.body.getAttribute('data-root-path')
-  if root_path.length
-    root_path = "/#{root_path}"
+  rootPath = document.body.getAttribute('data-root-path')
+  if rootPath.length
+    rootPath = "/#{rootPath}"
 
-  wsUrl += document.location.host + root_path + '/ws' + location.pathname
-  ws = new WebSocket wsUrl
+  wsUrl += document.location.host + rootPath
+  path = location.pathname
+  if path.indexOf('/session') < 0
+    path += "session/#{uuid()}"
 
-  ws.addEventListener 'open', ->
+  path += location.search
+
+  ws.shell = new WebSocket wsUrl + '/ws' + path
+  ws.termctl = new WebSocket wsUrl + '/ctl' + path
+
+  open = ->
     console.log "WebSocket open", arguments
-    term = new Terminal document.body, send, ctl
-    term.ws = ws
-    window.butterfly = term
-    ws.send 'R' + term.cols + ',' + term.rows
-    openTs = (new Date()).getTime()
+    if (ws.shell.readyState is WebSocket.OPEN and
+        ws.termctl.readyState is WebSocket.OPEN)
 
-  ws.addEventListener 'error', ->
+      term = new Terminal document.body, send, ctl
+      term.ws = ws
+      window.butterfly = term
+      ws.termctl.send JSON.stringify(cmd: 'open')
+      ws.termctl.send JSON.stringify(
+        cmd: 'size', cols: term.cols, rows: term.rows)
+      openTs = (new Date()).getTime()
+
+  error = ->
     console.log "WebSocket error", arguments
 
-  ws.addEventListener 'message', (e) ->
-    if e.data[0] is 'R'
-      [cols, rows] = e.data.slice(1).split(',')
-      term.resize cols, rows, true
-      return
-
-    if e.data[0] isnt 'S'
-      console.error 'Garbage message'
-      return
-
-    unless term.stop?
-      term.write e.data.slice(1)
-    else
-      if term.stop < cutMessage.length
-        letter = cutMessage[term.stop++]
-      else
-        letter = '.'
-      term.write letter
-
-  ws.addEventListener 'close', ->
+  close = ->
     console.log "WebSocket closed", arguments
+    return if quit
+
     setTimeout ->
       term.write 'Closed'
       # Allow quick reload
@@ -86,9 +90,33 @@ document.addEventListener 'DOMContentLoaded', ->
       term.body.classList.add('dead')
       # Don't autoclose if websocket didn't last 1 minute
       if (new Date()).getTime() - openTs > 60 * 1000
-        open('','_self').close()
+        window.open('','_self').close()
     , 1
     quit = true
+
+  ws.shell.addEventListener 'open', open
+  ws.termctl.addEventListener 'open', open
+
+  ws.shell.addEventListener 'error', error
+  ws.termctl.addEventListener 'error', error
+
+  ws.shell.addEventListener 'close', close
+  ws.termctl.addEventListener 'close', close
+
+  ws.shell.addEventListener 'message', (e) ->
+    unless term.stop?
+      term.write e.data
+    else
+      if term.stop < cutMessage.length
+        letter = cutMessage[term.stop++]
+      else
+        letter = '.'
+      term.write letter
+
+  ws.termctl.addEventListener 'message', (e) ->
+    cmd = JSON.parse(e.data)
+    if cmd.cmd is 'size'
+      term.resize cmd.cols, cmd.rows, true
 
   addEventListener 'beforeunload', ->
     if not quit

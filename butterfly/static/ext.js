@@ -80,9 +80,9 @@
       } else {
         alert(note + '\n' + message);
       }
-      return butterfly.ws.removeEventListener('message', alarm);
+      return butterfly.ws.shell.removeEventListener('message', alarm);
     };
-    butterfly.ws.addEventListener('message', alarm);
+    butterfly.ws.shell.addEventListener('message', alarm);
     return butterfly.body.classList.add('alarm');
   };
 

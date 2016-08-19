@@ -123,22 +123,17 @@ body {
 /* You should have received a copy of the GNU General Public License */
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 body {
-  transition: 200ms;
+  transition: filter 200ms;
   transform-origin: bottom; }
   body.bell {
-    -webkit-filter: blur(2px);
     filter: blur(2px); }
   body.skip {
-    -webkit-filter: sepia(1);
     filter: sepia(1); }
   body.selection {
-    -webkit-filter: saturate(2);
     filter: saturate(2); }
   body.alarm {
-    -webkit-filter: hue-rotate(150deg);
     filter: hue-rotate(150deg); }
   body.dead {
-    -webkit-filter: grayscale(1);
     filter: grayscale(1); }
     body.dead:after {
       content: "CLOSED";
@@ -155,7 +150,6 @@ body {
       opacity: .2;
       font-weight: 900; }
   body.stopped {
-    -webkit-filter: brightness(50%);
     filter: brightness(50%); }
   body.locked::-webkit-scrollbar-thumb {
     background: rgba(255, 0, 0, 0.7); }

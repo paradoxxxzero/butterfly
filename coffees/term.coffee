@@ -518,7 +518,7 @@ class Terminal
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
-      out = @linkify(out) unless j is @y + @shift or data.html
+      out = @linkify(out) unless j is @y + @shift or data?.html
       out += '\u23CE' if line.wrap
       if @children[j]
         @children[j].innerHTML = out

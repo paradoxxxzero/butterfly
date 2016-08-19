@@ -16,27 +16,22 @@
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 body
-  transition: 200ms
+  transition: filter 200ms
   transform-origin: bottom
 
   &.bell
-    -webkit-filter: blur(2px)
     filter: blur(2px)
 
   &.skip
-    -webkit-filter: sepia(1)
     filter: sepia(1)
 
   &.selection
-    -webkit-filter: saturate(2)
     filter: saturate(2)
 
   &.alarm
-    -webkit-filter: hue-rotate(150deg)
     filter: hue-rotate(150deg)
 
   &.dead
-    -webkit-filter: grayscale(1)
     filter: grayscale(1)
 
     &:after
@@ -55,7 +50,6 @@ body
       font-weight: 900
 
   &.stopped
-    -webkit-filter: brightness(50%)
     filter: brightness(50%)
 
   &.locked

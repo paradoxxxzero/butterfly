@@ -47,10 +47,16 @@ except NameError:
 
 
 class Terminal(object):
-    def __init__(self, user, path, session, socket, host, render_string, send):
-        self.host = host
+    sessions = {}
+
+    def __init__(self, user, path, session, socket, uri, render_string,
+                 broadcast):
+        self.sessions[session] = self
+        self.history_size = 50000
+        self.history = ''
+        self.uri = uri
         self.session = session
-        self.send = send
+        self.broadcast = broadcast
         self.fd = None
         self.closed = False
         self.socket = socket
@@ -88,13 +94,21 @@ class Terminal(object):
                 butterfly=self,
                 version=__version__,
                 opts=tornado.options.options,
+                uri=self.uri,
                 colors=utils.ansi_colors)
                     .decode('utf-8')
                     .replace('\r', '')
                     .replace('\n', '\r\n'))
-            self.send('S' + motd)
+            self.send(motd)
 
         log.info('Forking pty for user %r' % self.user)
+
+    def send(self, message):
+        if message is not None:
+            self.history += message
+            if len(self.history) > self.history_size:
+                self.history = self.history[-self.history_size:]
+        self.broadcast(self.session, message)
 
     def pty(self):
         # Make a "unique" id in 4 bytes
@@ -160,9 +174,7 @@ class Terminal(object):
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "butterfly"
         env["HOME"] = self.callee.dir
-        env["LOCATION"] = "http%s://%s:%d/" % (
-            "s" if not tornado.options.options.unsecure else "",
-            tornado.options.options.host, tornado.options.options.port)
+        env["LOCATION"] = self.uri
         env['BUTTERFLY_PATH'] = os.path.abspath(os.path.join(
             os.path.dirname(__file__), 'bin'))
 
@@ -180,7 +192,7 @@ class Terminal(object):
         utils.add_user_info(
             self.uid,
             tty, os.getpid(),
-            self.callee.name, self.host)
+            self.callee.name, self.uri)
 
         if not tornado.options.options.unsecure or (
                 self.socket.local and
@@ -272,16 +284,17 @@ class Terminal(object):
             self.on_close()
             self.close()
 
-        if message[0] == 'R':
-            cols, rows = map(int, message[1:].split(','))
+        log.debug('WRIT<%r' % message)
+        self.writer.write(message)
+        self.writer.flush()
+
+    def ctl(self, message):
+        if message['cmd'] == 'size':
+            cols = message['cols']
+            rows = message['rows']
             s = struct.pack("HHHH", rows, cols, 0, 0)
             fcntl.ioctl(self.fd, termios.TIOCSWINSZ, s)
             log.info('SIZE (%d, %d)' % (cols, rows))
-
-        elif message[0] == 'S':
-            log.debug('WRIT<%r' % message)
-            self.writer.write(message[1:])
-            self.writer.flush()
 
     def shell_handler(self, fd, events):
         if events & ioloop.READ:
@@ -292,7 +305,7 @@ class Terminal(object):
 
             log.debug('READ>%r' % read)
             if read and len(read) != 0:
-                self.send('S' + read.decode('utf-8', 'replace'))
+                self.send(read.decode('utf-8', 'replace'))
             else:
                 events = ioloop.ERROR
 
@@ -331,3 +344,5 @@ class Terminal(object):
             os.waitpid(self.pid, 0)
         except Exception:
             log.debug('waitpid fail', exc_info=True)
+
+        del self.sessions[self.session]

@@ -1,5 +1,5 @@
 (function() {
-  var $, State, Terminal, cancel, cols, cutMessage, openTs, quit, rows, s,
+  var $, State, Terminal, cancel, cols, cutMessage, openTs, quit, rows, s, uuid, ws,
     slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -11,20 +11,37 @@
 
   cutMessage = '\r\nCutting...... 8< ...... 8< ...... ' + '\r\nYou can release when there is no more output.' + '\r\nCutting...... 8< ...... 8< ......' + '\r\nCutting...... 8< ...... 8< ......';
 
+  ws = {
+    shell: null,
+    termctl: null
+  };
+
   $ = document.querySelectorAll.bind(document);
 
+  uuid = function() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r, v;
+      r = Math.random() * 16 | 0;
+      v = c === 'x' ? r : r & 0x3 | 0x8;
+      return v.toString(16);
+    });
+  };
+
   document.addEventListener('DOMContentLoaded', function() {
-    var ctl, root_path, send, term, ws, wsUrl;
+    var close, ctl, error, open, path, rootPath, send, term, wsUrl;
     term = null;
     send = function(data) {
-      return ws.send('S' + data);
+      return ws.shell.send(data);
     };
     ctl = function() {
-      var args, params, type;
+      var args, type;
       type = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      params = args.join(',');
       if (type === 'Resize') {
-        return ws.send('R' + params);
+        return ws.termctl.send(JSON.stringify({
+          cmd: 'size',
+          cols: args[0],
+          rows: args[1]
+        }));
       }
     };
     if (location.protocol === 'https:') {
@@ -32,36 +49,63 @@
     } else {
       wsUrl = 'ws://';
     }
-    root_path = document.body.getAttribute('data-root-path');
-    if (root_path.length) {
-      root_path = "/" + root_path;
+    rootPath = document.body.getAttribute('data-root-path');
+    if (rootPath.length) {
+      rootPath = "/" + rootPath;
     }
-    wsUrl += document.location.host + root_path + '/ws' + location.pathname;
-    ws = new WebSocket(wsUrl);
-    ws.addEventListener('open', function() {
+    wsUrl += document.location.host + rootPath;
+    path = location.pathname;
+    if (path.indexOf('/session') < 0) {
+      path += "session/" + (uuid());
+    }
+    path += location.search;
+    ws.shell = new WebSocket(wsUrl + '/ws' + path);
+    ws.termctl = new WebSocket(wsUrl + '/ctl' + path);
+    open = function() {
       console.log("WebSocket open", arguments);
-      term = new Terminal(document.body, send, ctl);
-      term.ws = ws;
-      window.butterfly = term;
-      ws.send('R' + term.cols + ',' + term.rows);
-      return openTs = (new Date()).getTime();
-    });
-    ws.addEventListener('error', function() {
+      if (ws.shell.readyState === WebSocket.OPEN && ws.termctl.readyState === WebSocket.OPEN) {
+        term = new Terminal(document.body, send, ctl);
+        term.ws = ws;
+        window.butterfly = term;
+        ws.termctl.send(JSON.stringify({
+          cmd: 'open'
+        }));
+        ws.termctl.send(JSON.stringify({
+          cmd: 'size',
+          cols: term.cols,
+          rows: term.rows
+        }));
+        return openTs = (new Date()).getTime();
+      }
+    };
+    error = function() {
       return console.log("WebSocket error", arguments);
-    });
-    ws.addEventListener('message', function(e) {
-      var letter, ref;
-      if (e.data[0] === 'R') {
-        ref = e.data.slice(1).split(','), cols = ref[0], rows = ref[1];
-        term.resize(cols, rows, true);
+    };
+    close = function() {
+      console.log("WebSocket closed", arguments);
+      if (quit) {
         return;
       }
-      if (e.data[0] !== 'S') {
-        console.error('Garbage message');
-        return;
-      }
+      setTimeout(function() {
+        term.write('Closed');
+        term.skipNextKey = true;
+        term.body.classList.add('dead');
+        if ((new Date()).getTime() - openTs > 60 * 1000) {
+          return window.open('', '_self').close();
+        }
+      }, 1);
+      return quit = true;
+    };
+    ws.shell.addEventListener('open', open);
+    ws.termctl.addEventListener('open', open);
+    ws.shell.addEventListener('error', error);
+    ws.termctl.addEventListener('error', error);
+    ws.shell.addEventListener('close', close);
+    ws.termctl.addEventListener('close', close);
+    ws.shell.addEventListener('message', function(e) {
+      var letter;
       if (term.stop == null) {
-        return term.write(e.data.slice(1));
+        return term.write(e.data);
       } else {
         if (term.stop < cutMessage.length) {
           letter = cutMessage[term.stop++];
@@ -71,17 +115,12 @@
         return term.write(letter);
       }
     });
-    ws.addEventListener('close', function() {
-      console.log("WebSocket closed", arguments);
-      setTimeout(function() {
-        term.write('Closed');
-        term.skipNextKey = true;
-        term.body.classList.add('dead');
-        if ((new Date()).getTime() - openTs > 60 * 1000) {
-          return open('', '_self').close();
-        }
-      }, 1);
-      return quit = true;
+    ws.termctl.addEventListener('message', function(e) {
+      var cmd;
+      cmd = JSON.parse(e.data);
+      if (cmd.cmd === 'size') {
+        return term.resize(cmd.cols, cmd.rows, true);
+      }
     });
     addEventListener('beforeunload', function() {
       if (!quit) {
@@ -520,7 +559,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, v, x;
+      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x, z;
       if (force == null) {
         force = false;
       }
@@ -659,7 +698,7 @@
         if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
         }
-        if (!(j === this.y + this.shift || data.html)) {
+        if (!(j === this.y + this.shift || (data != null ? data.html : void 0))) {
           out = this.linkify(out);
         }
         if (line.wrap) {
@@ -690,8 +729,8 @@
             line.remove();
           }
           ref5 = document.querySelectorAll('.group:empty');
-          for (v = 0, len4 = ref5.length; v < len4; v++) {
-            group = ref5[v];
+          for (z = 0, len4 = ref5.length; z < len4; z++) {
+            group = ref5[z];
             group.remove();
           }
           lines = document.querySelectorAll('.line');

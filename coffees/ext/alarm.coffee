@@ -62,9 +62,9 @@ setAlarm = (notification, cond) ->
     else
       alert(note + '\n' + message)
 
-    butterfly.ws.removeEventListener 'message', alarm
+    butterfly.ws.shell.removeEventListener 'message', alarm
 
-  butterfly.ws.addEventListener 'message', alarm
+  butterfly.ws.shell.addEventListener 'message', alarm
   butterfly.body.classList.add 'alarm'
 
 

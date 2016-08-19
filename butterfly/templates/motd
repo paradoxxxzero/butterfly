@@ -19,4 +19,8 @@
               !                   !                  {{ colors.red if opts.unsecure else colors.green }}{{ butterfly.socket.remote_addr }}:{{ butterfly.socket.remote_port }}{{ colors.reset }}
 
 For more information type: {{ colors.white }}$ {{ colors.green }}butterfly help{{ colors.reset }}
-
+{% if opts.unsecure %}{{ colors.light_red + '\x1b[5m' }}/!\{{ colors.reset }} {{ colors.red }}This session is UNSECURE everyone can access you terminal at:
+{{ uri }}
+{% else %}You can share your session with the following uri:
+{{ uri }}
+{% end %}
