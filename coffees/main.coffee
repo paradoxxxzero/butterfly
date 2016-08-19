@@ -92,9 +92,11 @@ document.addEventListener 'DOMContentLoaded', ->
       window.open('','_self').close()
 
   reopenOnClose = ->
-    return if quit
-    ws.shell = new WebSocket wsUrl + '/ws' + path
-    init_shell_ws()
+    setTimeout ->
+      return if quit
+      ws.shell = new WebSocket wsUrl + '/ws' + path
+      init_shell_ws()
+    , 100
 
   write = (data) ->
     if term

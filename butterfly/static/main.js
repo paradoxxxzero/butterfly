@@ -85,11 +85,13 @@
       }
     };
     reopenOnClose = function() {
-      if (quit) {
-        return;
-      }
-      ws.shell = new WebSocket(wsUrl + '/ws' + path);
-      return init_shell_ws();
+      return setTimeout(function() {
+        if (quit) {
+          return;
+        }
+        ws.shell = new WebSocket(wsUrl + '/ws' + path);
+        return init_shell_ws();
+      }, 100);
     };
     write = function(data) {
       if (term) {
