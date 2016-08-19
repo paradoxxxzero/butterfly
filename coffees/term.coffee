@@ -87,7 +87,6 @@ class Terminal
 
     @startBlink()
     addEventListener 'keydown', @keyDown.bind(@)
-    addEventListener 'keyup', @keyUp.bind(@)
     addEventListener 'keypress', @keyPress.bind(@)
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
@@ -1258,13 +1257,6 @@ class Terminal
   writeln: (data) ->
     @write "#{data}\r\n"
 
-  keyUp: (ev) ->
-    if ev.keyCode is 19  # Pause break
-      return unless @stop?
-      @body.classList.remove 'stopped'
-      @stop = null
-      @out '\x03\n'
-
   keyDown: (ev) ->
     # Key Resources:
     # https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
@@ -1272,10 +1264,9 @@ class Terminal
     return true if ev.keyCode > 15 and ev.keyCode < 19
 
     if ev.keyCode is 19  # Pause break
-      return if @stop?
       @body.classList.add 'stopped'
-      @stop = 0
       @out '\x03'
+      @ws.shell.close()
       return false
 
     # Handle shift insert and ctrl insert
@@ -1574,7 +1565,8 @@ class Terminal
     if (not x and not y) and oldCols == @cols and oldRows == @rows
       return
 
-    @ctl 'Resize', @cols, @rows unless notif
+    @ctl(JSON.stringify(
+      cmd: 'size', cols: @cols, rows: @rows)) unless notif
 
     # resize cols
     if oldCols < @cols

@@ -119,7 +119,6 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
     sessions_secure_users = {}
 
     def open(self, session):
-        self.set_nodelay(True)
         self.session = session
         self.closed = False
         self.log.info('Websocket /ctl opened %r' % self)
@@ -145,18 +144,24 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
             # Certificate authed user
             secure_user = user
 
-        elif socket.local and socket.user == utils.User():
+        elif socket.local and socket.user == utils.User() and not user:
             # Local to local returning browser user
             secure_user = socket.user
+        elif user:
+            try:
+                user = utils.User(name=user)
+            except LookupError:
+                raise Exception('Invalid user')
 
         if secure_user:
-            user = secure_user.name
-            if self.session in self.sessions:
-                if user != self.sessions_secure_users[self.session]:
+            user = secure_user
+            if self.session in self.sessions and self.session in (
+                    self.sessions_secure_users):
+                if user.name != self.sessions_secure_users[self.session]:
                     # Restrict to authorized users
                     raise tornado.web.HTTPError(403)
             else:
-                self.sessions_secure_users[self.session] = user
+                self.sessions_secure_users[self.session] = user.name
 
         self.sessions[self.session].append(self)
 
@@ -192,7 +197,11 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
         if cmd['cmd'] == 'open':
             self.create_terminal()
         else:
-            Terminal.sessions[self.session].ctl(cmd)
+            try:
+                Terminal.sessions[self.session].ctl(cmd)
+            except Exception:
+                # FF strange bug
+                pass
         self.broadcast(self.session, message, self)
 
     def on_close(self):
@@ -202,6 +211,14 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.log.info('Websocket /ctl closed %r' % self)
         if self in self.sessions[self.session]:
             self.sessions[self.session].remove(self)
+
+        opts = tornado.options.options
+        if opts.one_shot or (
+                self.application.systemd and
+                not sum([
+                    len(wsockets)
+                    for session, wsockets in self.sessions.items()])):
+            sys.exit(0)
 
 
 @url(r'/ws/session/(?P<session>[^/]+)')
@@ -258,14 +275,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.closed = True
         self.log.info('Websocket /ws closed %r' % self)
         self.sessions[self.session].remove(self)
-
-        opts = tornado.options.options
-        if opts.one_shot or (
-                self.application.systemd and
-                not sum([
-                    len(wsockets)
-                    for session, wsockets in self.sessions.items()])):
-            sys.exit(0)
 
 
 @url(r'/sessions/list.json')

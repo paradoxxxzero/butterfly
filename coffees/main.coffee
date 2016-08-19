@@ -10,7 +10,7 @@
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU General Public License for more details.s
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -18,13 +18,10 @@
 cols = rows = null
 quit = false
 openTs = (new Date()).getTime()
-cutMessage = '\r\nCutting...... 8< ...... 8< ...... ' +
-             '\r\nYou can release when there is no more output.' +
-             '\r\nCutting...... 8< ...... 8< ......' +
-             '\r\nCutting...... 8< ...... 8< ......'
+
 ws =
   shell: null
-  termctl: null
+  ctl: null
 
 $ = document.querySelectorAll.bind(document)
 
@@ -36,13 +33,6 @@ uuid = ->
 
 document.addEventListener 'DOMContentLoaded', ->
   term = null
-  send = (data) ->
-    ws.shell.send data
-
-  ctl = (type, args...) ->
-    if type == 'Resize'
-      ws.termctl.send JSON.stringify(
-        cmd: 'size', cols: args[0], rows: args[1])
 
   if location.protocol == 'https:'
     wsUrl = 'wss://'
@@ -61,87 +51,78 @@ document.addEventListener 'DOMContentLoaded', ->
   path += location.search
 
   ws.shell = new WebSocket wsUrl + '/ws' + path
-  ws.termctl = new WebSocket wsUrl + '/ctl' + path
+  ws.ctl = new WebSocket wsUrl + '/ctl' + path
 
   open = ->
     console.log "WebSocket open", arguments
-    if (ws.shell.readyState is WebSocket.OPEN and
-        ws.termctl.readyState is WebSocket.OPEN)
 
-      term = new Terminal document.body, send, ctl
+    if term
+      term.body.classList.remove 'stopped'
+      term.out = ws.shell.send.bind(ws.shell)
+      term.out '\x03\n'
+      return
+
+    if (ws.shell.readyState is WebSocket.OPEN and
+        ws.ctl.readyState is WebSocket.OPEN)
+
+      term = new Terminal(
+        document.body, ws.shell.send.bind(ws.shell), ws.ctl.send.bind(ws.ctl))
       term.ws = ws
       window.butterfly = term
-      ws.termctl.send JSON.stringify(cmd: 'open')
-      ws.termctl.send JSON.stringify(
+      ws.ctl.send JSON.stringify(cmd: 'open')
+      ws.ctl.send JSON.stringify(
         cmd: 'size', cols: term.cols, rows: term.rows)
       openTs = (new Date()).getTime()
+    console.log "WebSocket open end", arguments
 
   error = ->
-    console.log "WebSocket error", arguments
+    console.error "WebSocket error", arguments
 
   close = ->
     console.log "WebSocket closed", arguments
     return if quit
-
-    setTimeout ->
-      term.write 'Closed'
-      # Allow quick reload
-      term.skipNextKey = true
-      term.body.classList.add('dead')
-      # Don't autoclose if websocket didn't last 1 minute
-      if (new Date()).getTime() - openTs > 60 * 1000
-        window.open('','_self').close()
-    , 1
     quit = true
 
-  ws.shell.addEventListener 'open', open
-  ws.termctl.addEventListener 'open', open
+    term.write 'Closed'
+    # Allow quick reload
+    term.skipNextKey = true
+    term.body.classList.add('dead')
+    # Don't autoclose if websocket didn't last 1 minute
+    if (new Date()).getTime() - openTs > 60 * 1000
+      window.open('','_self').close()
 
-  ws.shell.addEventListener 'error', error
-  ws.termctl.addEventListener 'error', error
+  reopenOnClose = ->
+    return if quit
+    ws.shell = new WebSocket wsUrl + '/ws' + path
+    init_shell_ws()
 
-  ws.shell.addEventListener 'close', close
-  ws.termctl.addEventListener 'close', close
+  write = (data) ->
+    if term
+      term.write data
 
-  ws.shell.addEventListener 'message', (e) ->
-    unless term.stop?
-      term.write e.data
-    else
-      if term.stop < cutMessage.length
-        letter = cutMessage[term.stop++]
-      else
-        letter = '.'
-      term.write letter
+  write_request = (e) ->
+    setTimeout write, 1, e.data
 
-  ws.termctl.addEventListener 'message', (e) ->
+  ctl = ->
     cmd = JSON.parse(e.data)
     if cmd.cmd is 'size'
       term.resize cmd.cols, cmd.rows, true
 
+  init_shell_ws = ->
+    ws.shell.addEventListener 'open', open
+    ws.shell.addEventListener 'message', write_request
+    ws.shell.addEventListener 'error', error
+    ws.shell.addEventListener 'close', reopenOnClose
+
+  init_ctl_ws = ->
+    ws.ctl.addEventListener 'open', open
+    ws.ctl.addEventListener 'message', ctl
+    ws.ctl.addEventListener 'error', error
+    ws.ctl.addEventListener 'close', close
+
+  init_shell_ws()
+  init_ctl_ws()
+
   addEventListener 'beforeunload', ->
     if not quit
       'This will exit the terminal session'
-
-  window.bench = (n=100000000) ->
-    rnd = ''
-    while rnd.length < n
-      rnd += Math.random().toString(36).substring(2)
-
-    console.time('bench')
-    console.profile('bench')
-    term.write rnd
-    console.profileEnd()
-    console.timeEnd('bench')
-
-
-  window.cbench = (n=100000000) ->
-    rnd = ''
-    while rnd.length < n
-      rnd += "\x1b[#{30 + parseInt(Math.random() * 20)}m"
-      rnd += Math.random().toString(36).substring(2)
-
-    console.time('cbench')
-    console.profile('cbench')
-    term.write rnd
-    console.profileEnd()
-    console.timeEnd('cbench')

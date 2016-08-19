@@ -1,6 +1,5 @@
 (function() {
-  var $, State, Terminal, cancel, cols, cutMessage, openTs, quit, rows, s, uuid, ws,
-    slice = [].slice,
+  var $, State, Terminal, cancel, cols, openTs, quit, rows, s, uuid, ws,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   cols = rows = null;
@@ -9,11 +8,9 @@
 
   openTs = (new Date()).getTime();
 
-  cutMessage = '\r\nCutting...... 8< ...... 8< ...... ' + '\r\nYou can release when there is no more output.' + '\r\nCutting...... 8< ...... 8< ......' + '\r\nCutting...... 8< ...... 8< ......';
-
   ws = {
     shell: null,
-    termctl: null
+    ctl: null
   };
 
   $ = document.querySelectorAll.bind(document);
@@ -28,22 +25,8 @@
   };
 
   document.addEventListener('DOMContentLoaded', function() {
-    var close, ctl, error, open, path, rootPath, send, term, wsUrl;
+    var close, ctl, error, init_ctl_ws, init_shell_ws, open, path, reopenOnClose, rootPath, term, write, write_request, wsUrl;
     term = null;
-    send = function(data) {
-      return ws.shell.send(data);
-    };
-    ctl = function() {
-      var args, type;
-      type = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      if (type === 'Resize') {
-        return ws.termctl.send(JSON.stringify({
-          cmd: 'size',
-          cols: args[0],
-          rows: args[1]
-        }));
-      }
-    };
     if (location.protocol === 'https:') {
       wsUrl = 'wss://';
     } else {
@@ -60,104 +43,88 @@
     }
     path += location.search;
     ws.shell = new WebSocket(wsUrl + '/ws' + path);
-    ws.termctl = new WebSocket(wsUrl + '/ctl' + path);
+    ws.ctl = new WebSocket(wsUrl + '/ctl' + path);
     open = function() {
       console.log("WebSocket open", arguments);
-      if (ws.shell.readyState === WebSocket.OPEN && ws.termctl.readyState === WebSocket.OPEN) {
-        term = new Terminal(document.body, send, ctl);
+      if (term) {
+        term.body.classList.remove('stopped');
+        term.out = ws.shell.send.bind(ws.shell);
+        term.out('\x03\n');
+        return;
+      }
+      if (ws.shell.readyState === WebSocket.OPEN && ws.ctl.readyState === WebSocket.OPEN) {
+        term = new Terminal(document.body, ws.shell.send.bind(ws.shell), ws.ctl.send.bind(ws.ctl));
         term.ws = ws;
         window.butterfly = term;
-        ws.termctl.send(JSON.stringify({
+        ws.ctl.send(JSON.stringify({
           cmd: 'open'
         }));
-        ws.termctl.send(JSON.stringify({
+        ws.ctl.send(JSON.stringify({
           cmd: 'size',
           cols: term.cols,
           rows: term.rows
         }));
-        return openTs = (new Date()).getTime();
+        openTs = (new Date()).getTime();
       }
+      return console.log("WebSocket open end", arguments);
     };
     error = function() {
-      return console.log("WebSocket error", arguments);
+      return console.error("WebSocket error", arguments);
     };
     close = function() {
       console.log("WebSocket closed", arguments);
       if (quit) {
         return;
       }
-      setTimeout(function() {
-        term.write('Closed');
-        term.skipNextKey = true;
-        term.body.classList.add('dead');
-        if ((new Date()).getTime() - openTs > 60 * 1000) {
-          return window.open('', '_self').close();
-        }
-      }, 1);
-      return quit = true;
-    };
-    ws.shell.addEventListener('open', open);
-    ws.termctl.addEventListener('open', open);
-    ws.shell.addEventListener('error', error);
-    ws.termctl.addEventListener('error', error);
-    ws.shell.addEventListener('close', close);
-    ws.termctl.addEventListener('close', close);
-    ws.shell.addEventListener('message', function(e) {
-      var letter;
-      if (term.stop == null) {
-        return term.write(e.data);
-      } else {
-        if (term.stop < cutMessage.length) {
-          letter = cutMessage[term.stop++];
-        } else {
-          letter = '.';
-        }
-        return term.write(letter);
+      quit = true;
+      term.write('Closed');
+      term.skipNextKey = true;
+      term.body.classList.add('dead');
+      if ((new Date()).getTime() - openTs > 60 * 1000) {
+        return window.open('', '_self').close();
       }
-    });
-    ws.termctl.addEventListener('message', function(e) {
+    };
+    reopenOnClose = function() {
+      if (quit) {
+        return;
+      }
+      ws.shell = new WebSocket(wsUrl + '/ws' + path);
+      return init_shell_ws();
+    };
+    write = function(data) {
+      if (term) {
+        return term.write(data);
+      }
+    };
+    write_request = function(e) {
+      return setTimeout(write, 1, e.data);
+    };
+    ctl = function() {
       var cmd;
       cmd = JSON.parse(e.data);
       if (cmd.cmd === 'size') {
         return term.resize(cmd.cols, cmd.rows, true);
       }
-    });
-    addEventListener('beforeunload', function() {
+    };
+    init_shell_ws = function() {
+      ws.shell.addEventListener('open', open);
+      ws.shell.addEventListener('message', write_request);
+      ws.shell.addEventListener('error', error);
+      return ws.shell.addEventListener('close', reopenOnClose);
+    };
+    init_ctl_ws = function() {
+      ws.ctl.addEventListener('open', open);
+      ws.ctl.addEventListener('message', ctl);
+      ws.ctl.addEventListener('error', error);
+      return ws.ctl.addEventListener('close', close);
+    };
+    init_shell_ws();
+    init_ctl_ws();
+    return addEventListener('beforeunload', function() {
       if (!quit) {
         return 'This will exit the terminal session';
       }
     });
-    window.bench = function(n) {
-      var rnd;
-      if (n == null) {
-        n = 100000000;
-      }
-      rnd = '';
-      while (rnd.length < n) {
-        rnd += Math.random().toString(36).substring(2);
-      }
-      console.time('bench');
-      console.profile('bench');
-      term.write(rnd);
-      console.profileEnd();
-      return console.timeEnd('bench');
-    };
-    return window.cbench = function(n) {
-      var rnd;
-      if (n == null) {
-        n = 100000000;
-      }
-      rnd = '';
-      while (rnd.length < n) {
-        rnd += "\x1b[" + (30 + parseInt(Math.random() * 20)) + "m";
-        rnd += Math.random().toString(36).substring(2);
-      }
-      console.time('cbench');
-      console.profile('cbench');
-      term.write(rnd);
-      console.profileEnd();
-      return console.timeEnd('cbench');
-    };
   });
 
   cancel = function(ev) {
@@ -217,7 +184,6 @@
       this.focus();
       this.startBlink();
       addEventListener('keydown', this.keyDown.bind(this));
-      addEventListener('keyup', this.keyUp.bind(this));
       addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));
@@ -559,7 +525,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x, z;
+      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, n, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x;
       if (force == null) {
         force = false;
       }
@@ -575,7 +541,7 @@
       }
       newOut = '';
       ref2 = this.screen;
-      for (j = o = 0, len2 = ref2.length; o < len2; j = ++o) {
+      for (j = n = 0, len2 = ref2.length; n < len2; j = ++n) {
         line = ref2[j];
         if (!(line.dirty || force)) {
           continue;
@@ -588,7 +554,7 @@
         }
         attr = this.cloneAttr(this.defAttr);
         skipnext = false;
-        for (i = q = 0, ref3 = this.cols - 1; 0 <= ref3 ? q <= ref3 : q >= ref3; i = 0 <= ref3 ? ++q : --q) {
+        for (i = o = 0, ref3 = this.cols - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; i = 0 <= ref3 ? ++o : --o) {
           data = line.chars[i];
           if (data.html) {
             out += data.html;
@@ -724,13 +690,13 @@
         lines = document.querySelectorAll('.line');
         if (lines.length > this.scrollback) {
           ref4 = Array.prototype.slice.call(lines, 0, lines.length - this.scrollback);
-          for (u = 0, len3 = ref4.length; u < len3; u++) {
-            line = ref4[u];
+          for (q = 0, len3 = ref4.length; q < len3; q++) {
+            line = ref4[q];
             line.remove();
           }
           ref5 = document.querySelectorAll('.group:empty');
-          for (z = 0, len4 = ref5.length; z < len4; z++) {
-            group = ref5[z];
+          for (u = 0, len4 = ref5.length; u < len4; u++) {
+            group = ref5[u];
             group.remove();
           }
           lines = document.querySelectorAll('.line');
@@ -1407,29 +1373,15 @@
       return this.write(data + "\r\n");
     };
 
-    Terminal.prototype.keyUp = function(ev) {
-      if (ev.keyCode === 19) {
-        if (this.stop == null) {
-          return;
-        }
-        this.body.classList.remove('stopped');
-        this.stop = null;
-        return this.out('\x03\n');
-      }
-    };
-
     Terminal.prototype.keyDown = function(ev) {
       var key, ref;
       if (ev.keyCode > 15 && ev.keyCode < 19) {
         return true;
       }
       if (ev.keyCode === 19) {
-        if (this.stop != null) {
-          return;
-        }
         this.body.classList.add('stopped');
-        this.stop = 0;
         this.out('\x03');
+        this.ws.shell.close();
         return false;
       }
       if ((ev.shiftKey || ev.ctrlKey) && ev.keyCode === 45) {
@@ -1728,7 +1680,11 @@
         return;
       }
       if (!notif) {
-        this.ctl('Resize', this.cols, this.rows);
+        this.ctl(JSON.stringify({
+          cmd: 'size',
+          cols: this.cols,
+          rows: this.rows
+        }));
       }
       if (oldCols < this.cols) {
         i = this.screen.length;

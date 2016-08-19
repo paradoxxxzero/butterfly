@@ -73,7 +73,7 @@ class Terminal(object):
         if tornado.options.options.unsecure:
             if self.user:
                 try:
-                    self.callee = utils.User(name=self.user)
+                    self.callee = self.user
                 except LookupError:
                     log.debug(
                         "Can't switch to user %s" % self.user, exc_info=True)
@@ -198,7 +198,7 @@ class Terminal(object):
                 self.socket.local and
                 self.caller == self.callee and
                 server == self.callee
-        ) or not tornado.options.options.login:
+        ) and not tornado.options.options.login:
             # User has been auth with ssl or is the same user as server
             # or login is explicitly turned off
             if (
