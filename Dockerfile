@@ -1,4 +1,4 @@
-FROM ubuntu:14.04.4
+FROM ubuntu:14.04
 
 RUN apt-get update \
  && apt-get install -y -q --no-install-recommends \
