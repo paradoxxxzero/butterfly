@@ -109,17 +109,17 @@ into this repository: https://registry.hub.docker.com/u/garland/butterfly/
 Starting with login and password
 
 ``` bash
-docker run \
---env PASSWORD=password \
--p 57575:57575 \
--d garland/butterfly --port=57575 --login
+docker run --env PASSWORD=password -d garland/butterfly --login
 ```
 
 Starting with no password
 
 ``` bash
-docker run \
---env PORT=57575 \
--p 57575:57575 \
--d garland/butterfly --port=57575
+docker run -d -p 57575:57575 garland/butterfly
+```
+
+Starting with a different port
+
+``` bash
+docker run -d -p 12345:12345 garland/butterfly --port=12345
 ```
