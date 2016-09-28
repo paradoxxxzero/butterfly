@@ -28,7 +28,6 @@
 #   http://bellard.org/jslinux/
 
 
-
 cancel = (ev) ->
   ev.preventDefault() if ev.preventDefault
   ev.stopPropagation() if ev.stopPropagation
@@ -45,7 +44,20 @@ State =
   dcs: s++
   ignore: s++
 
+
 class Terminal
+  @hooks: {}
+  # Mini implementation of event
+  @on: (hook, fun) ->
+    unless Terminal.hooks[hook]?
+      Terminal.hooks[hook] = []
+    Terminal.hooks[hook].push(fun)
+
+  @off: (hook, fun) ->
+    unless Terminal.hooks[hook]?
+      Terminal.hooks[hook] = []
+    Terminal.hooks[hook].pop(fun)
+
   constructor: (@parent, @out, @ctl=->) ->
     # Global elements
     @document = @parent.ownerDocument
@@ -102,6 +114,13 @@ class Terminal
 
     @initmouse()
     addEventListener 'load', => @resize()
+    @emit 'load'
+
+  emit: (hook, args...) ->
+    unless Terminal.hooks[hook]?
+      Terminal.hooks[hook] = []
+    for fun in Terminal.hooks[hook]
+      fun.apply(@, args)
 
   cloneAttr: (a, char=null) ->
     bg: a.bg
@@ -396,18 +415,6 @@ class Terminal
         sendButton ev
         cancel ev
 
-  linkify: (t) ->
-    # http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
-    urlPattern = (
-      /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim)
-    pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim
-    emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim
-    (part
-      .replace(urlPattern, '<a href="$&">$&</a>')
-      .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
-      .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'
-    ) for part in t.split('&nbsp;')).join('&nbsp;')
-
   refresh: (force=false) ->
     for cursor in @body.querySelectorAll(".cursor")
       cursor.parentNode.replaceChild(
@@ -416,7 +423,7 @@ class Terminal
       active.classList.remove('active')
 
     newOut = ''
-
+    modified = []
     for line, j in @screen
       continue unless line.dirty or force
       out = ""
@@ -518,10 +525,10 @@ class Terminal
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
-      out = @linkify(out) unless j is @y + @shift or data.html
       out += '\u23CE' if line.wrap
       if @children[j]
         @children[j].innerHTML = out
+        modified.push @children[j]
         if x isnt -Infinity
           @children[j].classList.add 'active'
       else
@@ -533,6 +540,7 @@ class Terminal
       group = @document.createElement('div')
       group.className = 'group'
       group.innerHTML = newOut
+      modified.push group
       @body.appendChild group
       @screen = @screen.slice(-@rows)
       @shift = 0
@@ -549,6 +557,7 @@ class Terminal
         lines, -@rows)
 
     @nativeScrollTo()
+    @emit 'change', modified
 
   _cursorBlink: ->
     @cursorState ^= 1

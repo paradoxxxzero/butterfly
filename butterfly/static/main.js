@@ -145,6 +145,22 @@
   };
 
   Terminal = (function() {
+    Terminal.hooks = {};
+
+    Terminal.on = function(hook, fun) {
+      if (Terminal.hooks[hook] == null) {
+        Terminal.hooks[hook] = [];
+      }
+      return Terminal.hooks[hook].push(fun);
+    };
+
+    Terminal.off = function(hook, fun) {
+      if (Terminal.hooks[hook] == null) {
+        Terminal.hooks[hook] = [];
+      }
+      return Terminal.hooks[hook].pop(fun);
+    };
+
     function Terminal(parent, out1, ctl1) {
       var div, px;
       this.parent = parent;
@@ -201,7 +217,23 @@
           return _this.resize();
         };
       })(this));
+      this.emit('load');
     }
+
+    Terminal.prototype.emit = function() {
+      var args, fun, hook, k, len, ref, results;
+      hook = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (Terminal.hooks[hook] == null) {
+        Terminal.hooks[hook] = [];
+      }
+      ref = Terminal.hooks[hook];
+      results = [];
+      for (k = 0, len = ref.length; k < len; k++) {
+        fun = ref[k];
+        results.push(fun.apply(this, args));
+      }
+      return results;
+    };
 
     Terminal.prototype.cloneAttr = function(a, char) {
       if (char == null) {
@@ -502,25 +534,8 @@
       })(this));
     };
 
-    Terminal.prototype.linkify = function(t) {
-      var emailAddressPattern, part, pseudoUrlPattern, urlPattern;
-      urlPattern = /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim;
-      pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-      emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim;
-      return ((function() {
-        var k, len, ref, results;
-        ref = t.split('&nbsp;');
-        results = [];
-        for (k = 0, len = ref.length; k < len; k++) {
-          part = ref[k];
-          results.push(part.replace(urlPattern, '<a href="$&">$&</a>').replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>').replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'));
-        }
-        return results;
-      })()).join('&nbsp;');
-    };
-
     Terminal.prototype.refresh = function(force) {
-      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, v, x;
+      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, modified, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, v, x;
       if (force == null) {
         force = false;
       }
@@ -535,6 +550,7 @@
         active.classList.remove('active');
       }
       newOut = '';
+      modified = [];
       ref2 = this.screen;
       for (j = o = 0, len2 = ref2.length; o < len2; j = ++o) {
         line = ref2[j];
@@ -659,14 +675,12 @@
         if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
         }
-        if (!(j === this.y + this.shift || data.html)) {
-          out = this.linkify(out);
-        }
         if (line.wrap) {
           out += '\u23CE';
         }
         if (this.children[j]) {
           this.children[j].innerHTML = out;
+          modified.push(this.children[j]);
           if (x !== -Infinity) {
             this.children[j].classList.add('active');
           }
@@ -679,6 +693,7 @@
         group = this.document.createElement('div');
         group.className = 'group';
         group.innerHTML = newOut;
+        modified.push(group);
         this.body.appendChild(group);
         this.screen = this.screen.slice(-this.rows);
         this.shift = 0;
@@ -698,7 +713,8 @@
         }
         this.children = Array.prototype.slice.call(lines, -this.rows);
       }
-      return this.nativeScrollTo();
+      this.nativeScrollTo();
+      return this.emit('change', modified);
     };
 
     Terminal.prototype._cursorBlink = function() {
