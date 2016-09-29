@@ -5,5 +5,7 @@ Terminal.on 'change', (lines) ->
         if 'expanded' in line.classList
           line.classList.remove 'expanded'
         else
+          before = line.getBoundingClientRect().height
           line.classList.add 'expanded'
-          butterfly.nativeScrollTo()
+          after = line.getBoundingClientRect().height
+          document.body.scrollTop += after - before

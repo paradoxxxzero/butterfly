@@ -164,11 +164,14 @@
       if (indexOf.call(line.classList, 'extended') >= 0) {
         results.push(line.addEventListener('click', (function(line) {
           return function() {
+            var after, before;
             if (indexOf.call(line.classList, 'expanded') >= 0) {
               return line.classList.remove('expanded');
             } else {
+              before = line.getBoundingClientRect().height;
               line.classList.add('expanded');
-              return butterfly.nativeScrollTo();
+              after = line.getBoundingClientRect().height;
+              return document.body.scrollTop += after - before;
             }
           };
         })(line)));
