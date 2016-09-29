@@ -156,6 +156,29 @@
     }
   });
 
+  Terminal.on('change', function(lines) {
+    var j, len1, line, results;
+    results = [];
+    for (j = 0, len1 = lines.length; j < len1; j++) {
+      line = lines[j];
+      if (indexOf.call(line.classList, 'extended') >= 0) {
+        results.push(line.addEventListener('click', (function(line) {
+          return function() {
+            if (indexOf.call(line.classList, 'expanded') >= 0) {
+              return line.classList.remove('expanded');
+            } else {
+              line.classList.add('expanded');
+              return butterfly.nativeScrollTo();
+            }
+          };
+        })(line)));
+      } else {
+        results.push(void 0);
+      }
+    }
+    return results;
+  });
+
   walk = function(node, callback) {
     var child, j, len1, ref, results;
     ref = node.childNodes;

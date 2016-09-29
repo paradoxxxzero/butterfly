@@ -2816,6 +2816,27 @@ body {
   /* Pop ups */ }
   body .line.active {
     background-color: transparent; }
+  body .line.extended {
+    overflow-x: auto;
+    overflow-x: overlay;
+    cursor: zoom-in;
+    background-image: linear-gradient(90deg, rgba(9, 8, 10, 0), 95%, #09080a); }
+    body .line.extended:not(.expanded):hover {
+      background-color: #161419; }
+    body .line.extended.expanded {
+      cursor: zoom-out;
+      background-color: #09080a; }
+      body .line.extended.expanded .extra {
+        display: block;
+        white-space: pre-line;
+        word-break: break-all; }
+    body .line.extended::-webkit-scrollbar {
+      background: rgba(17, 15, 19, 0.1);
+      height: 0; }
+    body .line.extended::-webkit-scrollbar-thumb {
+      background: rgba(244, 234, 213, 0.1); }
+    body .line.extended::-webkit-scrollbar-thumb:hover {
+      background: rgba(244, 234, 213, 0.1); }
   body::-webkit-scrollbar {
     background: #110f13;
     width: 0.75em; }

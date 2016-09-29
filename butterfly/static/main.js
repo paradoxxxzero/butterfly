@@ -282,6 +282,7 @@
       this.applicationCursor = false;
       this.originMode = false;
       this.autowrap = true;
+      this.horizontalWrap = false;
       this.normal = null;
       this.charset = null;
       this.gcharset = null;
@@ -535,7 +536,7 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var active, attr, ch, classes, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, modified, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, v, x;
+      var active, attr, ch, classes, cls, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, modified, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, v, x;
       if (force == null) {
         force = false;
       }
@@ -678,14 +679,27 @@
         if (line.wrap) {
           out += '\u23CE';
         }
+        if (line.extra) {
+          out += '<span class="extra">' + line.extra + '</span>';
+        }
         if (this.children[j]) {
           this.children[j].innerHTML = out;
           modified.push(this.children[j]);
           if (x !== -Infinity) {
             this.children[j].classList.add('active');
           }
+          if (line.extra) {
+            this.children[j].classList.add('extended');
+          }
         } else {
-          newOut += "<div class=\"line" + (x !== -Infinity && ' active' || '') + "\">" + out + "</div>";
+          cls = ['line'];
+          if (x !== -Infinity) {
+            cls.push('active');
+          }
+          if (line.extra) {
+            cls.push('extended');
+          }
+          newOut += "<div class=\"" + (cls.join(' ')) + "\">" + out + "</div>";
         }
         this.screen[j].dirty = false;
       }
@@ -831,11 +845,17 @@
               case "\n":
               case "\x0b":
               case "\x0c":
-                this.screen[this.y + this.shift].dirty = true;
-                this.nextLine();
+                if (this.horizontalWrap) {
+                  this.screen[this.y + this.shift].extra += ch;
+                } else {
+                  this.screen[this.y + this.shift].dirty = true;
+                  this.nextLine();
+                }
                 break;
               case "\r":
-                this.x = 0;
+                if (!this.horizontalWrap) {
+                  this.x = 0;
+                }
                 break;
               case "\b":
                 if (this.x >= this.cols) {
@@ -877,11 +897,15 @@
                     ch = this.charset[ch];
                   }
                   if (this.x >= this.cols) {
-                    if (this.autowrap) {
-                      this.screen[this.y + this.shift].wrap = true;
-                      this.nextLine();
+                    if (this.horizontalWrap) {
+                      this.screen[this.y + this.shift].extra += ch;
+                    } else {
+                      if (this.autowrap) {
+                        this.screen[this.y + this.shift].wrap = true;
+                        this.nextLine();
+                      }
+                      this.x = 0;
                     }
-                    this.x = 0;
                   }
                   this.putChar(ch);
                   this.x++;
@@ -1291,8 +1315,7 @@
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<div class=\"inline-html\">" + safe + "</div>";
                       this.screen[this.y + this.shift].chars[this.x] = attr;
-                      this.screen[this.y + this.shift].dirty = true;
-                      this.screen[this.y + this.shift].wrap = false;
+                      this.resetLine(this.screen[this.y + this.shift]);
                       this.nextLine();
                       break;
                     case "IMAGE":
@@ -1307,8 +1330,7 @@
                       attr = this.cloneAttr(this.curAttr);
                       attr.html = "<img class=\"inline-image\" src=\"data:" + mime + ";base64," + b64 + "\" />";
                       this.screen[this.y + this.shift].chars[this.x] = attr;
-                      this.screen[this.y + this.shift].dirty = true;
-                      this.screen[this.y + this.shift].wrap = false;
+                      this.resetLine(this.screen[this.y + this.shift]);
                       break;
                     case "PROMPT":
                       this.send(content);
@@ -1865,8 +1887,7 @@
         line[x] = this.eraseAttr();
         x++;
       }
-      this.screen[y + this.shift].dirty = true;
-      return this.screen[y + this.shift].wrap = false;
+      return this.resetLine(this.screen[y + this.shift]);
     };
 
     Terminal.prototype.eraseLeft = function(x, y) {
@@ -1874,12 +1895,17 @@
       while (x--) {
         this.screen[y + this.shift].chars[x] = this.eraseAttr();
       }
-      this.screen[y + this.shift].dirty = true;
-      return this.screen[y + this.shift].wrap = false;
+      return this.resetLine(this.screen[y + this.shift]);
     };
 
     Terminal.prototype.eraseLine = function(y) {
       return this.eraseRight(0, y);
+    };
+
+    Terminal.prototype.resetLine = function(l) {
+      l.dirty = true;
+      l.wrap = false;
+      return l.extra = '';
     };
 
     Terminal.prototype.blankLine = function(cur, dirty) {
@@ -1900,7 +1926,8 @@
       return {
         chars: line,
         dirty: dirty,
-        wrap: false
+        wrap: false,
+        extra: ''
       };
     };
 
@@ -2304,8 +2331,7 @@
         this.screen[this.y + this.shift].chars.splice(this.x, 1);
         this.screen[this.y + this.shift].chars.push(this.eraseAttr());
       }
-      this.screen[this.y + this.shift].dirty = true;
-      return this.screen[this.y + this.shift].wrap = false;
+      return this.resetLine(this.screen[this.y + this.shift]);
     };
 
     Terminal.prototype.eraseChars = function(params) {
@@ -2318,8 +2344,7 @@
       while (param-- && j < this.cols) {
         this.screen[this.y + this.shift].chars[j++] = this.eraseAttr();
       }
-      this.screen[this.y + this.shift].dirty = true;
-      return this.screen[this.y + this.shift].wrap = false;
+      return this.resetLine(this.screen[this.y + this.shift]);
     };
 
     Terminal.prototype.charPosAbsolute = function(params) {
@@ -2455,6 +2480,8 @@
             return this.autowrap = true;
           case 66:
             return this.applicationKeypad = true;
+          case 77:
+            return this.horizontalWrap = true;
           case 9:
           case 1000:
           case 1002:
@@ -2534,6 +2561,8 @@
             return this.autowrap = false;
           case 66:
             return this.applicationKeypad = false;
+          case 77:
+            return this.horizontalWrap = false;
           case 9:
           case 1000:
           case 1002:
@@ -2834,8 +2863,7 @@
           while (i < l) {
             this.screen[i].chars.splice(this.x, 1);
             this.screen[i].chars.push(this.eraseAttr());
-            this.screen[i].dirty = true;
-            this.screen[i].wrap = false;
+            this.resetLine(this.screen[i].dirty);
             results1.push(i++);
           }
           return results1;
