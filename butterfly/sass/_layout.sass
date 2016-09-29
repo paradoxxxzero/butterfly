@@ -29,6 +29,34 @@ body
   .line.active
     background-color: $active-bg
 
+  .line.extended
+    overflow-x: auto
+    overflow-x: overlay
+    cursor: zoom-in
+    background-image: linear-gradient(90deg, rgba(darken($bg, 3%), 0), 95%, darken($bg, 3%))
+
+    &:not(.expanded):hover
+      background-color: lighten($bg, 2%)
+
+    &.expanded
+      cursor: zoom-out
+      background-color: darken($bg, 3%)
+
+      .extra
+        display: block
+        white-space: pre-line
+        word-break: break-all
+
+    &::-webkit-scrollbar
+      background: rgba($scroll-bg, .1)
+      height: 0
+
+    &::-webkit-scrollbar-thumb
+      background: rgba($scroll-fg, .1)
+
+    &::-webkit-scrollbar-thumb:hover
+      background: rgba($scroll-fg-hover, .1)
+
   &::-webkit-scrollbar
     background: $scroll-bg
     width: $scroll-width
