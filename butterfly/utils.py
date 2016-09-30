@@ -208,7 +208,11 @@ def get_socket_env(inode, user):
             continue
         try:
             with open('/proc/%s/cmdline' % pid) as c:
-                if c.read().split('\x00')[0].split('/')[-1] in [
+                command = c.read().split('\x00')
+                executable = command[0].split('/')[-1]
+                if executable in ('sh', 'bash', 'zsh'):
+                    executable = command[1].split('/')[-1]
+                if executable in [
                         'gnome-session',
                         'gnome-session-binary',
                         'startkde',
