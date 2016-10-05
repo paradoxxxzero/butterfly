@@ -216,6 +216,7 @@ def get_socket_env(inode, user):
                         'gnome-session',
                         'gnome-session-binary',
                         'startkde',
+                        'startdde',
                         'xfce4-session']:
                     with open('/proc/%s/status' % pid) as e:
                         uid = None

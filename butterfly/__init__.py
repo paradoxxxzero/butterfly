@@ -46,12 +46,17 @@ class Route(tornado.web.RequestHandler):
     @property
     def builtin_themes_dir(self):
         return os.path.join(
-                os.path.dirname(__file__), 'themes')
+            os.path.dirname(__file__), 'themes')
 
     @property
     def themes_dir(self):
         return os.path.join(
             self.application.butterfly_dir, 'themes')
+
+    @property
+    def local_js_dir(self):
+        return os.path.join(
+            self.application.butterfly_dir, 'js')
 
     def get_theme_dir(self, theme):
         if theme.startswith('built-in-'):
