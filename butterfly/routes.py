@@ -319,7 +319,7 @@ class ThemesList(Route):
                 'built-in-%s' % theme
                 for theme in os.listdir(self.builtin_themes_dir)
                 if os.path.isdir(os.path.join(
-                        self.builtin_themes_dir, theme)) and
+                    self.builtin_themes_dir, theme)) and
                 not theme.startswith('.')]
         else:
             builtin_themes = []
@@ -330,3 +330,22 @@ class ThemesList(Route):
             'builtin_themes': sorted(builtin_themes),
             'dir': self.themes_dir
         }))
+
+
+@url('/local.js')
+class LocalJsStatic(Route):
+    def get(self):
+        self.set_header("Content-Type", 'application/javascript')
+        if os.path.exists(self.local_js_dir):
+            for fn in os.listdir(self.local_js_dir):
+                if not fn.endswith('.js'):
+                    continue
+                with open(os.path.join(self.local_js_dir, fn), 'rb') as s:
+                    while True:
+                        data = s.read(16384)
+                        if data:
+                            self.write(data)
+                        else:
+                            self.write(';')
+                            break
+        self.finish()

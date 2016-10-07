@@ -28,7 +28,6 @@
 #   http://bellard.org/jslinux/
 
 
-
 cancel = (ev) ->
   ev.preventDefault() if ev.preventDefault
   ev.stopPropagation() if ev.stopPropagation
@@ -45,7 +44,20 @@ State =
   dcs: s++
   ignore: s++
 
+
 class Terminal
+  @hooks: {}
+  # Mini implementation of event
+  @on: (hook, fun) ->
+    unless Terminal.hooks[hook]?
+      Terminal.hooks[hook] = []
+    Terminal.hooks[hook].push(fun)
+
+  @off: (hook, fun) ->
+    unless Terminal.hooks[hook]?
+      Terminal.hooks[hook] = []
+    Terminal.hooks[hook].pop(fun)
+
   constructor: (@parent, @out, @ctl=->) ->
     # Global elements
     @document = @parent.ownerDocument
@@ -101,6 +113,13 @@ class Terminal
 
     @initmouse()
     addEventListener 'load', => @resize()
+    @emit 'load'
+
+  emit: (hook, args...) ->
+    unless Terminal.hooks[hook]?
+      Terminal.hooks[hook] = []
+    for fun in Terminal.hooks[hook]
+      fun.apply(@, args)
 
   cloneAttr: (a, char=null) ->
     bg: a.bg
@@ -148,6 +167,7 @@ class Terminal
     @applicationCursor = false
     @originMode = false
     @autowrap = true
+    @horizontalWrap = false
     @normal = null
 
     # charset
@@ -395,27 +415,17 @@ class Terminal
         sendButton ev
         cancel ev
 
-  linkify: (t) ->
-    # http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
-    urlPattern = (
-      /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim)
-    pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim
-    emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim
-    (part
-      .replace(urlPattern, '<a href="$&">$&</a>')
-      .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
-      .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>'
-    ) for part in t.split('&nbsp;')).join('&nbsp;')
-
   refresh: (force=false) ->
     for cursor in @body.querySelectorAll(".cursor")
       cursor.parentNode.replaceChild(
         @document.createTextNode(cursor.textContent), cursor)
     for active in @body.querySelectorAll(".line.active")
       active.classList.remove('active')
+    # for active in @body.querySelectorAll(".line.extended")
+    #   active.classList.remove('extended')
 
     newOut = ''
-
+    modified = []
     for line, j in @screen
       continue unless line.dirty or force
       out = ""
@@ -517,21 +527,30 @@ class Terminal
         out += "</span>" if i is x
         attr = data
       out += "</span>" unless @equalAttr attr, @defAttr
-      out = @linkify(out) unless j is @y + @shift or data?.html
       out += '\u23CE' if line.wrap
+      if line.extra
+        out += '<span class="extra">' + line.extra + '</span>'
       if @children[j]
         @children[j].innerHTML = out
+        modified.push @children[j]
         if x isnt -Infinity
           @children[j].classList.add 'active'
+        if line.extra
+          @children[j].classList.add 'extended'
       else
-        newOut += "<div class=\"line#{
-          x isnt -Infinity and ' active' or ''}\">#{out}</div>"
+        cls = ['line']
+        if x isnt -Infinity
+          cls.push 'active'
+        if line.extra
+          cls.push 'extended'
+        newOut += "<div class=\"#{cls.join(' ')}\">#{out}</div>"
       @screen[j].dirty = false
 
     if newOut isnt ''
       group = @document.createElement('div')
       group.className = 'group'
       group.innerHTML = newOut
+      modified.push group
       @body.appendChild group
       @screen = @screen.slice(-@rows)
       @shift = 0
@@ -548,6 +567,7 @@ class Terminal
         lines, -@rows)
 
     @nativeScrollTo()
+    @emit 'change', modified
 
   _cursorBlink: ->
     @cursorState ^= 1
@@ -634,12 +654,16 @@ class Terminal
             # '\n', '\v', '\f'
             when "\n", "\x0b", "\x0c"
               # @x = 0 if @convertEol
-              @screen[@y + @shift].dirty = true
-              @nextLine()
+              if @horizontalWrap
+                @screen[@y + @shift].extra += ch
+              else
+                @screen[@y + @shift].dirty = true
+                @nextLine()
 
             # '\r'
             when "\r"
-              @x = 0
+              unless @horizontalWrap
+                @x = 0
 
             # '\b'
             when "\b"
@@ -687,11 +711,13 @@ class Terminal
               if ch >= " "
                 ch = @charset[ch] if @charset?[ch]
                 if @x >= @cols
-                  if @autowrap
-                    @screen[@y + @shift].wrap = true
-                    @nextLine()
-                  @x = 0
-
+                  if @horizontalWrap
+                    @screen[@y + @shift].extra += ch
+                  else
+                    if @autowrap
+                      @screen[@y + @shift].wrap = true
+                      @nextLine()
+                    @x = 0
                 @putChar ch
                 @x++
                 if @forceWidth and "\uff00" < ch < "\uffef"
@@ -1140,8 +1166,6 @@ class Terminal
             switch @prefix
               # User-Defined Keys (DECUDK).
               when ""
-                # Disabling this for now as we need a good script
-                #  striper to avoid malicious script injection
                 pt = @currentParam
                 unless pt[0] is ';'
                   console.error "Unknown DECUDK: #{pt}"
@@ -1161,8 +1185,7 @@ class Terminal
                     attr.html = (
                       "<div class=\"inline-html\">#{safe}</div>")
                     @screen[@y + @shift].chars[@x] = attr
-                    @screen[@y + @shift].dirty = true
-                    @screen[@y + @shift].wrap = false
+                    @resetLine @screen[@y + @shift]
                     @nextLine()
 
                   when "IMAGE"
@@ -1180,8 +1203,7 @@ class Terminal
                       "<img class=\"inline-image\" src=\"data:#{mime};base64,#{
                         b64}\" />")
                     @screen[@y + @shift].chars[@x] = attr
-                    @screen[@y + @shift].dirty = true
-                    @screen[@y + @shift].wrap = false
+                    @resetLine @screen[@y + @shift]
 
                   when "PROMPT"
                     @send content
@@ -1673,17 +1695,20 @@ class Terminal
     while x < @cols
       line[x] = @eraseAttr()
       x++
-    @screen[y + @shift].dirty = true
-    @screen[y + @shift].wrap = false
+    @resetLine @screen[y + @shift]
 
   eraseLeft: (x, y) ->
     x++
     @screen[y + @shift].chars[x] = @eraseAttr() while x--
-    @screen[y + @shift].dirty = true
-    @screen[y + @shift].wrap = false
+    @resetLine @screen[y + @shift]
 
   eraseLine: (y) ->
     @eraseRight 0, y
+
+  resetLine: (l) ->
+    l.dirty = true
+    l.wrap = false
+    l.extra = ''
 
   blankLine: (cur=false, dirty=true) ->
     attr = (if cur then @eraseAttr() else @defAttr)
@@ -1696,6 +1721,7 @@ class Terminal
     chars: line
     dirty: dirty
     wrap: false
+    extra: ''
 
   ch: (cur) ->
     if cur then @eraseAttr() else @defAttr
@@ -2176,8 +2202,7 @@ class Terminal
     while param--
       @screen[@y + @shift].chars.splice @x, 1
       @screen[@y + @shift].chars.push @eraseAttr()
-    @screen[@y + @shift].dirty = true
-    @screen[@y + @shift].wrap = false
+    @resetLine @screen[@y + @shift]
 
   # CSI Ps X
   # Erase Ps Character(s) (default = 1) (ECH).
@@ -2187,8 +2212,7 @@ class Terminal
     j = @x
     # xterm
     @screen[@y + @shift].chars[j++] = @eraseAttr() while param-- and j < @cols
-    @screen[@y + @shift].dirty = true
-    @screen[@y + @shift].wrap = false
+    @resetLine @screen[@y + @shift]
 
   # CSI Pm `    Character Position Absolute
   #     [column] (default = [row,1]) (HPA).
@@ -2417,6 +2441,8 @@ class Terminal
           @autowrap = true
         when 66
           @applicationKeypad = true
+        when 77
+          @horizontalWrap = true
         # X10 Mouse
         # no release, no motion, no wheel, no modifiers.
         when 9, 1000, 1002, 1003 # any event mouse
@@ -2578,6 +2604,8 @@ class Terminal
           @autowrap = false
         when 66
           @applicationKeypad = false
+        when 77
+          @horizontalWrap = false
         when 9, 1000, 1002 , 1003 # any event mouse
           @x10Mouse = false
           @vt200Mouse = false
@@ -3158,8 +3186,7 @@ class Terminal
       while i < l
         @screen[i].chars.splice @x, 1
         @screen[i].chars.push @eraseAttr()
-        @screen[i].dirty = true
-        @screen[i].wrap = false
+        @resetLine @screen[i].dirty
         i++
 
   # DEC Special Character and Line Drawing Set.

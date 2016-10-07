@@ -1,5 +1,5 @@
 (function() {
-  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, first, nextLeaf, popup, previousLeaf, selection, setAlarm, virtualInput,
+  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, first, linkify, nextLeaf, popup, previousLeaf, selection, setAlarm, virtualInput, walk,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   clean_ansi = function(data) {
@@ -154,6 +154,73 @@
     if (!(butterfly.body.classList.contains('dead') || location.href.indexOf('session') > -1)) {
       return e.returnValue = 'This terminal is active and not in session. Are you sure you want to kill it?';
     }
+  });
+
+  Terminal.on('change', function(lines) {
+    var j, len1, line, results;
+    results = [];
+    for (j = 0, len1 = lines.length; j < len1; j++) {
+      line = lines[j];
+      if (indexOf.call(line.classList, 'extended') >= 0) {
+        results.push(line.addEventListener('click', (function(line) {
+          return function() {
+            var after, before;
+            if (indexOf.call(line.classList, 'expanded') >= 0) {
+              return line.classList.remove('expanded');
+            } else {
+              before = line.getBoundingClientRect().height;
+              line.classList.add('expanded');
+              after = line.getBoundingClientRect().height;
+              return document.body.scrollTop += after - before;
+            }
+          };
+        })(line)));
+      } else {
+        results.push(void 0);
+      }
+    }
+    return results;
+  });
+
+  walk = function(node, callback) {
+    var child, j, len1, ref, results;
+    ref = node.childNodes;
+    results = [];
+    for (j = 0, len1 = ref.length; j < len1; j++) {
+      child = ref[j];
+      callback.call(child);
+      results.push(walk(child, callback));
+    }
+    return results;
+  };
+
+  linkify = function(text) {
+    var emailAddressPattern, pseudoUrlPattern, urlPattern;
+    urlPattern = /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim;
+    pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+    emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim;
+    return text.replace(urlPattern, '<a href="$&">$&</a>').replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>').replace(emailAddressPattern, '<a href="mailto:$&">$&</a>');
+  };
+
+  Terminal.on('change', function(lines) {
+    var j, len1, line, results;
+    results = [];
+    for (j = 0, len1 = lines.length; j < len1; j++) {
+      line = lines[j];
+      results.push(walk(line, function() {
+        var linkified, newNode;
+        if (this.nodeType === 3) {
+          linkified = linkify(this.nodeValue);
+          if (linkified !== this.nodeValue) {
+            newNode = document.createElement('span');
+            newNode.innerHTML = linkified;
+            this.parentElement.replaceChild(newNode, this);
+            return true;
+          }
+        }
+      }));
+    }
+    return results;
   });
 
   document.addEventListener('keydown', function(e) {
