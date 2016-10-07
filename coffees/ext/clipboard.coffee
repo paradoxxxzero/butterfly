@@ -33,9 +33,18 @@ addEventListener 'copy', copy = (e) ->
   e.clipboardData.setData 'text/plain', data.slice(0, -1)
   e.preventDefault()
 
+
 addEventListener 'paste', (e) ->
   butterfly.bell "pasted"
   data = e.clipboardData.getData 'text/plain'
   data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r')
-  butterfly.send data
+  # Send big data in chunks to prevent data loss
+  size = 1024
+  send = ->
+    butterfly.send data.substring(0, size)
+    data = data.substring(size)
+    if data.length
+      setTimeout send, 25
+  send()
+
   e.preventDefault()
