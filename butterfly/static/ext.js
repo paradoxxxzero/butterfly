@@ -142,11 +142,19 @@
   });
 
   addEventListener('paste', function(e) {
-    var data;
+    var data, send, size;
     butterfly.bell("pasted");
     data = e.clipboardData.getData('text/plain');
     data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r');
-    butterfly.send(data);
+    size = 1024;
+    send = function() {
+      butterfly.send(data.substring(0, size));
+      data = data.substring(size);
+      if (data.length) {
+        return setTimeout(send, 25);
+      }
+    };
+    send();
     return e.preventDefault();
   });
 
