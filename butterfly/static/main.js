@@ -102,7 +102,7 @@
     write_request = function(e) {
       return setTimeout(write, 1, e.data);
     };
-    ctl = function() {
+    ctl = function(e) {
       var cmd;
       cmd = JSON.parse(e.data);
       if (cmd.cmd === 'size') {

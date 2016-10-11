@@ -25,6 +25,11 @@ body
   white-space: nowrap
   overflow-x: hidden
   overflow-y: scroll
+  a
+    text-decoration: underline rgba($fg, .2)
+    transition: text-decoration-color 500ms
+    &:hover
+      text-decoration: underline
 
   .line.active
     background-color: $active-bg

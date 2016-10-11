@@ -2808,6 +2808,11 @@ body {
   overflow-x: hidden;
   overflow-y: scroll;
   /* Pop ups */ }
+  body a {
+    text-decoration: underline rgba(244, 234, 213, 0.2);
+    transition: text-decoration-color 500ms; }
+    body a:hover {
+      text-decoration: underline; }
   body .line.active {
     background-color: transparent; }
   body .line.extended {

@@ -421,8 +421,6 @@ class Terminal
         @document.createTextNode(cursor.textContent), cursor)
     for active in @body.querySelectorAll(".line.active")
       active.classList.remove('active')
-    # for active in @body.querySelectorAll(".line.extended")
-    #   active.classList.remove('extended')
 
     newOut = ''
     modified = []

@@ -105,7 +105,7 @@ document.addEventListener 'DOMContentLoaded', ->
   write_request = (e) ->
     setTimeout write, 1, e.data
 
-  ctl = ->
+  ctl = (e) ->
     cmd = JSON.parse(e.data)
     if cmd.cmd is 'size'
       term.resize cmd.cols, cmd.rows, true
