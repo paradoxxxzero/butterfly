@@ -63,6 +63,7 @@ class Terminal
     @document = @parent.ownerDocument
     @html = @document.getElementsByTagName('html')[0]
     @body = @document.getElementsByTagName('body')[0]
+    @term = @document.getElementById('term')
     @forceWidth = @body.getAttribute(
       'data-force-unicode-width') is 'yes'
 
@@ -75,14 +76,12 @@ class Terminal
     # Adding one line to compute char size
     div = @document.createElement('div')
     div.className = 'line'
-    @body.appendChild(div)
-    @children = [div]
+    @term.appendChild(div)
 
     @computeCharSize()
     @cols = Math.floor(@body.clientWidth / @charSize.width)
     @rows = Math.floor(window.innerHeight / @charSize.height)
     px = window.innerHeight % @charSize.height
-    @body.style['padding-bottom'] = "#{px}px"
 
     @scrollback = 10000
     @buffSize = 100000
@@ -198,20 +197,21 @@ class Terminal
     @currentParam = 0
     @prefix = ""
     @screen = []
-    i = @rows
     @shift = 0
-    @screen.push @blankLine(false, false) while i--
+    for row in [0..@rows]
+      @screen.push @blankLine(false, false)
     @setupStops()
     @skipNextKey = null
 
   computeCharSize: ->
     testSpan = document.createElement('span')
     testSpan.textContent = '0123456789'
-    @children[0].appendChild(testSpan)
+    line = @term.firstChild
+    line.appendChild(testSpan)
     @charSize =
       width: testSpan.getBoundingClientRect().width / 10
-      height: @children[0].getBoundingClientRect().height
-    @children[0].removeChild(testSpan)
+      height: line.getBoundingClientRect().height
+    line.removeChild(testSpan)
 
   eraseAttr: ->
     erased = @cloneAttr @defAttr
@@ -520,29 +520,24 @@ class Terminal
         @active = div
 
   writeDom: (dom) ->
-    # frag = document.createDocumentFragment('fragment')
+    r = Math.max @term.childElementCount - @rows, 0
     for line, y in dom
       continue unless line
       @screen[y].dirty = false
-      if y < @children.length
-        @body.replaceChild line, @children[y]
-        @children[y] = line
-        @emit 'change', @children[y]
+      if y < @rows and y < @term.childElementCount
+        @term.replaceChild(line, @term.childNodes[r + y])
       else
-        @children.shift() if @children.length >= @rows
-        @body.appendChild line
-        @children.push line
-        @emit 'change', line
+        frag = frag or document.createDocumentFragment('fragment')
+        frag.appendChild line
+      @emit 'change', line
 
-    # @body.appendChild frag
+    frag and @term.appendChild frag
 
-    @screen = @screen.slice(-@rows)
     @shift = 0
-    if @body.childElementCount > @scrollback
-      @body.style.display = 'none'
-      for i in [0..@body.childElementCount - @scrollback]
-        @body.firstChild.remove()
-      @body.style.display = 'block'
+    @screen = @screen.slice -@rows
+    if @term.childElementCount > @scrollback
+      for i in [0..@term.childElementCount - @scrollback]
+        @term.firstChild.remove()
 
   refresh: (force=false) ->
     @active?.classList.remove('active')
@@ -552,7 +547,7 @@ class Terminal
 
   _cursorBlink: ->
     @cursorState ^= 1
-    cursor = @body.querySelector(".cursor")
+    cursor = @term.querySelector(".cursor")
     return unless cursor
     if cursor.classList.contains("reverse-video")
       cursor.classList.remove "reverse-video"
@@ -1558,8 +1553,6 @@ class Terminal
       return
     @cols = x or Math.floor(w / @charSize.width)
     @rows = y or Math.floor(h / @charSize.height)
-    px = h % @charSize.height
-    @body.style['padding-bottom'] = "#{px}px"
 
     @cols = Math.max 1, @cols
     @rows = Math.max 1, @rows
@@ -1572,72 +1565,50 @@ class Terminal
       cmd: 'size', cols: @cols, rows: @rows)) unless notif
 
     # resize cols
-    if oldCols < @cols
+    if @cols > oldCols
       # does xterm use the default attr?
-      i = @screen.length
-      while i--
-        @screen[i].chars.push @defAttr while @screen[i].chars.length < @cols
-        @screen[i].wrap = false
+      for line in @screen
+        line.chars.push @defAttr while line.chars.length < @cols
+        line.wrap = false
+      if @normal
+        for line in @normal.screen
+          line.chars.push @defAttr while line.chars.length < @cols
+          line.wrap = false
 
-    else if oldCols > @cols
-      i = @screen.length
-      while i--
-        @screen[i].chars.pop() while @screen[i].chars.length > @cols
+    else if @cols < oldCols
+      for line in @screen
+        line.chars.pop() while line.chars.length > @cols
+      if @normal
+        for line in @normal.screen
+          line.chars.pop() while line.chars.length > @cols
 
     @setupStops oldCols
 
+    if @term.childElementCount >= @rows
+      @y += @rows - oldRows
+      insert = 'unshift'
+    else
+      insert = 'push'
+
     # resize rows
-    j = oldRows
-    if j < @rows
-      # @body.style.display = 'none'
-      while j++ < @rows
-        @screen.push @blankLine() if @screen.length < @rows
-        # if @children.length < @rows
-          # line = @document.createElement("div")
-          # line.className = 'line'
-          # @body.appendChild line
-          # @children.push line
-        # @body.style.display = 'block'
-    else if j > @rows
-      while j-- > @rows
-        @screen.pop() if @screen.length > @rows
-        # if @children.length > @rows
-          # el = @children.pop()
-          # el?.parentNode.removeChild el
+    while @screen.length > @rows
+      @screen.shift()
+    while @screen.length < @rows
+      @screen[insert] @blankLine(false, false)
 
     if @normal
-      # resize cols
-      if oldCols < @cols
-        # does xterm use the default attr?
-        i = @normal.screen.length
-        while i--
-          while @normal.screen[i].chars.length < @cols
-            @normal.screen[i].chars.push @defAttr
-          @normal.screen[i].wrap = false
-
-      else if oldCols > @cols
-        i = @normal.screen.length
-        while i--
-          while @normal.screen[i].chars.length > @cols
-            @normal.screen[i].chars.pop()
-
-      # resize rows
-      j = oldRows
-      if j < @rows
-        while j++ < @rows
-          @normal.screen.push @blankLine() if @normal.screen.length < @rows
-      else if j > @rows
-        while j-- > @rows
-          @normal.screen.pop() if @normal.screen.length > @rows
+      while @normal.screen.length > @rows
+        @normal.screen.shift()
+      while @normal.screen.length < @rows
+        @normal.screen[insert] @blankLine(false, false)
 
     # make sure the cursor stays on screen
     @y = @rows - 1 if @y >= @rows
     @x = @cols - 1 if @x >= @cols
-
     @scrollTop = 0
     @scrollBottom = @rows - 1
 
-    @refresh(true)
+    @refresh()
     @reset() if not notif and (x or y)
 
   resizeWindowPlease: (cols) ->
@@ -1737,17 +1708,8 @@ class Terminal
   clearScrollback: ->
     # In case of real hard reset
     # Drop DOM history
-    lines = document.querySelectorAll('.line')
-    if lines.length > @rows
-      for line in Array.prototype.slice.call(
-        lines, 0, lines.length - @rows)
-          line.remove()
-      for group in document.querySelectorAll('.group:empty')
-        group.remove()
-      lines = document.querySelectorAll('.line')
-    @children = Array.prototype.slice.call(
-      lines, -@rows)
-
+    while @term.childElementCount > @rows
+      @term.firstChild.remove()
 
   # ESC H Tab Set (HTS is 0x88).
   tabSet: ->
@@ -2168,8 +2130,8 @@ class Terminal
       @screen.splice @scrollBottom + @shift, 0, @blankLine(true)
       @screen.splice @y + @shift, 1
       unless @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
-        @children[@y + @shift].remove()
-        @children.splice @y + @shift, 1
+        node = @term.childElementCount - @rows + @y + @shift
+        @term.childNodes[node].remove()
 
     if @normal or @scrollTop isnt 0 or @scrollBottom isnt @rows - 1
       for i in [@y + @shift..@screen.length - 1]

@@ -177,6 +177,7 @@
       this.document = this.parent.ownerDocument;
       this.html = this.document.getElementsByTagName('html')[0];
       this.body = this.document.getElementsByTagName('body')[0];
+      this.term = this.document.getElementById('term');
       this.forceWidth = this.body.getAttribute('data-force-unicode-width') === 'yes';
       this.body.className = 'terminal focus';
       this.body.style.outline = 'none';
@@ -184,13 +185,11 @@
       this.body.setAttribute('spellcheck', 'false');
       div = this.document.createElement('div');
       div.className = 'line';
-      this.body.appendChild(div);
-      this.children = [div];
+      this.term.appendChild(div);
       this.computeCharSize();
       this.cols = Math.floor(this.body.clientWidth / this.charSize.width);
       this.rows = Math.floor(window.innerHeight / this.charSize.height);
       px = window.innerHeight % this.charSize.height;
-      this.body.style['padding-bottom'] = px + "px";
       this.scrollback = 10000;
       this.buffSize = 100000;
       this.visualBell = 100;
@@ -280,7 +279,7 @@
     };
 
     Terminal.prototype.resetVars = function() {
-      var i;
+      var k, ref, row;
       this.x = 0;
       this.y = 0;
       this.cursorHidden = false;
@@ -317,9 +316,8 @@
       this.currentParam = 0;
       this.prefix = "";
       this.screen = [];
-      i = this.rows;
       this.shift = 0;
-      while (i--) {
+      for (row = k = 0, ref = this.rows; 0 <= ref ? k <= ref : k >= ref; row = 0 <= ref ? ++k : --k) {
         this.screen.push(this.blankLine(false, false));
       }
       this.setupStops();
@@ -327,15 +325,16 @@
     };
 
     Terminal.prototype.computeCharSize = function() {
-      var testSpan;
+      var line, testSpan;
       testSpan = document.createElement('span');
       testSpan.textContent = '0123456789';
-      this.children[0].appendChild(testSpan);
+      line = this.term.firstChild;
+      line.appendChild(testSpan);
       this.charSize = {
         width: testSpan.getBoundingClientRect().width / 10,
-        height: this.children[0].getBoundingClientRect().height
+        height: line.getBoundingClientRect().height
       };
-      return this.children[0].removeChild(testSpan);
+      return line.removeChild(testSpan);
     };
 
     Terminal.prototype.eraseAttr = function() {
@@ -705,34 +704,31 @@
     };
 
     Terminal.prototype.writeDom = function(dom) {
-      var i, k, len, line, m, ref, y;
+      var frag, i, k, len, line, m, r, ref, results, y;
+      r = Math.max(this.term.childElementCount - this.rows, 0);
       for (y = k = 0, len = dom.length; k < len; y = ++k) {
         line = dom[y];
         if (!line) {
           continue;
         }
         this.screen[y].dirty = false;
-        if (y < this.children.length) {
-          this.body.replaceChild(line, this.children[y]);
-          this.children[y] = line;
-          this.emit('change', this.children[y]);
+        if (y < this.rows && y < this.term.childElementCount) {
+          this.term.replaceChild(line, this.term.childNodes[r + y]);
         } else {
-          if (this.children.length >= this.rows) {
-            this.children.shift();
-          }
-          this.body.appendChild(line);
-          this.children.push(line);
-          this.emit('change', line);
+          frag = frag || document.createDocumentFragment('fragment');
+          frag.appendChild(line);
         }
+        this.emit('change', line);
       }
-      this.screen = this.screen.slice(-this.rows);
+      frag && this.term.appendChild(frag);
       this.shift = 0;
-      if (this.body.childElementCount > this.scrollback) {
-        this.body.style.display = 'none';
-        for (i = m = 0, ref = this.body.childElementCount - this.scrollback; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
-          this.body.firstChild.remove();
+      this.screen = this.screen.slice(-this.rows);
+      if (this.term.childElementCount > this.scrollback) {
+        results = [];
+        for (i = m = 0, ref = this.term.childElementCount - this.scrollback; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
+          results.push(this.term.firstChild.remove());
         }
-        return this.body.style.display = 'block';
+        return results;
       }
     };
 
@@ -752,7 +748,7 @@
     Terminal.prototype._cursorBlink = function() {
       var cursor;
       this.cursorState ^= 1;
-      cursor = this.body.querySelector(".cursor");
+      cursor = this.term.querySelector(".cursor");
       if (!cursor) {
         return;
       }
@@ -1705,7 +1701,7 @@
     };
 
     Terminal.prototype.resize = function(x, y, notif) {
-      var h, i, j, oldCols, oldRows, px, w;
+      var h, insert, k, len, len1, len2, len3, line, m, n, o, oldCols, oldRows, ref, ref1, ref2, ref3, w;
       if (x == null) {
         x = null;
       }
@@ -1726,8 +1722,6 @@
       }
       this.cols = x || Math.floor(w / this.charSize.width);
       this.rows = y || Math.floor(h / this.charSize.height);
-      px = h % this.charSize.height;
-      this.body.style['padding-bottom'] = px + "px";
       this.cols = Math.max(1, this.cols);
       this.rows = Math.max(1, this.rows);
       this.nativeScrollTo();
@@ -1741,67 +1735,62 @@
           rows: this.rows
         }));
       }
-      if (oldCols < this.cols) {
-        i = this.screen.length;
-        while (i--) {
-          while (this.screen[i].chars.length < this.cols) {
-            this.screen[i].chars.push(this.defAttr);
+      if (this.cols > oldCols) {
+        ref = this.screen;
+        for (k = 0, len = ref.length; k < len; k++) {
+          line = ref[k];
+          while (line.chars.length < this.cols) {
+            line.chars.push(this.defAttr);
           }
-          this.screen[i].wrap = false;
+          line.wrap = false;
         }
-      } else if (oldCols > this.cols) {
-        i = this.screen.length;
-        while (i--) {
-          while (this.screen[i].chars.length > this.cols) {
-            this.screen[i].chars.pop();
+        if (this.normal) {
+          ref1 = this.normal.screen;
+          for (m = 0, len1 = ref1.length; m < len1; m++) {
+            line = ref1[m];
+            while (line.chars.length < this.cols) {
+              line.chars.push(this.defAttr);
+            }
+            line.wrap = false;
+          }
+        }
+      } else if (this.cols < oldCols) {
+        ref2 = this.screen;
+        for (n = 0, len2 = ref2.length; n < len2; n++) {
+          line = ref2[n];
+          while (line.chars.length > this.cols) {
+            line.chars.pop();
+          }
+        }
+        if (this.normal) {
+          ref3 = this.normal.screen;
+          for (o = 0, len3 = ref3.length; o < len3; o++) {
+            line = ref3[o];
+            while (line.chars.length > this.cols) {
+              line.chars.pop();
+            }
           }
         }
       }
       this.setupStops(oldCols);
-      j = oldRows;
-      if (j < this.rows) {
-        while (j++ < this.rows) {
-          if (this.screen.length < this.rows) {
-            this.screen.push(this.blankLine());
-          }
-        }
-      } else if (j > this.rows) {
-        while (j-- > this.rows) {
-          if (this.screen.length > this.rows) {
-            this.screen.pop();
-          }
-        }
+      if (this.term.childElementCount >= this.rows) {
+        this.y += this.rows - oldRows;
+        insert = 'unshift';
+      } else {
+        insert = 'push';
+      }
+      while (this.screen.length > this.rows) {
+        this.screen.shift();
+      }
+      while (this.screen.length < this.rows) {
+        this.screen[insert](this.blankLine(false, false));
       }
       if (this.normal) {
-        if (oldCols < this.cols) {
-          i = this.normal.screen.length;
-          while (i--) {
-            while (this.normal.screen[i].chars.length < this.cols) {
-              this.normal.screen[i].chars.push(this.defAttr);
-            }
-            this.normal.screen[i].wrap = false;
-          }
-        } else if (oldCols > this.cols) {
-          i = this.normal.screen.length;
-          while (i--) {
-            while (this.normal.screen[i].chars.length > this.cols) {
-              this.normal.screen[i].chars.pop();
-            }
-          }
+        while (this.normal.screen.length > this.rows) {
+          this.normal.screen.shift();
         }
-        j = oldRows;
-        if (j < this.rows) {
-          while (j++ < this.rows) {
-            if (this.normal.screen.length < this.rows) {
-              this.normal.screen.push(this.blankLine());
-            }
-          }
-        } else if (j > this.rows) {
-          while (j-- > this.rows) {
-            if (this.normal.screen.length > this.rows) {
-              this.normal.screen.pop();
-            }
-          }
+        while (this.normal.screen.length < this.rows) {
+          this.normal.screen[insert](this.blankLine(false, false));
         }
       }
       if (this.y >= this.rows) {
@@ -1812,7 +1801,7 @@
       }
       this.scrollTop = 0;
       this.scrollBottom = this.rows - 1;
-      this.refresh(true);
+      this.refresh();
       if (!notif && (x || y)) {
         return this.reset();
       }
@@ -1966,22 +1955,12 @@
     };
 
     Terminal.prototype.clearScrollback = function() {
-      var group, k, len, len1, line, lines, m, ref, ref1;
-      lines = document.querySelectorAll('.line');
-      if (lines.length > this.rows) {
-        ref = Array.prototype.slice.call(lines, 0, lines.length - this.rows);
-        for (k = 0, len = ref.length; k < len; k++) {
-          line = ref[k];
-          line.remove();
-        }
-        ref1 = document.querySelectorAll('.group:empty');
-        for (m = 0, len1 = ref1.length; m < len1; m++) {
-          group = ref1[m];
-          group.remove();
-        }
-        lines = document.querySelectorAll('.line');
+      var results;
+      results = [];
+      while (this.term.childElementCount > this.rows) {
+        results.push(this.term.firstChild.remove());
       }
-      return this.children = Array.prototype.slice.call(lines, -this.rows);
+      return results;
     };
 
     Terminal.prototype.tabSet = function() {
@@ -2298,7 +2277,7 @@
     };
 
     Terminal.prototype.deleteLines = function(params) {
-      var i, k, param, ref, ref1, results;
+      var i, k, node, param, ref, ref1, results;
       param = params[0];
       if (param < 1) {
         param = 1;
@@ -2307,8 +2286,8 @@
         this.screen.splice(this.scrollBottom + this.shift, 0, this.blankLine(true));
         this.screen.splice(this.y + this.shift, 1);
         if (!(this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1)) {
-          this.children[this.y + this.shift].remove();
-          this.children.splice(this.y + this.shift, 1);
+          node = this.term.childElementCount - this.rows + this.y + this.shift;
+          this.term.childNodes[node].remove();
         }
       }
       if (this.normal || this.scrollTop !== 0 || this.scrollBottom !== this.rows - 1) {
