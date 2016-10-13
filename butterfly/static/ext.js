@@ -413,13 +413,13 @@
 
     Selection.prototype.go = function(n) {
       var index;
-      index = butterfly.children.indexOf(this.startLine) + n;
-      if (!((0 <= index && index < butterfly.children.length))) {
+      index = Array.prototype.indexOf.call(butterfly.term.childNodes, this.startLine) + n;
+      if (!((0 <= index && index < butterfly.term.childElementCount))) {
         return;
       }
-      while (!butterfly.children[index].textContent.match(/\S/)) {
+      while (!butterfly.term.childNodes[index].textContent.match(/\S/)) {
         index += n;
-        if (!((0 <= index && index < butterfly.children.length))) {
+        if (!((0 <= index && index < butterfly.term.childElementCount))) {
           return;
         }
       }
@@ -437,7 +437,7 @@
 
     Selection.prototype.selectLine = function(index) {
       var line, lineEnd, lineStart;
-      line = butterfly.children[index];
+      line = butterfly.term.childNodes[index];
       lineStart = {
         node: line.firstChild,
         offset: 0

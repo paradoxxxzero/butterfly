@@ -87,12 +87,13 @@ class Selection
     @go +1
 
   go: (n) ->
-    index = butterfly.children.indexOf(@startLine) + n
-    return unless 0 <= index < butterfly.children.length
+    index = Array.prototype.indexOf.call(
+      butterfly.term.childNodes, @startLine) + n
+    return unless 0 <= index < butterfly.term.childElementCount
 
-    until butterfly.children[index].textContent.match /\S/
+    until butterfly.term.childNodes[index].textContent.match /\S/
       index += n
-      return unless 0 <= index < butterfly.children.length
+      return unless 0 <= index < butterfly.term.childElementCount
 
     @selectLine index
 
@@ -104,7 +105,7 @@ class Selection
     @selection.addRange range
 
   selectLine: (index) ->
-    line = butterfly.children[index]
+    line = butterfly.term.childNodes[index]
     lineStart =
       node: line.firstChild
       offset: 0
