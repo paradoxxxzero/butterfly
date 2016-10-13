@@ -14,13 +14,12 @@ linkify = (text) ->
     .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
     .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>')
 
-Terminal.on 'change', (lines) ->
-  for line in lines
-    walk line, ->
-      if @nodeType is 3
-        linkified = linkify @nodeValue
-        if linkified isnt @nodeValue
-          newNode = document.createElement('span')
-          newNode.innerHTML = linkified
-          @parentElement.replaceChild newNode, @
-          true
+Terminal.on 'change', (line) ->
+  walk line, ->
+    if @nodeType is 3
+      linkified = linkify @nodeValue
+      if linkified isnt @nodeValue
+        newNode = document.createElement('span')
+        newNode.innerHTML = linkified
+        @parentElement.replaceChild newNode, @
+        true

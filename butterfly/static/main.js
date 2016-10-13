@@ -1,6 +1,5 @@
 (function() {
   var $, State, Terminal, cancel, cols, openTs, quit, rows, s, uuid, ws,
-    slice = [].slice,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   cols = rows = null;
@@ -192,7 +191,7 @@
       this.rows = Math.floor(window.innerHeight / this.charSize.height);
       px = window.innerHeight % this.charSize.height;
       this.body.style['padding-bottom'] = px + "px";
-      this.scrollback = 1000000;
+      this.scrollback = 10000;
       this.buffSize = 100000;
       this.visualBell = 100;
       this.convertEol = false;
@@ -226,11 +225,18 @@
         };
       })(this));
       this.emit('load');
+      this.active = null;
+      Terminal.on('change', (function(_this) {
+        return function(line) {
+          if (line.classList.contains('active')) {
+            return _this.active = line;
+          }
+        };
+      })(this));
     }
 
-    Terminal.prototype.emit = function() {
-      var args, fun, hook, k, len, ref, results;
-      hook = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    Terminal.prototype.emit = function(hook, obj) {
+      var fun, k, len, ref, results;
       if (Terminal.hooks[hook] == null) {
         Terminal.hooks[hook] = [];
       }
@@ -238,7 +244,11 @@
       results = [];
       for (k = 0, len = ref.length; k < len; k++) {
         fun = ref[k];
-        results.push(fun.apply(this, args));
+        results.push(setTimeout((function(f) {
+          return function() {
+            return f.call(this, obj);
+          };
+        })(fun), 10));
       }
       return results;
     };
@@ -543,144 +553,162 @@
       })(this));
     };
 
-    Terminal.prototype.refresh = function(force) {
-      var active, attr, ch, classes, cls, cursor, data, fg, group, i, j, k, len, len1, len2, len3, len4, line, lines, m, modified, n, newOut, o, out, q, ref, ref1, ref2, ref3, ref4, ref5, skipnext, styles, u, x;
-      if (force == null) {
-        force = false;
+    Terminal.prototype._putChar = function(data, attr, i, x) {
+      var ch, classes, fg, out, skipnext, styles;
+      out = '';
+      ch = data.ch;
+      if (!this.equalAttr(data, attr)) {
+        if (!this.equalAttr(attr, this.defAttr)) {
+          out += "</span>";
+        }
+        if (!this.equalAttr(data, this.defAttr)) {
+          classes = [];
+          styles = [];
+          out += "<span ";
+          if (data.bold) {
+            classes.push("bold");
+          }
+          if (data.underline) {
+            classes.push("underline");
+          }
+          if (data.blink === 1) {
+            classes.push("blink");
+          }
+          if (data.blink === 2) {
+            classes.push("blink-fast");
+          }
+          if (data.inverse) {
+            classes.push("reverse-video");
+          }
+          if (data.invisible) {
+            classes.push("invisible");
+          }
+          if (data.italic) {
+            classes.push("italic");
+          }
+          if (data.faint) {
+            classes.push("faint");
+          }
+          if (data.crossed) {
+            classes.push("crossed");
+          }
+          if (typeof data.fg === 'number') {
+            fg = data.fg;
+            if (data.bold && fg < 8) {
+              fg += 8;
+            }
+            classes.push("fg-color-" + fg);
+          }
+          if (typeof data.fg === 'string') {
+            styles.push("color: " + data.fg);
+          }
+          if (typeof data.bg === 'number') {
+            classes.push("bg-color-" + data.bg);
+          }
+          if (typeof data.bg === 'string') {
+            styles.push("background-color: " + data.bg);
+          }
+          out += "class=\"";
+          out += classes.join(" ");
+          out += "\"";
+          if (styles.length) {
+            out += " style=\"" + styles.join("; ") + "\"";
+          }
+          out += ">";
+        }
       }
-      ref = this.body.querySelectorAll(".cursor");
-      for (k = 0, len = ref.length; k < len; k++) {
-        cursor = ref[k];
-        cursor.parentNode.replaceChild(this.document.createTextNode(cursor.textContent), cursor);
+      if (i === x) {
+        out += "<span class=\"" + (this.cursorState ? "reverse-video " : "") + "cursor\">";
       }
-      ref1 = this.body.querySelectorAll(".line.active");
-      for (m = 0, len1 = ref1.length; m < len1; m++) {
-        active = ref1[m];
-        active.classList.remove('active');
+      if (ch.length > 1) {
+        out += ch;
+      } else {
+        switch (ch) {
+          case "&":
+            out += "&amp;";
+            break;
+          case "<":
+            out += "&lt;";
+            break;
+          case ">":
+            out += "&gt;";
+            break;
+          default:
+            if (ch === " ") {
+              out += '<span class="nbsp">\u2007</span>';
+            } else if (ch <= " ") {
+              out += "&nbsp;";
+            } else if (!this.forceWidth || ch <= "~") {
+              out += ch;
+            } else if (("\uff00" < ch && ch < "\uffef")) {
+              skipnext = true;
+              out += "<span style=\"display: inline-block; width: " + (2 * this.charSize.width) + "px\">" + ch + "</span>";
+            } else {
+              out += "<span style=\"display: inline-block; width: " + this.charSize.width + "px\">" + ch + "</span>";
+            }
+        }
       }
-      newOut = '';
-      modified = [];
-      ref2 = this.screen;
-      for (j = n = 0, len2 = ref2.length; n < len2; j = ++n) {
-        line = ref2[j];
+      if (i === x) {
+        out += "</span>";
+      }
+      return out;
+    };
+
+    Terminal.prototype._putLine = function(x, j, outs, line) {
+      var cls;
+      this.screen[j].dirty = false;
+      if (this.children[j]) {
+        this.children[j].innerHTML = outs.join('');
+        this.emit('change', this.children[j]);
+        if (x !== null) {
+          this.children[j].classList.add('active');
+        }
+        if (line.extra) {
+          this.children[j].classList.add('extended');
+        }
+        return null;
+      } else {
+        cls = ['line'];
+        if (x !== null) {
+          cls.push('active');
+        }
+        if (line.extra) {
+          cls.push('extended');
+        }
+        return "<div class=\"" + (cls.join(' ')) + "\">" + (outs.join('')) + "</div>";
+      }
+    };
+
+    Terminal.prototype._replotScreen = function(force) {
+      var attr, data, group, groups, i, j, k, len, line, m, out, outs, ref, ref1, skipnext, x;
+      groups = [];
+      ref = this.screen;
+      for (j = k = 0, len = ref.length; k < len; j = ++k) {
+        line = ref[j];
         if (!(line.dirty || force)) {
           continue;
         }
-        out = "";
+        x = null;
         if (j === this.y + this.shift && !this.cursorHidden) {
           x = this.x;
-        } else {
-          x = -Infinity;
         }
         attr = this.cloneAttr(this.defAttr);
         skipnext = false;
-        for (i = o = 0, ref3 = this.cols - 1; 0 <= ref3 ? o <= ref3 : o >= ref3; i = 0 <= ref3 ? ++o : --o) {
+        outs = [];
+        for (i = m = 0, ref1 = this.cols - 1; 0 <= ref1 ? m <= ref1 : m >= ref1; i = 0 <= ref1 ? ++m : --m) {
           data = line.chars[i];
           if (data.html) {
-            out += data.html;
+            outs.push(data.html);
             break;
           }
           if (skipnext) {
             skipnext = false;
             continue;
           }
-          ch = data.ch;
-          if (!this.equalAttr(data, attr)) {
-            if (!this.equalAttr(attr, this.defAttr)) {
-              out += "</span>";
-            }
-            if (!this.equalAttr(data, this.defAttr)) {
-              classes = [];
-              styles = [];
-              out += "<span ";
-              if (data.bold) {
-                classes.push("bold");
-              }
-              if (data.underline) {
-                classes.push("underline");
-              }
-              if (data.blink === 1) {
-                classes.push("blink");
-              }
-              if (data.blink === 2) {
-                classes.push("blink-fast");
-              }
-              if (data.inverse) {
-                classes.push("reverse-video");
-              }
-              if (data.invisible) {
-                classes.push("invisible");
-              }
-              if (data.italic) {
-                classes.push("italic");
-              }
-              if (data.faint) {
-                classes.push("faint");
-              }
-              if (data.crossed) {
-                classes.push("crossed");
-              }
-              if (typeof data.fg === 'number') {
-                fg = data.fg;
-                if (data.bold && fg < 8) {
-                  fg += 8;
-                }
-                classes.push("fg-color-" + fg);
-              }
-              if (typeof data.fg === 'string') {
-                styles.push("color: " + data.fg);
-              }
-              if (typeof data.bg === 'number') {
-                classes.push("bg-color-" + data.bg);
-              }
-              if (typeof data.bg === 'string') {
-                styles.push("background-color: " + data.bg);
-              }
-              out += "class=\"";
-              out += classes.join(" ");
-              out += "\"";
-              if (styles.length) {
-                out += " style=\"" + styles.join("; ") + "\"";
-              }
-              out += ">";
-            }
-          }
-          if (i === x) {
-            out += "<span class=\"" + (this.cursorState ? "reverse-video " : "") + "cursor\">";
-          }
-          if (ch.length > 1) {
-            out += ch;
-          } else {
-            switch (ch) {
-              case "&":
-                out += "&amp;";
-                break;
-              case "<":
-                out += "&lt;";
-                break;
-              case ">":
-                out += "&gt;";
-                break;
-              default:
-                if (ch === " ") {
-                  out += '<span class="nbsp">\u2007</span>';
-                } else if (ch <= " ") {
-                  out += "&nbsp;";
-                } else if (!this.forceWidth || ch <= "~") {
-                  out += ch;
-                } else if (("\uff00" < ch && ch < "\uffef")) {
-                  skipnext = true;
-                  out += "<span style=\"display: inline-block; width: " + (2 * this.charSize.width) + "px\">" + ch + "</span>";
-                } else {
-                  out += "<span style=\"display: inline-block; width: " + this.charSize.width + "px\">" + ch + "</span>";
-                }
-            }
-          }
-          if (i === x) {
-            out += "</span>";
-          }
+          outs.push(this._putChar(data, attr, i, x));
           attr = data;
         }
+        out = '';
         if (!this.equalAttr(attr, this.defAttr)) {
           out += "</span>";
         }
@@ -690,53 +718,59 @@
         if (line.extra) {
           out += '<span class="extra">' + line.extra + '</span>';
         }
-        if (this.children[j]) {
-          this.children[j].innerHTML = out;
-          modified.push(this.children[j]);
-          if (x !== -Infinity) {
-            this.children[j].classList.add('active');
-          }
-          if (line.extra) {
-            this.children[j].classList.add('extended');
-          }
-        } else {
-          cls = ['line'];
-          if (x !== -Infinity) {
-            cls.push('active');
-          }
-          if (line.extra) {
-            cls.push('extended');
-          }
-          newOut += "<div class=\"" + (cls.join(' ')) + "\">" + out + "</div>";
+        outs.push(out);
+        group = this._putLine(x, j, outs, line);
+        if (group) {
+          groups.push(group);
         }
-        this.screen[j].dirty = false;
       }
-      if (newOut !== '') {
-        group = this.document.createElement('div');
-        group.className = 'group';
-        group.innerHTML = newOut;
-        modified.push(group);
-        this.body.appendChild(group);
-        this.screen = this.screen.slice(-this.rows);
-        this.shift = 0;
-        lines = document.querySelectorAll('.line');
-        if (lines.length > this.scrollback) {
-          ref4 = Array.prototype.slice.call(lines, 0, lines.length - this.scrollback);
-          for (q = 0, len3 = ref4.length; q < len3; q++) {
-            line = ref4[q];
-            line.remove();
-          }
-          ref5 = document.querySelectorAll('.group:empty');
-          for (u = 0, len4 = ref5.length; u < len4; u++) {
-            group = ref5[u];
-            group.remove();
-          }
-          lines = document.querySelectorAll('.line');
+      if (groups.length) {
+        return this._putGroup(groups);
+      }
+    };
+
+    Terminal.prototype._putGroup = function(groups) {
+      var group, i, k, len, m, node, nodes, ref;
+      group = this.document.createElement('div');
+      group.className = 'group';
+      group.innerHTML = groups.join('');
+      if (true || groups.length > 1) {
+        nodes = group.childNodes;
+        node = group;
+      } else {
+        nodes = [group.firstChild];
+        node = group.firstChild;
+      }
+      this.body.appendChild(node);
+      for (k = 0, len = nodes.length; k < len; k++) {
+        node = nodes[k];
+        if (this.children.length >= this.rows) {
+          this.children.pop();
         }
-        this.children = Array.prototype.slice.call(lines, -this.rows);
+        this.emit('change', node);
+        this.children.push(node);
       }
-      this.nativeScrollTo();
-      return this.emit('change', modified);
+      this.screen = this.screen.slice(-this.rows);
+      this.shift = 0;
+      if (this.body.childElementCount > this.scrollback) {
+        this.body.style.display = 'none';
+        for (i = m = 0, ref = this.body.childElementCount - this.scrollback; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
+          this.body.firstChild.remove();
+        }
+        return this.body.style.display = 'block';
+      }
+    };
+
+    Terminal.prototype.refresh = function(force) {
+      var ref;
+      if (force == null) {
+        force = false;
+      }
+      if ((ref = this.active) != null) {
+        ref.classList.remove('active');
+      }
+      this._replotScreen(force);
+      return this.nativeScrollTo();
     };
 
     Terminal.prototype._cursorBlink = function() {
@@ -1747,6 +1781,7 @@
       j = oldRows;
       if (j < this.rows) {
         el = this.body;
+        this.body.style.display = 'none';
         while (j++ < this.rows) {
           if (this.screen.length < this.rows) {
             this.screen.push(this.blankLine());
@@ -1757,6 +1792,7 @@
             el.appendChild(line);
             this.children.push(line);
           }
+          this.body.style.display = 'block';
         }
       } else if (j > this.rows) {
         while (j-- > this.rows) {

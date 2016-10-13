@@ -164,30 +164,22 @@
     }
   });
 
-  Terminal.on('change', function(lines) {
-    var j, len1, line, results;
-    results = [];
-    for (j = 0, len1 = lines.length; j < len1; j++) {
-      line = lines[j];
-      if (indexOf.call(line.classList, 'extended') >= 0) {
-        results.push(line.addEventListener('click', (function(line) {
-          return function() {
-            var after, before;
-            if (indexOf.call(line.classList, 'expanded') >= 0) {
-              return line.classList.remove('expanded');
-            } else {
-              before = line.getBoundingClientRect().height;
-              line.classList.add('expanded');
-              after = line.getBoundingClientRect().height;
-              return document.body.scrollTop += after - before;
-            }
-          };
-        })(line)));
-      } else {
-        results.push(void 0);
-      }
+  Terminal.on('change', function(line) {
+    if (indexOf.call(line.classList, 'extended') >= 0) {
+      return line.addEventListener('click', (function(line) {
+        return function() {
+          var after, before;
+          if (indexOf.call(line.classList, 'expanded') >= 0) {
+            return line.classList.remove('expanded');
+          } else {
+            before = line.getBoundingClientRect().height;
+            line.classList.add('expanded');
+            after = line.getBoundingClientRect().height;
+            return document.body.scrollTop += after - before;
+          }
+        };
+      })(line));
     }
-    return results;
   });
 
   walk = function(node, callback) {
@@ -210,25 +202,19 @@
     return text.replace(urlPattern, '<a href="$&">$&</a>').replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>').replace(emailAddressPattern, '<a href="mailto:$&">$&</a>');
   };
 
-  Terminal.on('change', function(lines) {
-    var j, len1, line, results;
-    results = [];
-    for (j = 0, len1 = lines.length; j < len1; j++) {
-      line = lines[j];
-      results.push(walk(line, function() {
-        var linkified, newNode;
-        if (this.nodeType === 3) {
-          linkified = linkify(this.nodeValue);
-          if (linkified !== this.nodeValue) {
-            newNode = document.createElement('span');
-            newNode.innerHTML = linkified;
-            this.parentElement.replaceChild(newNode, this);
-            return true;
-          }
+  Terminal.on('change', function(line) {
+    return walk(line, function() {
+      var linkified, newNode;
+      if (this.nodeType === 3) {
+        linkified = linkify(this.nodeValue);
+        if (linkified !== this.nodeValue) {
+          newNode = document.createElement('span');
+          newNode.innerHTML = linkified;
+          this.parentElement.replaceChild(newNode, this);
+          return true;
         }
-      }));
-    }
-    return results;
+      }
+    });
   });
 
   document.addEventListener('keydown', function(e) {
