@@ -2804,6 +2804,7 @@ html, body {
   color: #f4ead5; }
 
 body {
+  margin-bottom: .5em;
   white-space: nowrap;
   overflow-x: hidden;
   overflow-y: scroll;
