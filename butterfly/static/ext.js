@@ -1,5 +1,5 @@
 (function() {
-  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, first, linkify, nextLeaf, popup, previousLeaf, selection, setAlarm, virtualInput, walk,
+  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, first, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tid, virtualInput, walk,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   clean_ansi = function(data) {
@@ -223,6 +223,39 @@
     }
     open(location.href);
     return cancel(e);
+  });
+
+  tid = null;
+
+  packSize = 1000;
+
+  histSize = 100;
+
+  maybePack = function() {
+    var hist, i, j, pack, packfrag, ref;
+    if (!(butterfly.term.childElementCount > packSize + butterfly.rows)) {
+      return;
+    }
+    hist = document.getElementById('packed');
+    packfrag = document.createDocumentFragment('fragment');
+    for (i = j = 0, ref = packSize; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+      packfrag.appendChild(butterfly.term.firstChild);
+    }
+    pack = document.createElement('div');
+    pack.classList.add('pack');
+    pack.appendChild(packfrag);
+    hist.appendChild(pack);
+    if (hist.childElementCount > histSize) {
+      hist.firstChild.remove();
+    }
+    return tid = setTimeout(maybePack);
+  };
+
+  Terminal.on('refresh', function() {
+    if (tid) {
+      clearTimeout(tid);
+    }
+    return maybePack();
   });
 
   Popup = (function() {

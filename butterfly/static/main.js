@@ -170,7 +170,7 @@
     };
 
     function Terminal(parent, out, ctl1) {
-      var div, px;
+      var div;
       this.parent = parent;
       this.out = out;
       this.ctl = ctl1 != null ? ctl1 : function() {};
@@ -189,9 +189,6 @@
       this.computeCharSize();
       this.cols = Math.floor(this.body.clientWidth / this.charSize.width);
       this.rows = Math.floor(window.innerHeight / this.charSize.height);
-      px = window.innerHeight % this.charSize.height;
-      this.scrollback = 10000;
-      this.buffSize = 100000;
       this.visualBell = 100;
       this.convertEol = false;
       this.termName = 'xterm';
@@ -704,7 +701,7 @@
     };
 
     Terminal.prototype.writeDom = function(dom) {
-      var frag, i, k, len, line, m, r, ref, results, y;
+      var frag, k, len, line, r, y;
       r = Math.max(this.term.childElementCount - this.rows, 0);
       for (y = k = 0, len = dom.length; k < len; y = ++k) {
         line = dom[y];
@@ -722,14 +719,7 @@
       }
       frag && this.term.appendChild(frag);
       this.shift = 0;
-      this.screen = this.screen.slice(-this.rows);
-      if (this.term.childElementCount > this.scrollback) {
-        results = [];
-        for (i = m = 0, ref = this.term.childElementCount - this.scrollback; 0 <= ref ? m <= ref : m >= ref; i = 0 <= ref ? ++m : --m) {
-          results.push(this.term.firstChild.remove());
-        }
-        return results;
-      }
+      return this.screen = this.screen.slice(-this.rows);
     };
 
     Terminal.prototype.refresh = function(force) {
@@ -742,7 +732,8 @@
       }
       dom = this.screenToDom(force);
       this.writeDom(dom);
-      return this.nativeScrollTo();
+      this.nativeScrollTo();
+      return this.emit('refresh');
     };
 
     Terminal.prototype._cursorBlink = function() {

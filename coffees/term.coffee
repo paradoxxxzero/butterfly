@@ -81,10 +81,6 @@ class Terminal
     @computeCharSize()
     @cols = Math.floor(@body.clientWidth / @charSize.width)
     @rows = Math.floor(window.innerHeight / @charSize.height)
-    px = window.innerHeight % @charSize.height
-
-    @scrollback = 10000
-    @buffSize = 100000
 
     @visualBell = 100
     @convertEol = false
@@ -535,15 +531,13 @@ class Terminal
 
     @shift = 0
     @screen = @screen.slice -@rows
-    if @term.childElementCount > @scrollback
-      for i in [0..@term.childElementCount - @scrollback]
-        @term.firstChild.remove()
 
   refresh: (force=false) ->
     @active?.classList.remove('active')
     dom = @screenToDom(force)
     @writeDom dom
     @nativeScrollTo()
+    @emit 'refresh'
 
   _cursorBlink: ->
     @cursorState ^= 1
