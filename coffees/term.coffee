@@ -194,7 +194,7 @@ class Terminal
     @prefix = ""
     @screen = []
     @shift = 0
-    for row in [0..@rows]
+    for row in [0..@rows - 1]
       @screen.push @blankLine(false, false)
     @setupStops()
     @skipNextKey = null
@@ -513,7 +513,10 @@ class Terminal
         div.classList.add 'active' if active
         div.classList.add 'extended' if line.extra
         div.innerHTML = (@lineToDom y, line, active).join('')
-        @active = div
+        if active
+          @active = div
+          @cursor = div.querySelectorAll('.cursor')[0]
+        div
 
   writeDom: (dom) ->
     r = Math.max @term.childElementCount - @rows, 0
@@ -533,7 +536,11 @@ class Terminal
     @screen = @screen.slice -@rows
 
   refresh: (force=false) ->
-    @active?.classList.remove('active')
+    if @active?
+      @active.classList.remove('active')
+    if @cursor
+      @cursor.parentNode?.replaceChild(
+        @document.createTextNode(@cursor.textContent), @cursor)
     dom = @screenToDom(force)
     @writeDom dom
     @nativeScrollTo()
@@ -541,12 +548,11 @@ class Terminal
 
   _cursorBlink: ->
     @cursorState ^= 1
-    cursor = @term.querySelector(".cursor")
-    return unless cursor
-    if cursor.classList.contains("reverse-video")
-      cursor.classList.remove "reverse-video"
+    return unless @cursor
+    if @cursor.classList.contains("reverse-video")
+      @cursor.classList.remove "reverse-video"
     else
-      cursor.classList.add "reverse-video"
+      @cursor.classList.add "reverse-video"
 
   showCursor: ->
     unless @cursorState
@@ -1598,6 +1604,7 @@ class Terminal
 
     # make sure the cursor stays on screen
     @y = @rows - 1 if @y >= @rows
+    @y = 0 if @y < 0
     @x = @cols - 1 if @x >= @cols
     @scrollTop = 0
     @scrollBottom = @rows - 1
@@ -1704,6 +1711,7 @@ class Terminal
     # Drop DOM history
     while @term.childElementCount > @rows
       @term.firstChild.remove()
+    @emit 'clear'
 
   # ESC H Tab Set (HTS is 0x88).
   tabSet: ->

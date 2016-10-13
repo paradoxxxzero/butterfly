@@ -314,7 +314,7 @@
       this.prefix = "";
       this.screen = [];
       this.shift = 0;
-      for (row = k = 0, ref = this.rows; 0 <= ref ? k <= ref : k >= ref; row = 0 <= ref ? ++k : --k) {
+      for (row = k = 0, ref = this.rows - 1; 0 <= ref ? k <= ref : k >= ref; row = 0 <= ref ? ++k : --k) {
         this.screen.push(this.blankLine(false, false));
       }
       this.setupStops();
@@ -692,7 +692,11 @@
             div.classList.add('extended');
           }
           div.innerHTML = (this.lineToDom(y, line, active)).join('');
-          results.push(this.active = div);
+          if (active) {
+            this.active = div;
+            this.cursor = div.querySelectorAll('.cursor')[0];
+          }
+          results.push(div);
         } else {
           results.push(void 0);
         }
@@ -727,8 +731,13 @@
       if (force == null) {
         force = false;
       }
-      if ((ref = this.active) != null) {
-        ref.classList.remove('active');
+      if (this.active != null) {
+        this.active.classList.remove('active');
+      }
+      if (this.cursor) {
+        if ((ref = this.cursor.parentNode) != null) {
+          ref.replaceChild(this.document.createTextNode(this.cursor.textContent), this.cursor);
+        }
       }
       dom = this.screenToDom(force);
       this.writeDom(dom);
@@ -737,16 +746,14 @@
     };
 
     Terminal.prototype._cursorBlink = function() {
-      var cursor;
       this.cursorState ^= 1;
-      cursor = this.term.querySelector(".cursor");
-      if (!cursor) {
+      if (!this.cursor) {
         return;
       }
-      if (cursor.classList.contains("reverse-video")) {
-        return cursor.classList.remove("reverse-video");
+      if (this.cursor.classList.contains("reverse-video")) {
+        return this.cursor.classList.remove("reverse-video");
       } else {
-        return cursor.classList.add("reverse-video");
+        return this.cursor.classList.add("reverse-video");
       }
     };
 
@@ -1787,6 +1794,9 @@
       if (this.y >= this.rows) {
         this.y = this.rows - 1;
       }
+      if (this.y < 0) {
+        this.y = 0;
+      }
       if (this.x >= this.cols) {
         this.x = this.cols - 1;
       }
@@ -1946,12 +1956,10 @@
     };
 
     Terminal.prototype.clearScrollback = function() {
-      var results;
-      results = [];
       while (this.term.childElementCount > this.rows) {
-        results.push(this.term.firstChild.remove());
+        this.term.firstChild.remove();
       }
-      return results;
+      return this.emit('clear');
     };
 
     Terminal.prototype.tabSet = function() {

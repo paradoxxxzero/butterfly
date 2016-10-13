@@ -258,6 +258,14 @@
     return maybePack();
   });
 
+  Terminal.on('clear', function() {
+    var hist, newHist;
+    newHist = document.createElement('div');
+    newHist.id = 'packed';
+    hist = document.getElementById('packed');
+    return butterfly.body.replaceChild(newHist, hist);
+  });
+
   Popup = (function() {
     function Popup() {
       this.el = document.getElementById('popup');

@@ -21,3 +21,9 @@ maybePack = ->
 Terminal.on 'refresh', ->
   clearTimeout tid if tid
   maybePack()
+
+Terminal.on 'clear', ->
+  newHist = document.createElement 'div'
+  newHist.id = 'packed'
+  hist = document.getElementById 'packed'
+  butterfly.body.replaceChild newHist, hist
