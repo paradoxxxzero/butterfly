@@ -115,8 +115,6 @@ class Terminal
     addEventListener 'load', => @resize()
     @emit 'load'
     @active = null
-    Terminal.on 'change', (line) =>
-      @active = line if line.classList.contains 'active'
 
   emit: (hook, obj) ->
     unless Terminal.hooks[hook]?
@@ -420,160 +418,126 @@ class Terminal
         sendButton ev
         cancel ev
 
-  _putChar: (data, attr, i, x) ->
-    out = ''
+  getClasses: (data) ->
+    classes = []
+    styles = []
+    # bold
+    classes.push "bold" if data.bold
+    # underline
+    classes.push "underline" if data.underline
+    # blink
+    classes.push "blink" if data.blink is 1
+    classes.push "blink-fast" if data.blink is 2
+    # inverse
+    classes.push "reverse-video" if data.inverse
+    # invisible
+    classes.push "invisible" if data.invisible
+    # italic
+    classes.push "italic" if data.italic
+    # faint
+    classes.push "faint" if data.faint
+    # crossed
+    classes.push "crossed" if data.crossed
+
+    if typeof data.fg is 'number'
+      fg = data.fg
+      if data.bold and fg < 8
+        fg += 8
+      classes.push "fg-color-" + fg
+    else if typeof data.fg is 'string'
+      styles.push "color: " + data.fg
+
+    if typeof data.bg is 'number'
+      classes.push "bg-color-" + data.bg
+    else if typeof data.bg is 'string'
+      styles.push "background-color: " + data.bg
+
+    [classes, styles]
+
+  charToDom: (data, attr, cursor) ->
+    return data.html if data.html
+    attr = attr or @cloneAttr @defAttr
     ch = data.ch
+    char = ''
     unless @equalAttr data, attr
-      out += "</span>" unless @equalAttr attr, @defAttr
+      char += "</span>" unless @equalAttr attr, @defAttr
       unless @equalAttr data, @defAttr
-        classes = []
-        styles = []
-        out += "<span "
+        [classes, styles] = @getClasses data
+        char += "<span class=\"#{classes.join(" ")}\""
+        char += " style=\"" + styles.join("; ") + "\"" if styles.length
+        char += ">"
 
-        # bold
-        classes.push "bold" if data.bold
-        # underline
-        classes.push "underline" if data.underline
-        # blink
-        classes.push "blink" if data.blink is 1
-        classes.push "blink-fast" if data.blink is 2
-        # inverse
-        classes.push "reverse-video" if data.inverse
-        # invisible
-        classes.push "invisible" if data.invisible
-        # italic
-        classes.push "italic" if data.italic
-        # faint
-        classes.push "faint" if data.faint
-        # crossed
-        classes.push "crossed" if data.crossed
+    char += "<span class=\"#{
+      if @cursorState then "reverse-video " else ""}cursor\">" if cursor
 
-        if typeof data.fg is 'number'
-          fg = data.fg
-          if data.bold and fg < 8
-            fg += 8
-          classes.push "fg-color-" + fg
-
-        if typeof data.fg is 'string'
-          styles.push "color: " + data.fg
-
-        if typeof data.bg is 'number'
-          classes.push "bg-color-" + data.bg
-
-        if typeof data.bg is 'string'
-          styles.push "background-color: " + data.bg
-
-        out += "class=\""
-        out += classes.join(" ")
-        out += "\""
-        if styles.length
-          out += " style=\"" + styles.join("; ") + "\""
-        out += ">"
-
-    out += "<span class=\"" + (
-      if @cursorState then "reverse-video " else ""
-    ) + "cursor\">" if i is x
-
-    # This is a temporary dirty hack for raw html insertion
-    if ch.length > 1
-      out += ch
-    else
-      switch ch
-        when "&"
-          out += "&amp;"
-        when "<"
-          out += "&lt;"
-        when ">"
-          out += "&gt;"
+    switch ch
+      when "&"
+        char += "&amp;"
+      when "<"
+        char += "&lt;"
+      when ">"
+        char += "&gt;"
+      when " "
+        char += '<span class="nbsp">\u2007</span>'
+      else
+        if ch <= " "
+          char += "&nbsp;"
+        else unless @forceWidth
+          char += ch
         else
-          if ch == " "
-            out += '<span class="nbsp">\u2007</span>'
-          else if ch <= " "
-            out += "&nbsp;"
-          else if not @forceWidth or ch <= "~" # Ascii chars
-            out += ch
+          if ch <= "~" # Ascii chars
+            char += ch
           else if "\uff00" < ch < "\uffef"
-            skipnext = true
-            out += "<span style=\"display: inline-block;
-              width: #{2 * @charSize.width}px\">#{ch}</span>"
+            char += "<span style=\"display: inline-block; width: #{
+              2 * @charSize.width}px\">#{ch}</span>"
           else
-            out += "<span style=\"display: inline-block;
-              width: #{@charSize.width}px\">#{ch}</span>"
+            char += "<span style=\"display: inline-block; width: #{
+              @charSize.width}px\">#{ch}</span>"
 
-    out += "</span>" if i is x
-    out
+    char += "</span>" if cursor
+    char
 
-  _putLine: (x, j, outs, line) ->
-    @screen[j].dirty = false
-    if @children[j]
-      @children[j].innerHTML = outs.join('')
-      @emit 'change', @children[j]
-      if x isnt null
-        @children[j].classList.add 'active'
-      if line.extra
-        @children[j].classList.add 'extended'
-      null
-    else
-      cls = ['line']
-      if x isnt null
-        cls.push 'active'
-      if line.extra
-        cls.push 'extended'
-      "<div class=\"#{cls.join(' ')}\">#{outs.join('')}</div>"
+  lineToDom: (y, line, active) ->
+    cursorX = @x if active
+    for x in [0..@cols]
+      unless x is @cols
+        @charToDom line.chars[x], line.chars[x - 1], x is cursorX
+      else
+        eol = ''
+        eol += '</span>' unless @equalAttr line.chars[x - 1], @defAttr
+        eol += '\u23CE' if line.wrap
+        eol += "<span class=\"extra\">#{line.extra}</span>" if line.extra
 
-  _replotScreen: (force) ->
-    groups = []
-    for line, j in @screen
-      continue unless line.dirty or force
+  screenToDom: (force) ->
+    for line, y in @screen
+      if line.dirty or force
+        active = y is @y + @shift and not @cursorHidden
+        div = document.createElement 'div'
+        div.classList.add 'line'
+        div.classList.add 'active' if active
+        div.classList.add 'extended' if line.extra
+        div.innerHTML = (@lineToDom y, line, active).join('')
+        @active = div
 
-      x = null
-      x = @x if j is @y + @shift and not @cursorHidden
-      attr = @cloneAttr @defAttr
-      skipnext = false
-      outs = []
-      for i in [0..@cols - 1]
-        data = line.chars[i]
-        if data.html
-          outs.push data.html
-          break
-        if skipnext
-          skipnext = false
-          continue
+  writeDom: (dom) ->
+    # frag = document.createDocumentFragment('fragment')
+    for line, y in dom
+      continue unless line
+      @screen[y].dirty = false
+      if y < @children.length
+        @body.replaceChild line, @children[y]
+        @children[y] = line
+        @emit 'change', @children[y]
+      else
+        @children.shift() if @children.length >= @rows
+        @body.appendChild line
+        @children.push line
+        @emit 'change', line
 
-        outs.push @_putChar data, attr, i, x
-        attr = data
+    # @body.appendChild frag
 
-      out = ''
-      out += "</span>" unless @equalAttr attr, @defAttr
-      out += '\u23CE' if line.wrap
-      if line.extra
-        out += '<span class="extra">' + line.extra + '</span>'
-      outs.push out
-
-      group = @_putLine x, j, outs, line
-      groups.push group if group
-    @_putGroup groups if groups.length
-
-  _putGroup: (groups) ->
-    group = @document.createElement('div')
-    group.className = 'group'
-    group.innerHTML = groups.join('')
-
-    if true or groups.length > 1
-      nodes = group.childNodes
-      node = group
-    else
-      nodes = [group.firstChild]
-      node = group.firstChild
-    @body.appendChild node
-    for node in nodes
-      if @children.length >= @rows
-        @children.pop()
-      @emit 'change', node
-      @children.push node
     @screen = @screen.slice(-@rows)
     @shift = 0
-
     if @body.childElementCount > @scrollback
       @body.style.display = 'none'
       for i in [0..@body.childElementCount - @scrollback]
@@ -582,7 +546,8 @@ class Terminal
 
   refresh: (force=false) ->
     @active?.classList.remove('active')
-    @_replotScreen(force)
+    dom = @screenToDom(force)
+    @writeDom dom
     @nativeScrollTo()
 
   _cursorBlink: ->
@@ -594,25 +559,21 @@ class Terminal
     else
       cursor.classList.add "reverse-video"
 
-
   showCursor: ->
     unless @cursorState
       @cursorState = 1
       @screen[@y + @shift].dirty = true
       @refresh()
 
-
   startBlink: ->
     return unless @cursorBlink
     @_blinker = => @_cursorBlink()
     @t_blink = setInterval(@_blinker, 500)
 
-
   refreshBlink: ->
     return unless @cursorBlink
     clearInterval @t_blink
     @t_blink = setInterval(@_blinker, 500)
-
 
   scroll: ->
     # Use emulated scroll in alternate buffer or when scroll region is defined
@@ -1590,7 +1551,11 @@ class Terminal
     oldRows = @rows
     @computeCharSize()
     w = @body.clientWidth
-    h = @html.clientHeight - (@html.offsetHeight - @html.scrollHeight)
+    h = @html.clientHeight #- (@html.offsetHeight - @html.scrollHeight)
+
+    if @charSize.width is 0 or @charSize.height is 0
+      console.error 'Null size in refresh'
+      return
     @cols = x or Math.floor(w / @charSize.width)
     @rows = y or Math.floor(h / @charSize.height)
     px = h % @charSize.height
@@ -1624,22 +1589,21 @@ class Terminal
     # resize rows
     j = oldRows
     if j < @rows
-      el = @body
-      @body.style.display = 'none'
+      # @body.style.display = 'none'
       while j++ < @rows
         @screen.push @blankLine() if @screen.length < @rows
-        if @children.length < @rows
-          line = @document.createElement("div")
-          line.className = 'line'
-          el.appendChild line
-          @children.push line
-        @body.style.display = 'block'
+        # if @children.length < @rows
+          # line = @document.createElement("div")
+          # line.className = 'line'
+          # @body.appendChild line
+          # @children.push line
+        # @body.style.display = 'block'
     else if j > @rows
       while j-- > @rows
         @screen.pop() if @screen.length > @rows
-        if @children.length > @rows
-          el = @children.pop()
-          el?.parentNode.removeChild el
+        # if @children.length > @rows
+          # el = @children.pop()
+          # el?.parentNode.removeChild el
 
     if @normal
       # resize cols

@@ -169,10 +169,10 @@
       return Terminal.hooks[hook].pop(fun);
     };
 
-    function Terminal(parent, out1, ctl1) {
+    function Terminal(parent, out, ctl1) {
       var div, px;
       this.parent = parent;
-      this.out = out1;
+      this.out = out;
       this.ctl = ctl1 != null ? ctl1 : function() {};
       this.document = this.parent.ownerDocument;
       this.html = this.document.getElementsByTagName('html')[0];
@@ -226,13 +226,6 @@
       })(this));
       this.emit('load');
       this.active = null;
-      Terminal.on('change', (function(_this) {
-        return function(line) {
-          if (line.classList.contains('active')) {
-            return _this.active = line;
-          }
-        };
-      })(this));
     }
 
     Terminal.prototype.emit = function(hook, obj) {
@@ -553,202 +546,184 @@
       })(this));
     };
 
-    Terminal.prototype._putChar = function(data, attr, i, x) {
-      var ch, classes, fg, out, skipnext, styles;
-      out = '';
+    Terminal.prototype.getClasses = function(data) {
+      var classes, fg, styles;
+      classes = [];
+      styles = [];
+      if (data.bold) {
+        classes.push("bold");
+      }
+      if (data.underline) {
+        classes.push("underline");
+      }
+      if (data.blink === 1) {
+        classes.push("blink");
+      }
+      if (data.blink === 2) {
+        classes.push("blink-fast");
+      }
+      if (data.inverse) {
+        classes.push("reverse-video");
+      }
+      if (data.invisible) {
+        classes.push("invisible");
+      }
+      if (data.italic) {
+        classes.push("italic");
+      }
+      if (data.faint) {
+        classes.push("faint");
+      }
+      if (data.crossed) {
+        classes.push("crossed");
+      }
+      if (typeof data.fg === 'number') {
+        fg = data.fg;
+        if (data.bold && fg < 8) {
+          fg += 8;
+        }
+        classes.push("fg-color-" + fg);
+      } else if (typeof data.fg === 'string') {
+        styles.push("color: " + data.fg);
+      }
+      if (typeof data.bg === 'number') {
+        classes.push("bg-color-" + data.bg);
+      } else if (typeof data.bg === 'string') {
+        styles.push("background-color: " + data.bg);
+      }
+      return [classes, styles];
+    };
+
+    Terminal.prototype.charToDom = function(data, attr, cursor) {
+      var ch, char, classes, ref, styles;
+      if (data.html) {
+        return data.html;
+      }
+      attr = attr || this.cloneAttr(this.defAttr);
       ch = data.ch;
+      char = '';
       if (!this.equalAttr(data, attr)) {
         if (!this.equalAttr(attr, this.defAttr)) {
-          out += "</span>";
+          char += "</span>";
         }
         if (!this.equalAttr(data, this.defAttr)) {
-          classes = [];
-          styles = [];
-          out += "<span ";
-          if (data.bold) {
-            classes.push("bold");
-          }
-          if (data.underline) {
-            classes.push("underline");
-          }
-          if (data.blink === 1) {
-            classes.push("blink");
-          }
-          if (data.blink === 2) {
-            classes.push("blink-fast");
-          }
-          if (data.inverse) {
-            classes.push("reverse-video");
-          }
-          if (data.invisible) {
-            classes.push("invisible");
-          }
-          if (data.italic) {
-            classes.push("italic");
-          }
-          if (data.faint) {
-            classes.push("faint");
-          }
-          if (data.crossed) {
-            classes.push("crossed");
-          }
-          if (typeof data.fg === 'number') {
-            fg = data.fg;
-            if (data.bold && fg < 8) {
-              fg += 8;
-            }
-            classes.push("fg-color-" + fg);
-          }
-          if (typeof data.fg === 'string') {
-            styles.push("color: " + data.fg);
-          }
-          if (typeof data.bg === 'number') {
-            classes.push("bg-color-" + data.bg);
-          }
-          if (typeof data.bg === 'string') {
-            styles.push("background-color: " + data.bg);
-          }
-          out += "class=\"";
-          out += classes.join(" ");
-          out += "\"";
+          ref = this.getClasses(data), classes = ref[0], styles = ref[1];
+          char += "<span class=\"" + (classes.join(" ")) + "\"";
           if (styles.length) {
-            out += " style=\"" + styles.join("; ") + "\"";
+            char += " style=\"" + styles.join("; ") + "\"";
           }
-          out += ">";
+          char += ">";
         }
       }
-      if (i === x) {
-        out += "<span class=\"" + (this.cursorState ? "reverse-video " : "") + "cursor\">";
+      if (cursor) {
+        char += "<span class=\"" + (this.cursorState ? "reverse-video " : "") + "cursor\">";
       }
-      if (ch.length > 1) {
-        out += ch;
-      } else {
-        switch (ch) {
-          case "&":
-            out += "&amp;";
-            break;
-          case "<":
-            out += "&lt;";
-            break;
-          case ">":
-            out += "&gt;";
-            break;
-          default:
-            if (ch === " ") {
-              out += '<span class="nbsp">\u2007</span>';
-            } else if (ch <= " ") {
-              out += "&nbsp;";
-            } else if (!this.forceWidth || ch <= "~") {
-              out += ch;
+      switch (ch) {
+        case "&":
+          char += "&amp;";
+          break;
+        case "<":
+          char += "&lt;";
+          break;
+        case ">":
+          char += "&gt;";
+          break;
+        case " ":
+          char += '<span class="nbsp">\u2007</span>';
+          break;
+        default:
+          if (ch <= " ") {
+            char += "&nbsp;";
+          } else if (!this.forceWidth) {
+            char += ch;
+          } else {
+            if (ch <= "~") {
+              char += ch;
             } else if (("\uff00" < ch && ch < "\uffef")) {
-              skipnext = true;
-              out += "<span style=\"display: inline-block; width: " + (2 * this.charSize.width) + "px\">" + ch + "</span>";
+              char += "<span style=\"display: inline-block; width: " + (2 * this.charSize.width) + "px\">" + ch + "</span>";
             } else {
-              out += "<span style=\"display: inline-block; width: " + this.charSize.width + "px\">" + ch + "</span>";
+              char += "<span style=\"display: inline-block; width: " + this.charSize.width + "px\">" + ch + "</span>";
             }
-        }
+          }
       }
-      if (i === x) {
-        out += "</span>";
+      if (cursor) {
+        char += "</span>";
       }
-      return out;
+      return char;
     };
 
-    Terminal.prototype._putLine = function(x, j, outs, line) {
-      var cls;
-      this.screen[j].dirty = false;
-      if (this.children[j]) {
-        this.children[j].innerHTML = outs.join('');
-        this.emit('change', this.children[j]);
-        if (x !== null) {
-          this.children[j].classList.add('active');
-        }
-        if (line.extra) {
-          this.children[j].classList.add('extended');
-        }
-        return null;
-      } else {
-        cls = ['line'];
-        if (x !== null) {
-          cls.push('active');
-        }
-        if (line.extra) {
-          cls.push('extended');
-        }
-        return "<div class=\"" + (cls.join(' ')) + "\">" + (outs.join('')) + "</div>";
+    Terminal.prototype.lineToDom = function(y, line, active) {
+      var cursorX, eol, k, ref, results, x;
+      if (active) {
+        cursorX = this.x;
       }
+      results = [];
+      for (x = k = 0, ref = this.cols; 0 <= ref ? k <= ref : k >= ref; x = 0 <= ref ? ++k : --k) {
+        if (x !== this.cols) {
+          results.push(this.charToDom(line.chars[x], line.chars[x - 1], x === cursorX));
+        } else {
+          eol = '';
+          if (!this.equalAttr(line.chars[x - 1], this.defAttr)) {
+            eol += '</span>';
+          }
+          if (line.wrap) {
+            eol += '\u23CE';
+          }
+          if (line.extra) {
+            results.push(eol += "<span class=\"extra\">" + line.extra + "</span>");
+          } else {
+            results.push(void 0);
+          }
+        }
+      }
+      return results;
     };
 
-    Terminal.prototype._replotScreen = function(force) {
-      var attr, data, group, groups, i, j, k, len, line, m, out, outs, ref, ref1, skipnext, x;
-      groups = [];
+    Terminal.prototype.screenToDom = function(force) {
+      var active, div, k, len, line, ref, results, y;
       ref = this.screen;
-      for (j = k = 0, len = ref.length; k < len; j = ++k) {
-        line = ref[j];
-        if (!(line.dirty || force)) {
+      results = [];
+      for (y = k = 0, len = ref.length; k < len; y = ++k) {
+        line = ref[y];
+        if (line.dirty || force) {
+          active = y === this.y + this.shift && !this.cursorHidden;
+          div = document.createElement('div');
+          div.classList.add('line');
+          if (active) {
+            div.classList.add('active');
+          }
+          if (line.extra) {
+            div.classList.add('extended');
+          }
+          div.innerHTML = (this.lineToDom(y, line, active)).join('');
+          results.push(this.active = div);
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+
+    Terminal.prototype.writeDom = function(dom) {
+      var i, k, len, line, m, ref, y;
+      for (y = k = 0, len = dom.length; k < len; y = ++k) {
+        line = dom[y];
+        if (!line) {
           continue;
         }
-        x = null;
-        if (j === this.y + this.shift && !this.cursorHidden) {
-          x = this.x;
-        }
-        attr = this.cloneAttr(this.defAttr);
-        skipnext = false;
-        outs = [];
-        for (i = m = 0, ref1 = this.cols - 1; 0 <= ref1 ? m <= ref1 : m >= ref1; i = 0 <= ref1 ? ++m : --m) {
-          data = line.chars[i];
-          if (data.html) {
-            outs.push(data.html);
-            break;
+        this.screen[y].dirty = false;
+        if (y < this.children.length) {
+          this.body.replaceChild(line, this.children[y]);
+          this.children[y] = line;
+          this.emit('change', this.children[y]);
+        } else {
+          if (this.children.length >= this.rows) {
+            this.children.shift();
           }
-          if (skipnext) {
-            skipnext = false;
-            continue;
-          }
-          outs.push(this._putChar(data, attr, i, x));
-          attr = data;
+          this.body.appendChild(line);
+          this.children.push(line);
+          this.emit('change', line);
         }
-        out = '';
-        if (!this.equalAttr(attr, this.defAttr)) {
-          out += "</span>";
-        }
-        if (line.wrap) {
-          out += '\u23CE';
-        }
-        if (line.extra) {
-          out += '<span class="extra">' + line.extra + '</span>';
-        }
-        outs.push(out);
-        group = this._putLine(x, j, outs, line);
-        if (group) {
-          groups.push(group);
-        }
-      }
-      if (groups.length) {
-        return this._putGroup(groups);
-      }
-    };
-
-    Terminal.prototype._putGroup = function(groups) {
-      var group, i, k, len, m, node, nodes, ref;
-      group = this.document.createElement('div');
-      group.className = 'group';
-      group.innerHTML = groups.join('');
-      if (true || groups.length > 1) {
-        nodes = group.childNodes;
-        node = group;
-      } else {
-        nodes = [group.firstChild];
-        node = group.firstChild;
-      }
-      this.body.appendChild(node);
-      for (k = 0, len = nodes.length; k < len; k++) {
-        node = nodes[k];
-        if (this.children.length >= this.rows) {
-          this.children.pop();
-        }
-        this.emit('change', node);
-        this.children.push(node);
       }
       this.screen = this.screen.slice(-this.rows);
       this.shift = 0;
@@ -762,14 +737,15 @@
     };
 
     Terminal.prototype.refresh = function(force) {
-      var ref;
+      var dom, ref;
       if (force == null) {
         force = false;
       }
       if ((ref = this.active) != null) {
         ref.classList.remove('active');
       }
-      this._replotScreen(force);
+      dom = this.screenToDom(force);
+      this.writeDom(dom);
       return this.nativeScrollTo();
     };
 
@@ -1729,7 +1705,7 @@
     };
 
     Terminal.prototype.resize = function(x, y, notif) {
-      var el, h, i, j, line, oldCols, oldRows, px, w;
+      var h, i, j, oldCols, oldRows, px, w;
       if (x == null) {
         x = null;
       }
@@ -1743,7 +1719,11 @@
       oldRows = this.rows;
       this.computeCharSize();
       w = this.body.clientWidth;
-      h = this.html.clientHeight - (this.html.offsetHeight - this.html.scrollHeight);
+      h = this.html.clientHeight;
+      if (this.charSize.width === 0 || this.charSize.height === 0) {
+        console.error('Null size in refresh');
+        return;
+      }
       this.cols = x || Math.floor(w / this.charSize.width);
       this.rows = y || Math.floor(h / this.charSize.height);
       px = h % this.charSize.height;
@@ -1780,30 +1760,15 @@
       this.setupStops(oldCols);
       j = oldRows;
       if (j < this.rows) {
-        el = this.body;
-        this.body.style.display = 'none';
         while (j++ < this.rows) {
           if (this.screen.length < this.rows) {
             this.screen.push(this.blankLine());
           }
-          if (this.children.length < this.rows) {
-            line = this.document.createElement("div");
-            line.className = 'line';
-            el.appendChild(line);
-            this.children.push(line);
-          }
-          this.body.style.display = 'block';
         }
       } else if (j > this.rows) {
         while (j-- > this.rows) {
           if (this.screen.length > this.rows) {
             this.screen.pop();
-          }
-          if (this.children.length > this.rows) {
-            el = this.children.pop();
-            if (el != null) {
-              el.parentNode.removeChild(el);
-            }
           }
         }
       }
