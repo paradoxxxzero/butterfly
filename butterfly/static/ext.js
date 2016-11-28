@@ -545,7 +545,7 @@
   })();
 
   document.addEventListener('keydown', function(e) {
-    var ref, ref1;
+    var r, ref, ref1;
     if (ref = e.keyCode, indexOf.call([16, 17, 18, 19], ref) >= 0) {
       return true;
     }
@@ -582,8 +582,9 @@
       return cancel(e);
     }
     if (!selection && e.ctrlKey && e.shiftKey && e.keyCode === 38) {
+      r = Math.max(butterfly.term.childElementCount - butterfly.rows, 0);
       selection = new Selection();
-      selection.selectLine(butterfly.y - 1);
+      selection.selectLine(r + butterfly.y - 1);
       selection.apply();
       return cancel(e);
     }

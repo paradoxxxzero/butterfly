@@ -205,8 +205,9 @@ document.addEventListener 'keydown', (e) ->
 
   # Start selection mode with shift up
   if not selection and e.ctrlKey and e.shiftKey and e.keyCode == 38
+    r = Math.max butterfly.term.childElementCount - butterfly.rows, 0
     selection = new Selection()
-    selection.selectLine butterfly.y - 1
+    selection.selectLine r + butterfly.y - 1
     selection.apply()
     return cancel e
   true
