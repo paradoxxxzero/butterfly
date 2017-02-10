@@ -31,7 +31,7 @@ import tornado.process
 import tornado.web
 import tornado.websocket
 from logging import getLogger
-from butterfly import utils, __version__
+from butterfly import pam, utils, __version__
 
 log = getLogger('butterfly')
 ioloop = tornado.ioloop.IOLoop.instance()
@@ -223,7 +223,7 @@ class Terminal(object):
         # Unsecure connection with su
         if server.root:
             if self.socket.local:
-                if self.callee != self.caller:
+                if self.callee != self.caller and tornado.options.options.pam_profile == "":
                     # Force password prompt by dropping rights
                     # to the daemon user
                     os.setuid(daemon.uid)
@@ -234,17 +234,20 @@ class Terminal(object):
                     sys.exit(1)
                 os.setuid(daemon.uid)
 
-        if os.path.exists('/usr/bin/su'):
-            args = ['/usr/bin/su']
-        else:
-            args = ['/bin/su']
+        if (not server.root) or tornado.options.options.pam_profile == "":
+            if os.path.exists('/usr/bin/su'):
+                args = ['/usr/bin/su']
+            else:
+                args = ['/bin/su']
 
-        args.append('-l')
-        if sys.platform == 'linux' and tornado.options.options.shell:
-            args.append('-s')
-            args.append(tornado.options.options.shell)
-        args.append(self.callee.name)
-        os.execvpe(args[0], args, env)
+            args.append('-l')
+            if sys.platform == 'linux' and tornado.options.options.shell:
+                args.append('-s')
+                args.append(tornado.options.options.shell)
+            args.append(self.callee.name)
+            os.execvpe(args[0], args, env)
+        else:
+            pam.login_prompt(self.callee.name, tornado.options.options.pam_profile, env)
 
     def communicate(self):
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)

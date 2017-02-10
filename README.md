@@ -45,6 +45,20 @@ To get an overview of butterfly features.
 $ butterfly.server.py --host=myhost --port=57575
 ```
 
+Or with login prompt
+
+```bash
+$ butterfly.server.py --host=myhost --port=57575 --login
+```
+
+Or with PAM authentication (ROOT required)
+
+```bash
+# butterfly.server.py --host=myhost --port=57575 --login --pam_profile=sshd
+```
+
+You can change `sshd` to your preferred PAM profile.
+
 The first time it will ask you to generate the certificates (see: [here](http://paradoxxxzero.github.io/2014/03/21/butterfly-with-ssl-auth.html))
 
 

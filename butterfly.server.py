@@ -52,6 +52,8 @@ tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
 tornado.options.define("login", default=False,
                        help="Use login screen at start")
+tornado.options.define("pam_profile", default="", type=str,
+                       help="When --login=True provided and running as ROOT, use PAM with the specified PAM profile for authentication and then execute the user's default shell. Will override --shell.")
 tornado.options.define("force_unicode_width",
                        default=False,
                        help="Force all unicode characters to the same width."
