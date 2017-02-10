@@ -40,6 +40,8 @@ tornado.options.define("unminified", default=False,
 
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
+tornado.options.define("keepalive_interval", default=30, type=int,
+                        help="Interval between ping packets sent from server to client (in seconds)")
 tornado.options.define("one_shot", default=False,
                        help="Run a one-shot instance. Quit at term close")
 tornado.options.define("shell", help="Shell to execute at login")

@@ -17,7 +17,9 @@
 
 
 import os
+import struct
 import sys
+import time
 import tornado.options
 import tornado.process
 import tornado.escape
@@ -133,10 +135,15 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     # Session history
     history = {}
 
+    # Keepalive timer
+    keepalive_timer = None
+
     def open(self, user, path, session):
+        opts = tornado.options.options
         self.session = session
         self.closed = False
         self.secure_user = None
+        self.keepalive_timer = tornado.ioloop.PeriodicCallback(self.send_ping, opts.keepalive_interval * 1000)
 
         # Prevent cross domain
         if self.request.headers['Origin'] not in (
@@ -155,7 +162,6 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.set_nodelay(True)
 
         socket = utils.Socket(self.ws_connection.stream.socket)
-        opts = tornado.options.options
 
         if not opts.unsecure:
             user = utils.parse_cert(
@@ -205,6 +211,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                 self.user_terminals[session] = terminal
         else:
             self._terminal = terminal
+
+        self.keepalive_timer.start()
 
     @property
     def user_sessions(self):
@@ -278,6 +286,8 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     def on_close(self):
         if self.closed:
             return
+        if self.keepalive_timer != None:
+            self.keepalive_timer.stop()
         self.closed = True
         self.log.info('Websocket closed %r' % self)
         TermWebSocket.sockets.remove(self)
@@ -296,6 +306,15 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
                     len(sessions)
                     for user, sessions in TermWebSocket.terminals.items()])):
             sys.exit(0)
+
+    def send_ping(self):
+        t = int(time.time())
+        frame = struct.pack('<I', t) # A ping frame based on time
+        self.log.info("Sending ping frame %s" % t)
+        try:
+            self.ping(frame)
+        except tornado.websocket.WebSocketClosedError:
+            self.keepalive_timer.stop()
 
 
 @url(r'/sessions/list.json')
