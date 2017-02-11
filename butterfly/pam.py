@@ -167,7 +167,7 @@ def login_prompt(username, profile, env):
         su = '/usr/bin/su'
         if not os.path.exists(su):
             su = '/bin/su'
-        os.execvpe(su, [su, username], env)
+        os.execvpe(su, [su, '-l', username], env)
     return success
 
 if __name__ == "__main__":
