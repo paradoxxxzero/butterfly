@@ -169,3 +169,9 @@ def login_prompt(username, profile, env):
             su = '/bin/su'
         os.execvpe(su, [su, username], env)
     return success
+
+if __name__ == "__main__":
+    if login_prompt(sys.argv[1], sys.argv[2], os.environ):
+        exit(0)
+    else:
+        exit(1)

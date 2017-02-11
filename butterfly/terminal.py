@@ -247,7 +247,8 @@ class Terminal(object):
             args.append(self.callee.name)
             os.execvpe(args[0], args, env)
         else:
-            pam.login_prompt(self.callee.name, tornado.options.options.pam_profile, env)
+            pam_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pam.py')
+            os.execvpe(sys.executable, [sys.executable, pam_path, self.callee.name, tornado.options.options.pam_profile], env)
 
     def communicate(self):
         fcntl.fcntl(self.fd, fcntl.F_SETFL, os.O_NONBLOCK)
