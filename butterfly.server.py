@@ -311,7 +311,7 @@ log.info('Starting server')
 http_server = HTTPServer(application, ssl_options=ssl_opts)
 http_server.listen(port, address=host)
 
-if http_server.systemd:
+if getattr(http_server, 'systemd', False):
     os.environ.pop('LISTEN_PID')
     os.environ.pop('LISTEN_FDS')
 

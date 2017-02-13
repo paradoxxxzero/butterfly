@@ -240,7 +240,7 @@ class TermCtlWebSocket(Route, KeptAliveWebSocketHandler):
             self.sessions[self.session].remove(self)
 
         if tornado.options.options.one_shot or (
-                self.application.systemd and
+                getattr(self.application, 'systemd', False) and
                 not sum([
                     len(wsockets)
                     for session, wsockets in self.sessions.items()])):
