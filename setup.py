@@ -24,8 +24,11 @@ options = dict(
     platforms="Any",
     scripts=['butterfly.server.py', 'scripts/butterfly', 'scripts/b'],
     packages=['butterfly'],
-    install_requires=["tornado>=3.2", "pyOpenSSL", 'tornado_systemd'],
-    extras_requires=["libsass"],
+    install_requires=["tornado>=3.2", "pyOpenSSL"],
+    extras_requires={
+        'themes': ["libsass"],
+        'systemd': ['tornado_systemd']
+    },
     package_data={
         'butterfly': [
             'sass/*.sass',

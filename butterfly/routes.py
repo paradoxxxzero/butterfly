@@ -18,7 +18,9 @@
 
 import json
 import os
+import struct
 import sys
+import time
 from collections import defaultdict
 from mimetypes import guess_type
 from uuid import uuid4
@@ -116,26 +118,47 @@ class ThemeStatic(Route):
         raise tornado.web.HTTPError(404)
 
 
+class KeptAliveWebSocketHandler(tornado.websocket.WebSocketHandler):
+    keepalive_timer = None
+
+    def open(self, *args, **kwargs):
+        self.keepalive_timer = tornado.ioloop.PeriodicCallback(
+            self.send_ping, tornado.options.options.keepalive_interval * 1000)
+
+    def send_ping(self):
+        t = int(time.time())
+        frame = struct.pack('<I', t)  # A ping frame based on time
+        self.log.info("Sending ping frame %s" % t)
+        try:
+            self.ping(frame)
+        except tornado.websocket.WebSocketClosedError:
+            self.keepalive_timer.stop()
+
+    def on_close(self):
+        if self.keepalive_timer is not None:
+            self.keepalive_timer.stop()
+
+
 @url(r'/ctl/session/(?P<session>[^/]+)')
-class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
+class TermCtlWebSocket(Route, KeptAliveWebSocketHandler):
     sessions = defaultdict(list)
     sessions_secure_users = {}
 
     def open(self, session):
+        super(TermCtlWebSocket, self).open(session)
         self.session = session
         self.closed = False
         self.log.info('Websocket /ctl opened %r' % self)
 
     def create_terminal(self):
         socket = utils.Socket(self.ws_connection.stream.socket)
-        opts = tornado.options.options
         user = self.request.query_arguments.get(
             'user', [b''])[0].decode('utf-8')
         path = self.request.query_arguments.get(
             'path', [b''])[0].decode('utf-8')
         secure_user = None
 
-        if not opts.unsecure:
+        if not tornado.options.options.unsecure:
             user = utils.parse_cert(
                 self.ws_connection.stream.socket.getpeercert())
             assert user, 'No user in certificate'
@@ -208,6 +231,7 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
         self.broadcast(self.session, message, self)
 
     def on_close(self):
+        super(TermCtlWebSocket, self).on_close()
         if self.closed:
             return
         self.closed = True
@@ -215,8 +239,7 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
         if self in self.sessions[self.session]:
             self.sessions[self.session].remove(self)
 
-        opts = tornado.options.options
-        if opts.one_shot or (
+        if tornado.options.options.one_shot or (
                 self.application.systemd and
                 not sum([
                     len(wsockets)
@@ -225,7 +248,7 @@ class TermCtlWebSocket(Route, tornado.websocket.WebSocketHandler):
 
 
 @url(r'/ws/session/(?P<session>[^/]+)')
-class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
+class TermWebSocket(Route, KeptAliveWebSocketHandler):
     # List of websockets per session
     sessions = defaultdict(list)
 
@@ -236,6 +259,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
     history = {}
 
     def open(self, session):
+        super(TermWebSocket, self).open(session)
         self.set_nodelay(True)
         self.session = session
         self.closed = False
@@ -273,6 +297,7 @@ class TermWebSocket(Route, tornado.websocket.WebSocketHandler):
         Terminal.sessions[self.session].write(message)
 
     def on_close(self):
+        super(TermWebSocket, self).on_close()
         if self.closed:
             return
         self.closed = True

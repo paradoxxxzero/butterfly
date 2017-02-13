@@ -20,7 +20,11 @@
 import tornado.options
 import tornado.ioloop
 import tornado.httpserver
-import tornado_systemd
+try:
+    from tornado_systemd import SystemdHTTPServer as HTTPServer
+except ImportError:
+    from tornado.httpserver import HTTPServer
+
 import logging
 import webbrowser
 import uuid
@@ -40,6 +44,8 @@ tornado.options.define("unminified", default=False,
 
 tornado.options.define("host", default='localhost', help="Server host")
 tornado.options.define("port", default=57575, type=int, help="Server port")
+tornado.options.define("keepalive_interval", default=30, type=int,
+                        help="Interval between ping packets sent from server to client (in seconds)")
 tornado.options.define("one_shot", default=False,
                        help="Run a one-shot instance. Quit at term close")
 tornado.options.define("shell", help="Shell to execute at login")
@@ -131,6 +137,7 @@ if not os.path.exists(options.ssl_dir):
 def to_abs(file):
     return os.path.join(options.ssl_dir, file)
 
+
 ca, ca_key, cert, cert_key, pkcs12 = map(to_abs, [
     'butterfly_ca.crt', 'butterfly_ca.key',
     'butterfly_%s.crt', 'butterfly_%s.key',
@@ -155,6 +162,7 @@ def read(file):
     print('Reading %s' % file)
     with open(file, 'rb') as fd:
         return fd.read()
+
 
 if options.generate_certs:
     from OpenSSL import crypto
@@ -298,9 +306,7 @@ else:
 from butterfly import application
 application.butterfly_dir = butterfly_dir
 log.info('Starting server')
-http_server = tornado_systemd.SystemdHTTPServer(
-    application,
-    ssl_options=ssl_opts)
+http_server = HTTPServer(application, ssl_options=ssl_opts)
 http_server.listen(port, address=host)
 
 if http_server.systemd:
