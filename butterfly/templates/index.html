@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% from tornado.options import options %}
+{% from uuid import uuid4 %}
 <html>
   <head>
     <meta charset="utf-8">
@@ -15,7 +16,8 @@
 
   <body spellcheck="false"
         data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}"
-        data-root-path="{{ options.uri_root_path }}">
+        data-root-path="{{ options.uri_root_path }}"
+        data-session-token={{ session }}>
     <div id="popup" class="hidden">
     </div>
     <script src="{{ static_url('html-sanitizer.js') }}"></script>

@@ -19,14 +19,16 @@
 import json
 import os
 import sys
+from collections import defaultdict
+from mimetypes import guess_type
+from uuid import uuid4
+
+import tornado.escape
 import tornado.options
 import tornado.process
-import tornado.escape
 import tornado.web
 import tornado.websocket
-from mimetypes import guess_type
-from collections import defaultdict
-from butterfly import url, Route, utils, __version__
+from butterfly import Route, __version__, url, utils
 from butterfly.terminal import Terminal
 
 
@@ -41,7 +43,8 @@ class Index(Route):
     def get(self, user, path, session):
         if not tornado.options.options.unsecure and user:
             raise tornado.web.HTTPError(400)
-        return self.render('index.html')
+        return self.render(
+            'index.html', session=session or str(uuid4()))
 
 
 @url(r'/theme/([^/]+)/style.css')

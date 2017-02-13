@@ -1,5 +1,5 @@
 (function() {
-  var $, State, Terminal, cancel, cols, openTs, quit, rows, s, uuid, ws,
+  var $, State, Terminal, cancel, cols, openTs, quit, rows, s, ws,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   cols = rows = null;
@@ -14,15 +14,6 @@
   };
 
   $ = document.querySelectorAll.bind(document);
-
-  uuid = function() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r, v;
-      r = Math.random() * 16 | 0;
-      v = c === 'x' ? r : r & 0x3 | 0x8;
-      return v.toString(16);
-    });
-  };
 
   document.addEventListener('DOMContentLoaded', function() {
     var close, ctl, error, init_ctl_ws, init_shell_ws, open, path, reopenOnClose, rootPath, term, write, write_request, wsUrl;
@@ -39,7 +30,7 @@
     wsUrl += document.location.host + rootPath;
     path = location.pathname;
     if (path.indexOf('/session') < 0) {
-      path += "session/" + (uuid());
+      path += "session/" + (document.body.getAttribute('data-session-token'));
     }
     path += location.search;
     ws.shell = new WebSocket(wsUrl + '/ws' + path);

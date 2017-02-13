@@ -25,12 +25,6 @@ ws =
 
 $ = document.querySelectorAll.bind(document)
 
-uuid = ->
-  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace /[xy]/g, (c) ->
-    r = Math.random() * 16 | 0
-    v = if c is 'x' then r else (r & 0x3|0x8)
-    v.toString(16)
-
 document.addEventListener 'DOMContentLoaded', ->
   term = null
 
@@ -46,7 +40,7 @@ document.addEventListener 'DOMContentLoaded', ->
   wsUrl += document.location.host + rootPath
   path = location.pathname
   if path.indexOf('/session') < 0
-    path += "session/#{uuid()}"
+    path += "session/#{document.body.getAttribute('data-session-token')}"
 
   path += location.search
 
