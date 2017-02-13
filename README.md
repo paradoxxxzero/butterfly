@@ -1,4 +1,4 @@
-# ƸӜƷ butterfly 2.0
+# ƸӜƷ butterfly 3.0 (Not released yet)
 
 ![](http://paradoxxxzero.github.io/assets/butterfly_2.0_1.gif)
 
@@ -26,7 +26,8 @@ Butterfly is a xterm compatible terminal that runs in your browser.
 
 ``` bash
 $ pip install butterfly
-$ pip install libsass  # If you want to use themes
+$ pip install butterfly[themes]  # If you want to use themes
+$ pip install butterfly[systemd]  # If you want to use systemd
 $ butterfly
 ```
 
@@ -60,7 +61,8 @@ $ systemctl enable butterfly.socket
 $ systemctl start butterfly.socket
 ```
 
-Don't forget to update the /etc/butterfly/butterfly.conf file with your server options (host, port, shell, ...)
+Don't forget to update the /etc/butterfly/butterfly.conf file with your server options (host, port, shell, ...) and to install butterfly with the [systemd] flag.
+
 
 ## Contribute
 
@@ -84,7 +86,7 @@ The js part is based on [term.js](https://github.com/chjj/term.js/) which is bas
 ## License
 
 ```
-butterfly Copyright (C) 2015  Florian Mounier
+butterfly Copyright (C) 2015-2017  Florian Mounier
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
