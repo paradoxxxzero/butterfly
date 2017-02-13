@@ -232,7 +232,10 @@ class Terminal(object):
             os.execvpe(args[0], args, env)
             # This process has been replaced
 
-        if server.root and tornado.options.options.pam_profile:
+        if tornado.options.options.pam_profile:
+            if not server.root:
+                print('You must be root to use pam_profile option.')
+                sys.exit(3)
             pam_path = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)), 'pam.py')
             os.execvpe(sys.executable, [

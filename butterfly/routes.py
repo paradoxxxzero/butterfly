@@ -40,9 +40,11 @@ def u(s):
     return s
 
 
-@url(r'/(?:user/(.+))?/?(?:wd/(.+))?/?(?:session/(.+))?')
+@url(r'/(?:session/(?P<session>[^/]+)/?)?')
 class Index(Route):
-    def get(self, user, path, session):
+    def get(self, session):
+        user = self.request.query_arguments.get(
+            'user', [b''])[0].decode('utf-8')
         if not tornado.options.options.unsecure and user:
             raise tornado.web.HTTPError(400)
         return self.render(
