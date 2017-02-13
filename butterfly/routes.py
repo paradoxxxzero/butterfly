@@ -108,7 +108,19 @@ class ThemeStatic(Route):
             raise tornado.web.HTTPError(403)
 
         if os.path.exists(fn):
-            self.set_header("Content-Type", guess_type(fn)[0])
+            type = guess_type(fn)[0]
+            if type is None:
+                # Fallback if there's no mimetypes on the system
+                type = {
+                    'png': 'image/png',
+                    'jpg': 'image/jpeg',
+                    'jpeg': 'image/jpeg',
+                    'gif': 'image/gif',
+                    'woff': 'application/font-woff',
+                    'ttf': 'application/x-font-ttf'
+                }.get(fn.split('.')[-1], 'text/plain')
+
+            self.set_header("Content-Type", type)
             with open(fn, 'rb') as s:
                 while True:
                     data = s.read(16384)
