@@ -283,14 +283,19 @@ class TermWebSocket(Route, KeptAliveWebSocketHandler):
 
     @classmethod
     def close_session(cls, session):
-        wsockets = (cls.sessions.get(session) +
-                    TermCtlWebSocket.sessions.get(session))
+        wsockets = (cls.sessions.get(session, []) +
+                    TermCtlWebSocket.sessions.get(session, []))
         for wsocket in wsockets:
             wsocket.on_close()
+
             wsocket.close()
-        del cls.sessions[session]
-        del TermCtlWebSocket.sessions_secure_users[session]
-        del TermCtlWebSocket.sessions[session]
+
+        if session in cls.sessions:
+            del cls.sessions[session]
+        if session in TermCtlWebSocket.sessions_secure_users:
+            del TermCtlWebSocket.sessions_secure_users[session]
+        if session in TermCtlWebSocket.sessions:
+            del TermCtlWebSocket.sessions[session]
 
     @classmethod
     def broadcast(cls, session, message, emitter=None):
