@@ -408,4 +408,5 @@ class AnsiColors(object):
             return '\x1b[0m'
         return ''
 
+
 ansi_colors = AnsiColors()

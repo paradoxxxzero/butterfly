@@ -196,6 +196,11 @@ if options.generate_certs:
     server_pk.generate_key(crypto.TYPE_RSA, 2048)
     server_cert = crypto.X509()
     server_cert.get_subject().CN = host
+    alt = 'subjectAltName'
+    value = 'DNS:%s' % host
+    server_cert.add_extensions([crypto.X509Extension(
+        alt.encode('utf-8'), False, value.encode('utf-8'))])
+
     fill_fields(server_cert.get_subject())
     server_cert.set_serial_number(uuid.uuid4().int)
     server_cert.gmtime_adj_notBefore(0)  # From now

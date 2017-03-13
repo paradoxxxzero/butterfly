@@ -1,4 +1,4 @@
-# ƸӜƷ butterfly 3.0 (Not released yet)
+# ƸӜƷ butterfly 3.0
 
 ![](http://paradoxxxzero.github.io/assets/butterfly_2.0_1.gif)
 
