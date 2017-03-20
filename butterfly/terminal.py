@@ -31,7 +31,7 @@ import tornado.process
 import tornado.web
 import tornado.websocket
 from logging import getLogger
-from butterfly import pam, utils, __version__
+from butterfly import utils, __version__
 
 log = getLogger('butterfly')
 ioloop = tornado.ioloop.IOLoop.instance()
@@ -95,10 +95,10 @@ class Terminal(object):
                 version=__version__,
                 opts=tornado.options.options,
                 uri=self.uri,
-                colors=utils.ansi_colors)
-                    .decode('utf-8')
-                    .replace('\r', '')
-                    .replace('\n', '\r\n'))
+                colors=utils.ansi_colors
+            ).decode('utf-8')
+             .replace('\r', '')
+             .replace('\n', '\r\n'))
             self.send(motd)
 
         log.info('Forking pty for user %r' % self.user)
