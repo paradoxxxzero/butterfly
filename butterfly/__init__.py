@@ -14,14 +14,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '3.0.0'
-
-
 import os
 import tornado.web
 import tornado.options
 import tornado.web
 from logging import getLogger
+
+try:
+    import pkg_resources
+except ImportError:
+    __version__ = "pkg_resources not found on PYTHON_PATH"
+else:
+    try:
+        __version__ = pkg_resources.require('butterfly')[0].version
+    except pkg_resources.DistributionNotFound:
+        __version__ = "butterfly is not installed"
 
 log = getLogger('butterfly')
 

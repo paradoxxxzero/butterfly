@@ -4,13 +4,9 @@
 """
 Butterfly - A sleek web based terminal emulator
 """
-import os
-import re
 from setuptools import setup
 
-ROOT = os.path.dirname(__file__)
-with open(os.path.join(ROOT, 'butterfly', '__init__.py')) as fd:
-    __version__ = re.search("__version__ = '([^']+)'", fd.read()).group(1)
+__version__ = '3.0.1'
 
 options = dict(
     name="butterfly",
