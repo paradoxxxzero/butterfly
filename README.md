@@ -12,7 +12,7 @@ Butterfly is a xterm compatible terminal that runs in your browser.
 
 * xterm compatible (support a lot of unused features!)
 * Native browser scroll and search
-* Theming in css / sass [(18 preset themes)](https://github.com/paradoxxxzero/butterfly-themes) endless possibilities!
+* Theming in css / sass [(20 preset themes)](https://github.com/paradoxxxzero/butterfly-themes) endless possibilities!
 * HTML in your terminal! cat images and use &lt;table&gt;
 * Multiple sessions support (à la screen -x) to simultaneously access a terminal from several places on the planet!
 * Secure authentication with X509 certificates!
