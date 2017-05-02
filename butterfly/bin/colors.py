@@ -2,7 +2,8 @@
 import argparse
 import sys
 
-parser = argparse.ArgumentParser(description='Butterfly terminal color tester.')
+parser = argparse.ArgumentParser(
+    description='Butterfly terminal color tester.')
 parser.add_argument(
     '--colors',
     default='16',

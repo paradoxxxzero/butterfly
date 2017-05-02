@@ -27,7 +27,8 @@ setup(
     install_requires=["tornado>=3.2", "pyOpenSSL"],
     extras_require={
         'themes': ["libsass"],
-        'systemd': ['tornado_systemd']
+        'systemd': ['tornado_systemd'],
+        'lint': ['pytest', 'pytest-flake8', 'pytest-isort']
     },
     package_data={
         'butterfly': [

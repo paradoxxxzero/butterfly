@@ -133,9 +133,9 @@ class PAM():
             if isinstance(service, str):
                 service = service.encode(encoding)
         else:
-            if isinstance(username, unicode):
+            if isinstance(username, unicode):  # noqa: F821
                 username = username.encode(encoding)
-            if isinstance(service, unicode):
+            if isinstance(service, unicode):  # noqa: F821
                 service = service.encode(encoding)
 
         if b'\x00' in username or b'\x00' in service:

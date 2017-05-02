@@ -24,14 +24,16 @@ import signal
 import string
 import struct
 import sys
-import termios
+from logging import getLogger
+
 import tornado.ioloop
 import tornado.options
 import tornado.process
 import tornado.web
 import tornado.websocket
-from logging import getLogger
-from butterfly import utils, __version__
+
+import termios
+from butterfly import __version__, utils
 
 log = getLogger('butterfly')
 ioloop = tornado.ioloop.IOLoop.instance()

@@ -22,15 +22,6 @@ import tornado.options
 import tornado.web
 from logging import getLogger
 
-try:
-    import pkg_resources
-except ImportError:
-    __version__ = "pkg_resources not found on PYTHON_PATH"
-else:
-    try:
-        __version__ = pkg_resources.require('butterfly')[0].version
-    except pkg_resources.DistributionNotFound:
-        __version__ = "butterfly is not installed"
 
 log = getLogger('butterfly')
 
@@ -86,4 +77,4 @@ if hasattr(tornado.options.options, 'debug'):
             if tornado.options.options.uri_root_path else '')
     )
 
-    import butterfly.routes
+    import butterfly.routes  # noqa: F401

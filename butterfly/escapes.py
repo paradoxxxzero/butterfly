@@ -1,8 +1,9 @@
-from contextlib import contextmanager
-from butterfly.utils import ansi_colors as colors
 import sys
-import termios
 import tty
+from contextlib import contextmanager
+
+import termios
+from butterfly.utils import ansi_colors as colors  # noqa: F401
 
 
 @contextmanager

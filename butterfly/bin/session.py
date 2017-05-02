@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+import argparse
 import os
 import webbrowser
-import argparse
 
 parser = argparse.ArgumentParser(description='Butterfly session opener.')
 parser.add_argument(

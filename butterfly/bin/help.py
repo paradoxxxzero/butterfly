@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+import base64
+import os
+import subprocess
+
+import butterfly
 from butterfly.escapes import image
 from butterfly.utils import ansi_colors
-import os
-import butterfly
-import base64
-import shutil
-import subprocess
 
 print(ansi_colors.white + "Welcome to the butterfly help." + ansi_colors.reset)
 path = os.getenv('BUTTERFLY_PATH')
@@ -58,7 +58,6 @@ Butterfly is a xterm compliant terminal built with python and javascript.
     code=ansi_colors.light_yellow,
     comment=ansi_colors.light_magenta,
     reset=ansi_colors.reset,
-    rcol=int(subprocess.check_output(['stty','size']).split()[1]) - 31,
+    rcol=int(subprocess.check_output(['stty', 'size']).split()[1]) - 31,
     main=os.path.normpath(os.path.join(
-                os.path.abspath(os.path.dirname(butterfly.__file__)),
-                'sass'))))
+        os.path.abspath(os.path.dirname(butterfly.__file__)), 'sass'))))

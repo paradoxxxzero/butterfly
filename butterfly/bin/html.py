@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-from butterfly.escapes import html
 import argparse
 import fileinput
 import sys
+
+from butterfly.escapes import html
 
 parser = argparse.ArgumentParser(
     description="Butterfly html converter.\n\n"

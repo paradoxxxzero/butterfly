@@ -8,3 +8,5 @@ node_modules/
 sass/scss
 *.egg-info/
 build/
+.cache/
+.env/

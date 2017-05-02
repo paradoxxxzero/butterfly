@@ -30,7 +30,7 @@ import tornado.options
 import tornado.process
 import tornado.web
 import tornado.websocket
-from butterfly import Route, __version__, url, utils
+from butterfly import Route, url, utils
 from butterfly.terminal import Terminal
 
 

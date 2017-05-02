@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-import sys
-import os
+import argparse
 import base64
 import mimetypes
+import os
 import subprocess
+import sys
+
 from butterfly.escapes import image
-import argparse
 
 parser = argparse.ArgumentParser(description='Butterfly cat wrapper.')
 parser.add_argument('-o', action="store_true",

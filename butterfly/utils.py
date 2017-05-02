@@ -18,13 +18,13 @@
 
 import os
 import pwd
-import time
-import sys
-import struct
-from logging import getLogger
-from collections import namedtuple
-import subprocess
 import re
+import struct
+import subprocess
+import sys
+import time
+from collections import namedtuple
+from logging import getLogger
 
 log = getLogger('butterfly')
 
@@ -294,11 +294,12 @@ def get_wtmp_file():
         if os.path.exists(file):
             return file
 
+
 UTmp = namedtuple(
-            'UTmp',
-            ['type', 'pid', 'line', 'id', 'user', 'host',
-             'exit0', 'exit1', 'session',
-             'sec', 'usec', 'addr0', 'addr1', 'addr2', 'addr3', 'unused'])
+    'UTmp',
+    ['type', 'pid', 'line', 'id', 'user', 'host',
+     'exit0', 'exit1', 'session',
+     'sec', 'usec', 'addr0', 'addr1', 'addr2', 'addr3', 'unused'])
 
 
 def utmp_line(id, type, pid, fd, user, host, ts):
