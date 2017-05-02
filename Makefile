@@ -6,8 +6,10 @@ all: install lint check-outdated run-debug
 install:
 	test -d $(VENV) || virtualenv $(VENV)
 	$(PIP) install --upgrade --no-cache pip setuptools -e .[lint] devcore
+	$(NPM) install
 
 clean:
+	rm -fr $(NODE_MODULES)
 	rm -fr $(VENV)
 	rm -fr *.egg-info
 
@@ -22,7 +24,10 @@ run-debug:
 	sleep 0.5 && $(BROWSER) http://localhost:1212&
 	$(PYTHON) ./butterfly.server.py --port=1212 --unsecure --debug
 
-release:
+build-coffee:
+	$(NODE_MODULES)/.bin/grunt
+
+release: build-coffee
 	git pull
 	$(eval VERSION := $(shell PROJECT_NAME=$(PROJECT_NAME) $(VENV)/bin/devcore bump $(LEVEL)))
 	git commit -am "Bump $(VERSION)"

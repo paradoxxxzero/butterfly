@@ -221,7 +221,7 @@
     if (!(e.altKey && e.keyCode === 79)) {
       return true;
     }
-    open(location.href);
+    open(location.origin);
     return cancel(e);
   });
 
