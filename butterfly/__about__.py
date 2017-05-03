@@ -1,5 +1,5 @@
 __title__ = "butterfly"
-__version__ = "3.1.1"
+__version__ = "3.1.2"
 
 __summary__ = "A sleek web based terminal emulator"
 __uri__ = "https://github.com/paradoxxxzero/butterfly"
