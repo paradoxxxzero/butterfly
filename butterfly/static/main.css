@@ -2827,7 +2827,8 @@ body {
       cursor: zoom-out;
       background-color: #09080a; }
       body .line.extended.expanded .extra {
-        display: block; }
+        display: block;
+        white-space: pre; }
   body::-webkit-scrollbar {
     background: #110f13;
     width: 0.75em; }
