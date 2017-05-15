@@ -2828,7 +2828,8 @@ body {
       background-color: #09080a; }
       body .line.extended.expanded .extra {
         display: block;
-        white-space: pre; }
+        white-space: pre-wrap;
+        word-break: break-all; }
   body::-webkit-scrollbar {
     background: #110f13;
     width: 0.75em; }
