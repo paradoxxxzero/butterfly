@@ -4,9 +4,9 @@ include Makefile.config
 all: install lint check-outdated run-debug
 
 install:
-	test -d $(VENV) || virtualenv $(VENV)
-	$(PIP) install --upgrade --no-cache pip setuptools -e .[lint] devcore
-	$(NPM) install
+	test -d $(VENV) || virtualenv $(VENV) -p $(PYTHON_VERSION)
+	# $(PIP) install --upgrade --no-cache pip setuptools -e .[lint] devcore
+	# $(NPM) install
 
 clean:
 	rm -fr $(NODE_MODULES)

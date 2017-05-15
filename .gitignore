@@ -9,4 +9,4 @@ sass/scss
 *.egg-info/
 build/
 .cache/
-.env/
+.env*

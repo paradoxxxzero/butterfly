@@ -168,7 +168,7 @@ def get_lsof_socket_line(addr, port):
     # May want to make this into a dictionary in the future...
     regex = "\w+\s+(?P<pid>\d+)\s+(?P<user>\w+).*\s" \
             "(?P<laddr>.*?):(?P<lport>\d+)->(?P<raddr>.*?):(?P<rport>\d+)"
-    output = subprocess.check_output(['lsof', '-Pni'])
+    output = subprocess.check_output(['lsof', '-Pni']).decode('utf-8')
     lines = output.split('\n')
     for line in lines:
         # Look for local address with peer port
