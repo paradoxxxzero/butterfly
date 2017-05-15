@@ -20,9 +20,10 @@ lint:
 check-outdated:
 	$(PIP) list --outdated --format=columns
 
+ARGS ?= --port=1212 --unsecure --debug 
 run-debug:
 	sleep 0.5 && $(BROWSER) http://localhost:1212&
-	$(PYTHON) ./butterfly.server.py --port=1212 --unsecure --debug
+	$(PYTHON) ./butterfly.server.py $(ARGS)
 
 build-coffee:
 	$(NODE_MODULES)/.bin/grunt

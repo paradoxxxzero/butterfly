@@ -196,19 +196,19 @@ class Terminal(object):
             tty, os.getpid(),
             self.callee.name, self.uri)
 
-        if not tornado.options.options.unsecure or (
-                self.socket.local and
-                self.caller == self.callee and
-                server == self.callee
-        ) and not tornado.options.options.login:
+        local_login = (
+            self.socket.local and self.caller == self.callee and
+            server == self.callee)
+        secure = not tornado.options.options.unsecure
+        force_login = tornado.options.options.login
+        ignore_security = (
+            tornado.options.options.
+            i_hereby_declare_i_dont_want_any_security_whatsoever)
+
+        if not force_login and (ignore_security or secure or local_login):
             # User has been auth with ssl or is the same user as server
             # or login is explicitly turned off
-            if (
-                    not tornado.options.options.unsecure and not (
-                        self.socket.local and
-                        self.caller == self.callee and
-                        server == self.callee
-                    )):
+            if secure and not local_login:
                 # User is authed by ssl, setting groups
                 try:
                     os.initgroups(self.callee.name, self.callee.gid)
