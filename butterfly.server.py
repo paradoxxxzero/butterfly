@@ -55,7 +55,7 @@ tornado.options.define("cmd",
                        help="Command to run instead of shell, f.i.: 'ls -l'")
 tornado.options.define("unsecure", default=False,
                        help="Don't use ssl not recommended")
-tornado.options.define("i-hereby-declare-i-dont-want-any-security-whatsoever",
+tornado.options.define("i_hereby_declare_i_dont_want_any_security_whatsoever",
                        default=False,
                        help="Remove all security and warnings. There are some "
                        "use cases for that. Use this if you really know what "
