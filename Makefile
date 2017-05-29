@@ -5,8 +5,8 @@ all: install lint check-outdated run-debug
 
 install:
 	test -d $(VENV) || virtualenv $(VENV) -p $(PYTHON_VERSION)
-	# $(PIP) install --upgrade --no-cache pip setuptools -e .[lint] devcore
-	# $(NPM) install
+	$(PIP) install --upgrade --no-cache pip setuptools -e .[lint] devcore
+	$(NPM) install
 
 clean:
 	rm -fr $(NODE_MODULES)
@@ -20,7 +20,7 @@ lint:
 check-outdated:
 	$(PIP) list --outdated --format=columns
 
-ARGS ?= --port=1212 --unsecure --debug 
+ARGS ?= --port=1212 --unsecure --debug
 run-debug:
 	sleep 0.5 && $(BROWSER) http://localhost:1212&
 	$(PYTHON) ./butterfly.server.py $(ARGS)

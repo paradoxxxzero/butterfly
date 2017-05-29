@@ -1,3 +1,8 @@
+3.1.5
+=====
+
+* Fix new option in older tornado version. (#146 thanks @warpkwd)
+
 3.1.4
 =====
 
