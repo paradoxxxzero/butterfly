@@ -189,6 +189,7 @@ if options.generate_certs:
         ca_pk.generate_key(crypto.TYPE_RSA, 2048)
         ca_cert = crypto.X509()
         ca_cert.get_subject().CN = 'Butterfly CA on %s' % socket.gethostname()
+        ca_cert.set_version(2)
         fill_fields(ca_cert.get_subject())
         ca_cert.set_serial_number(uuid.uuid4().int)
         ca_cert.gmtime_adj_notBefore(0)  # From now
@@ -213,6 +214,7 @@ if options.generate_certs:
     value = 'DNS:%s' % host
     server_cert.add_extensions([crypto.X509Extension(
         alt.encode('utf-8'), False, value.encode('utf-8'))])
+    server_cert.set_version(2)
 
     fill_fields(server_cert.get_subject())
     server_cert.set_serial_number(uuid.uuid4().int)
@@ -264,6 +266,7 @@ if (options.generate_current_user_pkcs or
 
     client_cert = crypto.X509()
     client_cert.get_subject().CN = user
+    client_cert.set_version(2)
     fill_fields(client_cert.get_subject())
     client_cert.set_serial_number(uuid.uuid4().int)
     client_cert.gmtime_adj_notBefore(0)  # From now
