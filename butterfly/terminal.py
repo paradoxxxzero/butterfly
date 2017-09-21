@@ -264,7 +264,7 @@ class Terminal(object):
             args = ['/bin/su']
 
         args.append('-l')
-        if sys.platform == 'linux' and tornado.options.options.shell:
+        if sys.platform.startswith('linux') and tornado.options.options.shell:
             args.append('-s')
             args.append(tornado.options.options.shell)
         args.append(self.callee.name)
