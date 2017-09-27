@@ -178,6 +178,9 @@ def read(file):
     with open(file, 'rb') as fd:
         return fd.read()
 
+def b(s):
+    return s.encode('utf-8')
+
 
 if options.generate_certs:
     from OpenSSL import crypto
@@ -188,8 +191,8 @@ if options.generate_certs:
         ca_pk = crypto.PKey()
         ca_pk.generate_key(crypto.TYPE_RSA, 2048)
         ca_cert = crypto.X509()
+        ca_cert.set_version(2)
         ca_cert.get_subject().CN = 'Butterfly CA on %s' % socket.gethostname()
-        ca_cert.set_version(3)
         fill_fields(ca_cert.get_subject())
         ca_cert.set_serial_number(uuid.uuid4().int)
         ca_cert.gmtime_adj_notBefore(0)  # From now
@@ -198,11 +201,18 @@ if options.generate_certs:
         ca_cert.set_pubkey(ca_pk)
         ca_cert.add_extensions([
             crypto.X509Extension(
-                'basicConstraints', True, 'CA:TRUE, pathlen:0'),
+                b('basicConstraints'), True, b('CA:TRUE, pathlen:0')),
             crypto.X509Extension(
-                'keyUsage', True, 'keyCertSign, cRLSign'),
+                b('keyUsage'), True, b('keyCertSign, cRLSign')),
             crypto.X509Extension(
-                'subjectKeyIdentifier', False, 'hash', subject=ca_cert),
+                b('subjectKeyIdentifier'), False, b('hash'), subject=ca_cert),
+        ])
+        ca_cert.add_extensions([
+            crypto.X509Extension(
+                b('authorityKeyIdentifier'), False,
+                b('issuer:always, keyid:always'),
+                issuer=ca_cert, subject=ca_cert
+            )
         ])
         ca_cert.sign(ca_pk, 'sha512')
 
@@ -217,13 +227,23 @@ if options.generate_certs:
     server_pk = crypto.PKey()
     server_pk.generate_key(crypto.TYPE_RSA, 2048)
     server_cert = crypto.X509()
+    server_cert.set_version(2)
     server_cert.get_subject().CN = host
-    alt = 'subjectAltName'
-    value = 'DNS:%s' % host
-    server_cert.add_extensions([crypto.X509Extension(
-        alt.encode('utf-8'), False, value.encode('utf-8'))])
-    server_cert.set_version(3)
-
+    server_cert.add_extensions([
+        crypto.X509Extension(
+            b('basicConstraints'), False, b('CA:FALSE')),
+        crypto.X509Extension(
+            b('subjectKeyIdentifier'), False, b('hash'), subject=server_cert),
+        crypto.X509Extension(
+            b('subjectAltName'), False, b('DNS:%s' % host)),
+    ])
+    server_cert.add_extensions([
+        crypto.X509Extension(
+            b('authorityKeyIdentifier'), False,
+            b('issuer:always, keyid:always'),
+            issuer=ca_cert, subject=ca_cert
+        )
+    ])
     fill_fields(server_cert.get_subject())
     server_cert.set_serial_number(uuid.uuid4().int)
     server_cert.gmtime_adj_notBefore(0)  # From now
@@ -273,8 +293,8 @@ if (options.generate_current_user_pkcs or
     client_pk.generate_key(crypto.TYPE_RSA, 2048)
 
     client_cert = crypto.X509()
+    client_cert.set_version(2)
     client_cert.get_subject().CN = user
-    client_cert.set_version(3)
     fill_fields(client_cert.get_subject())
     client_cert.set_serial_number(uuid.uuid4().int)
     client_cert.gmtime_adj_notBefore(0)  # From now

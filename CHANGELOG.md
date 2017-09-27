@@ -1,3 +1,8 @@
+3.2.1
+=====
+
+* Issue correct X.509 v3 certificates (you will need to re-generate your certs)
+
 3.1.5
 =====
 
