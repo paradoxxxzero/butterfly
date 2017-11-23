@@ -1,5 +1,5 @@
 (function() {
-  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, first, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tid, virtualInput, walk,
+  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, escape, first, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tags, tid, virtualInput, walk,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   clean_ansi = function(data) {
@@ -202,12 +202,25 @@
     return text.replace(urlPattern, '<a href="$&">$&</a>').replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>').replace(emailAddressPattern, '<a href="mailto:$&">$&</a>');
   };
 
+  tags = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;'
+  };
+
+  escape = function(s) {
+    return s.replace(/[&<>]/g, function(tag) {
+      return tags[tag] || tag;
+    });
+  };
+
   Terminal.on('change', function(line) {
     return walk(line, function() {
-      var linkified, newNode;
+      var linkified, newNode, val;
       if (this.nodeType === 3) {
-        linkified = linkify(this.nodeValue);
-        if (linkified !== this.nodeValue) {
+        val = this.nodeValue;
+        linkified = linkify(escape(val));
+        if (linkified !== val) {
           newNode = document.createElement('span');
           newNode.innerHTML = linkified;
           this.parentElement.replaceChild(newNode, this);

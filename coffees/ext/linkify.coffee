@@ -14,11 +14,19 @@ linkify = (text) ->
     .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
     .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>')
 
+tags =
+  '&': '&amp;'
+  '<': '&lt;'
+  '>': '&gt;'
+
+escape = (s) -> s.replace(/[&<>]/g, (tag) -> tags[tag] or tag)
+
 Terminal.on 'change', (line) ->
   walk line, ->
     if @nodeType is 3
-      linkified = linkify @nodeValue
-      if linkified isnt @nodeValue
+      val = @nodeValue
+      linkified = linkify escape(val)
+      if linkified isnt val
         newNode = document.createElement('span')
         newNode.innerHTML = linkified
         @parentElement.replaceChild newNode, @
