@@ -1,3 +1,8 @@
+3.2.2
+=====
+
+* Fix unescaping entities when linkifying
+
 3.2.1
 =====
 
