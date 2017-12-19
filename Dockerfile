@@ -7,6 +7,8 @@ RUN apt-get update \
     libssl-dev \
     python-dev \
     python-setuptools \
+ && sudo easy_install pip \
+ && sudo pip install --upgrade setuptools \
  && apt-get clean \
  && rm -r /var/lib/apt/lists/*
 
