@@ -1374,6 +1374,14 @@ class Terminal
       # in which case we just fetch it from the text area
       setTimeout =>
         unless @inComposition || @inputHelper.value.length > 1
+          char = @inputHelper.value.toUpperCase().charCodeAt(0)
+          if 65 <= char <= 90
+            # If the character sent here is a letter
+            # allow it to be overridden on mobile
+            # Combinations like "Ctrl+C" won't work without this
+            # on Chrome for Android
+            e = new KeyboardEvent 'keydown', keyCode: char
+            return if window.mobileKeydown e
           @send @inputHelper.value
       , 0
       return false
@@ -1382,6 +1390,7 @@ class Terminal
     # https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
     # Don't handle modifiers alone
     return true if ev.keyCode > 15 and ev.keyCode < 19
+    return true if window.mobileKeydown ev
 
     if ev.keyCode is 19  # Pause break
       @body.classList.add 'stopped'

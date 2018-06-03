@@ -1507,7 +1507,17 @@
         ev.stopPropagation();
         setTimeout((function(_this) {
           return function() {
+            var char, e;
             if (!(_this.inComposition || _this.inputHelper.value.length > 1)) {
+              char = _this.inputHelper.value.toUpperCase().charCodeAt(0);
+              if ((65 <= char && char <= 90)) {
+                e = new KeyboardEvent('keydown', {
+                  keyCode: char
+                });
+                if (window.mobileKeydown(e)) {
+                  return;
+                }
+              }
               return _this.send(_this.inputHelper.value);
             }
           };
@@ -1515,6 +1525,9 @@
         return false;
       }
       if (ev.keyCode > 15 && ev.keyCode < 19) {
+        return true;
+      }
+      if (window.mobileKeydown(ev)) {
         return true;
       }
       if (ev.keyCode === 19) {

@@ -1,5 +1,5 @@
 (function() {
-  var Popup, Selection, _set_theme_href, _theme, cancel, clean_ansi, copy, escape, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tags, tid, walk,
+  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, escape, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tags, tid, walk,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   clean_ansi = function(data) {
@@ -231,6 +231,46 @@
       }
     });
   });
+
+  ctrl = false;
+
+  alt = false;
+
+  addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      return ctrl = true;
+    } else if (e.touches.length === 3) {
+      ctrl = false;
+      return alt = true;
+    } else if (e.touches.length === 4) {
+      ctrl = true;
+      return alt = true;
+    }
+  });
+
+  window.mobileKeydown = function(e) {
+    var _altKey, _ctrlKey, _keyCode;
+    if (ctrl || alt) {
+      _ctrlKey = ctrl;
+      _altKey = alt;
+      _keyCode = e.keyCode;
+      if (e.keyCode >= 97 && e.keyCode <= 122) {
+        _keyCode -= 32;
+      }
+      e = new KeyboardEvent('keydown', {
+        ctrlKey: _ctrlKey,
+        altKey: _altKey,
+        keyCode: _keyCode
+      });
+      ctrl = alt = false;
+      setTimeout(function() {
+        return window.dispatchEvent(e);
+      }, 0);
+      return true;
+    } else {
+      return false;
+    }
+  };
 
   document.addEventListener('keydown', function(e) {
     if (!(e.altKey && e.keyCode === 79)) {
