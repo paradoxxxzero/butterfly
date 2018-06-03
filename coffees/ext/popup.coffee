@@ -9,20 +9,12 @@ class Popup
     @el.innerHTML = html
     @el.classList.remove 'hidden'
 
-    # ff glorious hack
-    if typeof InstallTrigger isnt "undefined"
-      document.body.contentEditable = 'false'
-
     addEventListener 'click', @bound_click_maybe_close
     addEventListener 'keydown', @bound_key_maybe_close
 
   close: ->
     removeEventListener 'click', @bound_click_maybe_close
     removeEventListener 'keydown', @bound_key_maybe_close
-
-    # ff glorious hack
-    if typeof InstallTrigger isnt "undefined"
-      document.body.contentEditable = 'true'
 
     @el.classList.add 'hidden'
     @el.innerHTML = ''

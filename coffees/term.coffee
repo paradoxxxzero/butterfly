@@ -119,10 +119,6 @@ class Terminal
       @compositionUpdate.bind(@)
     @inputHelper.addEventListener 'compositionend',
       @compositionEnd.bind(@)
-    @inputHelper.addEventListener 'keydown',
-      @keyDown.bind(@)
-    @inputHelper.addEventListener 'keypress',
-      @keyPress.bind(@)
     addEventListener 'keydown', @keyDown.bind(@)
     addEventListener 'keypress', @keyPress.bind(@)
     # Always focus on the inputHelper textarea

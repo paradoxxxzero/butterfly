@@ -201,8 +201,6 @@
       this.inputHelper.addEventListener('compositionstart', this.compositionStart.bind(this));
       this.inputHelper.addEventListener('compositionupdate', this.compositionUpdate.bind(this));
       this.inputHelper.addEventListener('compositionend', this.compositionEnd.bind(this));
-      this.inputHelper.addEventListener('keydown', this.keyDown.bind(this));
-      this.inputHelper.addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('keydown', this.keyDown.bind(this));
       addEventListener('keypress', this.keyPress.bind(this));
       if (!isMobile()) {
