@@ -170,10 +170,14 @@
       this.body = this.document.getElementsByTagName('body')[0];
       this.term = this.document.getElementById('term');
       this.forceWidth = this.body.getAttribute('data-force-unicode-width') === 'yes';
+      this.inputHelper = this.document.getElementById('input-helper');
+      this.inputView = this.document.getElementById('input-view');
       this.body.className = 'terminal focus';
       this.body.style.outline = 'none';
       this.body.setAttribute('tabindex', 0);
       this.body.setAttribute('spellcheck', 'false');
+      this.inputHelper.setAttribute('tabindex', 0);
+      this.inputHelper.setAttribute('spellcheck', 'false');
       div = this.document.createElement('div');
       div.className = 'line';
       this.term.appendChild(div);
@@ -185,11 +189,23 @@
       this.termName = 'xterm';
       this.cursorBlink = true;
       this.cursorState = 0;
+      this.inComposition = false;
+      this.compositionText = "";
       this.resetVars();
       this.focus();
       this.startBlink();
+      this.inputHelper.addEventListener('compositionstart', this.compositionStart.bind(this));
+      this.inputHelper.addEventListener('compositionupdate', this.compositionUpdate.bind(this));
+      this.inputHelper.addEventListener('compositionend', this.compositionEnd.bind(this));
+      this.inputHelper.addEventListener('keydown', this.keyDown.bind(this));
+      this.inputHelper.addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('keydown', this.keyDown.bind(this));
       addEventListener('keypress', this.keyPress.bind(this));
+      addEventListener('keyup', (function(_this) {
+        return function() {
+          return _this.inputHelper.focus();
+        };
+      })(this));
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));
       addEventListener('resize', (function(_this) {
@@ -202,9 +218,6 @@
           return _this.nativeScrollTo();
         };
       })(this), true);
-      if (typeof InstallTrigger !== "undefined") {
-        this.body.contentEditable = 'true';
-      }
       this.initmouse();
       addEventListener('load', (function(_this) {
         return function() {
@@ -248,7 +261,8 @@
         invisible: a.invisible,
         italic: a.italic,
         faint: a.faint,
-        crossed: a.crossed
+        crossed: a.crossed,
+        placeholder: false
       };
     };
 
@@ -256,12 +270,18 @@
       return a.bg === b.bg && a.fg === b.fg && a.bold === b.bold && a.underline === b.underline && a.blink === b.blink && a.inverse === b.inverse && a.invisible === b.invisible && a.italic === b.italic && a.faint === b.faint && a.crossed === b.crossed;
     };
 
-    Terminal.prototype.putChar = function(c) {
+    Terminal.prototype.putChar = function(c, placeholder) {
+      var newChar;
+      if (placeholder == null) {
+        placeholder = false;
+      }
+      newChar = this.cloneAttr(this.curAttr, c);
+      newChar.placeholder = placeholder;
       if (this.insertMode) {
-        this.screen[this.y + this.shift].chars.splice(this.x, 0, this.cloneAttr(this.curAttr, c));
+        this.screen[this.y + this.shift].chars.splice(this.x, 0, newChar);
         this.screen[this.y + this.shift].chars.pop();
       } else {
-        this.screen[this.y + this.shift].chars[this.x] = this.cloneAttr(this.curAttr, c);
+        this.screen[this.y + this.shift].chars[this.x] = newChar;
       }
       return this.screen[this.y + this.shift].dirty = true;
     };
@@ -297,7 +317,8 @@
         invisible: false,
         italic: false,
         faint: false,
-        crossed: false
+        crossed: false,
+        placeholder: false
       };
       this.curAttr = this.cloneAttr(this.defAttr);
       this.params = [];
@@ -342,6 +363,7 @@
       this.showCursor();
       this.body.classList.add('focus');
       this.body.classList.remove('blur');
+      this.inputHelper.focus();
       this.resize();
       return this.scrollLock = old_sl;
     };
@@ -581,8 +603,15 @@
       return [classes, styles];
     };
 
+    Terminal.prototype.isCJK = function(ch) {
+      return ("\u4e00" <= ch && ch <= "\u9fff") || ("\u3040" <= ch && ch <= "\u30ff") || ("\u31f0" <= ch && ch <= "\u31ff") || ("\u3190" <= ch && ch <= "\u319f") || ("\u3301" <= ch && ch <= "\u3356") || ("\uac00" <= ch && ch <= "\ud7ff") || ("\u3000" <= ch && ch <= "\u303f") || ("\uff00" <= ch && ch <= "\uff60") || ("\uffe0" <= ch && ch <= "\uffe6");
+    };
+
     Terminal.prototype.charToDom = function(data, attr, cursor) {
       var ch, char, classes, ref, styles;
+      if (data.placeholder) {
+        return;
+      }
       if (data.html) {
         return data.html;
       }
@@ -621,12 +650,12 @@
         default:
           if (ch <= " ") {
             char += "&nbsp;";
-          } else if (!this.forceWidth) {
+          } else if (!(this.forceWidth || this.isCJK(ch))) {
             char += ch;
           } else {
             if (ch <= "~") {
               char += ch;
-            } else if (("\uff00" < ch && ch < "\uffef")) {
+            } else if (this.isCJK(ch)) {
               char += "<span style=\"display: inline-block; width: " + (2 * this.charSize.width) + "px\">" + ch + "</span>";
             } else {
               char += "<span style=\"display: inline-block; width: " + this.charSize.width + "px\">" + ch + "</span>";
@@ -733,6 +762,7 @@
       dom = this.screenToDom(force);
       this.writeDom(dom);
       this.nativeScrollTo();
+      this.updateInputViews();
       return this.emit('refresh');
     };
 
@@ -912,12 +942,8 @@
                   }
                   this.putChar(ch);
                   this.x++;
-                  if (this.forceWidth && ("\uff00" < ch && ch < "\uffef")) {
-                    if (this.cols < 2 || this.x >= this.cols) {
-                      this.putChar(" ");
-                      break;
-                    }
-                    this.putChar(" ");
+                  if (this.isCJK(ch)) {
+                    this.putChar(" ", true);
                     this.x++;
                   }
                 }
@@ -1409,8 +1435,75 @@
       return this.write(data + "\r\n");
     };
 
+    Terminal.prototype.updateInputViews = function() {
+      var cursorPos;
+      cursorPos = this.cursor.getBoundingClientRect();
+      this.inputView.style['left'] = cursorPos.left + "px";
+      this.inputView.style['top'] = cursorPos.top + "px";
+      this.inputHelper.style['left'] = cursorPos.left + "px";
+      this.inputHelper.style['top'] = cursorPos.top + "px";
+      return this.inputHelper.value = "";
+    };
+
+    Terminal.prototype.compositionStart = function(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.updateInputViews();
+      this.inputView.className = "";
+      this.inputView.innerText = "";
+      this.cursor.style['visibility'] = "hidden";
+      this.inComposition = true;
+      this.compositionText = "";
+      return false;
+    };
+
+    Terminal.prototype.compositionUpdate = function(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.compositionText = ev.data;
+      this.inputView.innerText = this.compositionText;
+      return false;
+    };
+
+    Terminal.prototype.compositionEnd = function(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.finishComposition();
+      return false;
+    };
+
+    Terminal.prototype.finishComposition = function() {
+      this.inComposition = false;
+      this.showCursor();
+      this.inputHelper.value = "";
+      this.inputView.className = "hidden";
+      this.send(this.compositionText);
+      this.compositionText = "";
+      return this.inputHelper.focus();
+    };
+
     Terminal.prototype.keyDown = function(ev) {
       var key, ref;
+      if (this.inComposition) {
+        if (ev.keyCode === 229) {
+          return false;
+        } else if (ev.keyCode === 16 || ev.keyCode === 17 || ev.keyCode === 18) {
+          return false;
+        }
+        this.finishComposition();
+      }
+      if (ev.keyCode === 229) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        setTimeout((function(_this) {
+          return function() {
+            if (!(_this.inComposition || _this.inputHelper.value.length > 1)) {
+              return _this.send(_this.inputHelper.value);
+            }
+          };
+        })(this), 0);
+        return false;
+      }
       if (ev.keyCode > 15 && ev.keyCode < 19) {
         return true;
       }
@@ -1424,6 +1517,7 @@
         return true;
       }
       if ((ev.shiftKey && ev.ctrlKey) && ((ref = ev.keyCode) === 67 || ref === 86)) {
+        this.body.contentEditable = true;
         return true;
       }
       if (ev.altKey && ev.keyCode === 90 && !this.skipNextKey) {

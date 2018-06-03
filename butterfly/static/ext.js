@@ -122,6 +122,7 @@
 
   addEventListener('copy', copy = function(e) {
     var data, end, j, len1, line, ref, sel;
+    document.getElementsByTagName('body')[0].contentEditable = false;
     butterfly.bell("copied");
     e.clipboardData.clearData();
     sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
@@ -143,6 +144,7 @@
 
   addEventListener('paste', function(e) {
     var data, send, size;
+    document.getElementsByTagName('body')[0].contentEditable = false;
     butterfly.bell("pasted");
     data = e.clipboardData.getData('text/plain');
     data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r');

@@ -67,11 +67,23 @@ class Terminal
     @forceWidth = @body.getAttribute(
       'data-force-unicode-width') is 'yes'
 
+    # A hidden textarea to capture all input events
+    # This allows the body to receive IME composition events
+    # without being `contentEditable`, which will mess up
+    # the layout
+    @inputHelper = @document.getElementById('input-helper')
+
+    # A simple div to take place of the IME input preview
+    # which is now hidden due to the textarea
+    @inputView = @document.getElementById('input-view')
+
     # Main terminal element
     @body.className = 'terminal focus'
     @body.style.outline = 'none'
     @body.setAttribute 'tabindex', 0
     @body.setAttribute 'spellcheck', 'false'
+    @inputHelper.setAttribute 'tabindex', 0
+    @inputHelper.setAttribute 'spellcheck', 'false'
 
     # Adding one line to compute char size
     div = @document.createElement('div')
@@ -87,24 +99,37 @@ class Terminal
     @termName = 'xterm'
     @cursorBlink = true
     @cursorState = 0
+    @inComposition = false
+    @compositionText = ""
 
     @resetVars()
 
     @focus()
 
     @startBlink()
+    # IME Events should be registered to the textarea
+    # The textarea helps guiding the IME to pop up
+    # at the correct position
+    @inputHelper.addEventListener 'compositionstart',
+      @compositionStart.bind(@)
+    @inputHelper.addEventListener 'compositionupdate',
+      @compositionUpdate.bind(@)
+    @inputHelper.addEventListener 'compositionend',
+      @compositionEnd.bind(@)
+    @inputHelper.addEventListener 'keydown',
+      @keyDown.bind(@)
+    @inputHelper.addEventListener 'keypress',
+      @keyPress.bind(@)
     addEventListener 'keydown', @keyDown.bind(@)
     addEventListener 'keypress', @keyPress.bind(@)
+    # Always focus on the inputHelper textarea
+    addEventListener 'keyup', => @inputHelper.focus()
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
     addEventListener 'resize', => @resize()
     @body.addEventListener 'load', =>
       @nativeScrollTo()
     , true
-
-    # # Horrible Firefox paste workaround
-    if typeof InstallTrigger isnt "undefined"
-      @body.contentEditable = 'true'
 
     @initmouse()
     addEventListener 'load', => @resize()
@@ -131,6 +156,7 @@ class Terminal
     italic: a.italic
     faint: a.faint
     crossed: a.crossed
+    placeholder: false
 
   equalAttr: (a, b) ->
     # Not testing char
@@ -140,12 +166,14 @@ class Terminal
       a.italic is b.italic and a.faint is b.faint and
       a.crossed is b.crossed)
 
-  putChar: (c) ->
+  putChar: (c, placeholder = false) ->
+    newChar = @cloneAttr @curAttr, c
+    newChar.placeholder = placeholder
     if @insertMode
-      @screen[@y + @shift].chars.splice(@x, 0, @cloneAttr @curAttr, c)
+      @screen[@y + @shift].chars.splice(@x, 0, newChar)
       @screen[@y + @shift].chars.pop()
     else
-      @screen[@y + @shift].chars[@x] = @cloneAttr @curAttr, c
+      @screen[@y + @shift].chars[@x] = newChar
 
     @screen[@y + @shift].dirty = true
 
@@ -187,6 +215,7 @@ class Terminal
       italic: false
       faint: false
       crossed: false
+      placeholder: false
 
     @curAttr = @cloneAttr @defAttr
     @params = []
@@ -222,6 +251,7 @@ class Terminal
     @showCursor()
     @body.classList.add('focus')
     @body.classList.remove('blur')
+    @inputHelper.focus() # Always focus on the textarea
     @resize()
 
     @scrollLock = old_sl
@@ -450,7 +480,21 @@ class Terminal
 
     [classes, styles]
 
+  # Fullwidth (CJK) character ranges
+  isCJK: (ch) ->
+    "\u4e00" <= ch <= "\u9fff" or # CJK Unified Ideographs
+    "\u3040" <= ch <= "\u30ff" or # Japanese Hiragana and Katakana
+    "\u31f0" <= ch <= "\u31ff" or # Japanese Katakana Phonetic Extensions
+    "\u3190" <= ch <= "\u319f" or # Japanese Kanbun symbols
+    "\u3301" <= ch <= "\u3356" or # Japanese compound characters Kumimoji (組文字)
+    "\uac00" <= ch <= "\ud7ff" or # Hangul precomposed syllables
+    "\u3000" <= ch <= "\u303f" or # CJK Punctuations and Symbols
+    "\uff00" <= ch <= "\uff60" or # Fullwidth forms
+    "\uffe0" <= ch <= "\uffe6"    # Fullwidth forms
+
   charToDom: (data, attr, cursor) ->
+    # Just do not render if we see any placeholder characters
+    return if data.placeholder
     return data.html if data.html
     attr = attr or @cloneAttr @defAttr
     ch = data.ch
@@ -478,12 +522,13 @@ class Terminal
       else
         if ch <= " "
           char += "&nbsp;"
-        else unless @forceWidth
+        # CJK characters should always be forced to be fullwidth
+        else unless @forceWidth or @isCJK ch
           char += ch
         else
           if ch <= "~" # Ascii chars
             char += ch
-          else if "\uff00" < ch < "\uffef"
+          else if @isCJK ch # CJK always fullwidth
             char += "<span style=\"display: inline-block; width: #{
               2 * @charSize.width}px\">#{ch}</span>"
           else
@@ -544,6 +589,7 @@ class Terminal
     dom = @screenToDom(force)
     @writeDom dom
     @nativeScrollTo()
+    @updateInputViews()
     @emit 'refresh'
 
   _cursorBlink: ->
@@ -692,12 +738,15 @@ class Terminal
                     @x = 0
                 @putChar ch
                 @x++
-                if @forceWidth and "\uff00" < ch < "\uffef"
-                  if @cols < 2 or @x >= @cols
-                    @putChar " "
-                    break
-
-                  @putChar " "
+                if @isCJK ch
+                  # Add a dummy, placeholder character
+                  # for double-width, CJK characters
+                  # In order to fix counting of characters
+                  # when calculating for remaining cols
+                  # They are always considered to be
+                  # @forceWidth because otherwise they
+                  # do not render properly at all
+                  @putChar " ", true
                   @x++
 
         when State.escaped
@@ -1251,7 +1300,81 @@ class Terminal
   writeln: (data) ->
     @write "#{data}\r\n"
 
+  updateInputViews: ->
+    # Re-position the textarea and the preview box
+    # to the current position of the cursor
+    cursorPos = @cursor.getBoundingClientRect()
+    @inputView.style['left'] = cursorPos.left + "px"
+    @inputView.style['top'] = cursorPos.top + "px"
+    @inputHelper.style['left'] = cursorPos.left + "px"
+    @inputHelper.style['top'] = cursorPos.top + "px"
+    # Clear the textarea as often as possible
+    @inputHelper.value = ""
+
+  compositionStart: (ev) ->
+    ev.preventDefault()
+    ev.stopPropagation()
+    @updateInputViews()
+
+    # Show the preview box
+    @inputView.className = ""
+    @inputView.innerText = ""
+
+    # Hide the blinking cursor
+    @cursor.style['visibility'] = "hidden"
+
+    @inComposition = true
+    @compositionText = ""
+    return false
+
+  compositionUpdate: (ev) ->
+    ev.preventDefault()
+    ev.stopPropagation()
+    # Update the composition text
+    @compositionText = ev.data
+    @inputView.innerText = @compositionText
+    return false
+
+  compositionEnd: (ev) ->
+    ev.preventDefault()
+    ev.stopPropagation()
+    @finishComposition()
+    return false
+
+  finishComposition: ->
+    @inComposition = false
+    @showCursor()
+    @inputHelper.value = ""
+    @inputView.className = "hidden"
+    @send @compositionText
+    @compositionText = ""
+    # Force focus on the inputHelper
+    @inputHelper.focus()
+
   keyDown: (ev) ->
+    if @inComposition
+      # Continue IME composition if the character is
+      # composition key or modifier key
+      if ev.keyCode is 229
+        return false
+      else if ev.keyCode is 16 || ev.keyCode is 17 || ev.keyCode is 18
+        return false
+      # Otherwise, if we receive a keyDown, abort the composition
+      @finishComposition()
+
+    if ev.keyCode is 229
+      ev.preventDefault()
+      ev.stopPropagation()
+      # If the composition key is sent while IME not active
+      # it means that some character have been input while IME
+      # enabled, i.e. punctuations
+      # in which case we just fetch it from the text area
+      setTimeout =>
+        unless @inComposition || @inputHelper.value.length > 1
+          @send @inputHelper.value
+      , 0
+      return false
+
     # Key Resources:
     # https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent
     # Don't handle modifiers alone
@@ -1268,7 +1391,11 @@ class Terminal
     return true if (ev.shiftKey or ev.ctrlKey) and ev.keyCode is 45
 
     # Let the ctrl+shift+c, ctrl+shift+v go through to handle native copy paste
-    return true if (ev.shiftKey and ev.ctrlKey) and ev.keyCode in [67, 86]
+    if (ev.shiftKey and ev.ctrlKey) and ev.keyCode in [67, 86]
+      # Make the content temporarily ediatble, to allow the paste event
+      # to propagate (this does not work for the textarea if not set like this)
+      @body.contentEditable = true
+      return true
 
     # Alt-z works as an escape to relay the following keys to the browser.
     # usefull to trigger browser shortcuts, i.e.: Alt+Z F5 to reload

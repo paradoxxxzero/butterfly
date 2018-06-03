@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 addEventListener 'copy', copy = (e) ->
+  document.getElementsByTagName('body')[0].contentEditable = false
   butterfly.bell "copied"
   e.clipboardData.clearData()
   sel = getSelection().toString().replace(
@@ -35,6 +36,7 @@ addEventListener 'copy', copy = (e) ->
 
 
 addEventListener 'paste', (e) ->
+  document.getElementsByTagName('body')[0].contentEditable = false
   butterfly.bell "pasted"
   data = e.clipboardData.getData 'text/plain'
   data = data.replace(/\r\n/g, '\n').replace(/\n/g, '\r')

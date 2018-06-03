@@ -18,6 +18,10 @@
         data-force-unicode-width="{{ 'yes' if options.force_unicode_width else 'no' }}"
         data-root-path="{{ options.uri_root_path }}"
         data-session-token={{ session }}>
+    <textarea id="input-helper">
+    </textarea>
+    <div id="input-view" class="hidden">
+    </div>
     <div id="popup" class="hidden">
     </div>
     <script src="{{ static_url('html-sanitizer.js') }}"></script>
