@@ -34,6 +34,9 @@ cancel = (ev) ->
   ev.cancelBubble = true
   false
 
+isMobile = ->
+  /iPhone|iPad|iPod|Android/i.test navigator.userAgent
+
 s = 0
 State =
   normal: s++
@@ -123,7 +126,9 @@ class Terminal
     addEventListener 'keydown', @keyDown.bind(@)
     addEventListener 'keypress', @keyPress.bind(@)
     # Always focus on the inputHelper textarea
-    addEventListener 'keyup', => @inputHelper.focus()
+    # Don't do this on mobile, it will mess up the IME
+    unless isMobile()
+      addEventListener 'keyup', => @inputHelper.focus()
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
     addEventListener 'resize', => @resize()

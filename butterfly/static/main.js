@@ -1,5 +1,5 @@
 (function() {
-  var $, State, Terminal, cancel, cols, openTs, quit, rows, s, ws,
+  var $, State, Terminal, cancel, cols, isMobile, openTs, quit, rows, s, ws,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   cols = rows = null;
@@ -131,6 +131,10 @@
     return false;
   };
 
+  isMobile = function() {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  };
+
   s = 0;
 
   State = {
@@ -201,11 +205,13 @@
       this.inputHelper.addEventListener('keypress', this.keyPress.bind(this));
       addEventListener('keydown', this.keyDown.bind(this));
       addEventListener('keypress', this.keyPress.bind(this));
-      addEventListener('keyup', (function(_this) {
-        return function() {
-          return _this.inputHelper.focus();
-        };
-      })(this));
+      if (!isMobile()) {
+        addEventListener('keyup', (function(_this) {
+          return function() {
+            return _this.inputHelper.focus();
+          };
+        })(this));
+      }
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));
       addEventListener('resize', (function(_this) {
