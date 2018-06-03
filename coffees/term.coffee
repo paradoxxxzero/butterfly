@@ -125,6 +125,8 @@ class Terminal
     # Don't do this on mobile, it will mess up the IME
     unless isMobile()
       addEventListener 'keyup', => @inputHelper.focus()
+    else
+      addEventListener 'click', => @inputHelper.focus()
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
     addEventListener 'resize', => @resize()

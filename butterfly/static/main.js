@@ -209,6 +209,12 @@
             return _this.inputHelper.focus();
           };
         })(this));
+      } else {
+        addEventListener('click', (function(_this) {
+          return function() {
+            return _this.inputHelper.focus();
+          };
+        })(this));
       }
       addEventListener('focus', this.focus.bind(this));
       addEventListener('blur', this.blur.bind(this));

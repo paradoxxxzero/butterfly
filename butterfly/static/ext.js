@@ -1,5 +1,5 @@
 (function() {
-  var Popup, Selection, _set_theme_href, _theme, alt, cancel, clean_ansi, copy, ctrl, escape, first, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tags, tid, virtualInput, walk,
+  var Popup, Selection, _set_theme_href, _theme, cancel, clean_ansi, copy, escape, histSize, linkify, maybePack, nextLeaf, packSize, popup, previousLeaf, selection, setAlarm, tags, tid, walk,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   clean_ansi = function(data) {
@@ -121,14 +121,14 @@
   });
 
   addEventListener('copy', copy = function(e) {
-    var data, end, j, len1, line, ref, sel;
+    var data, end, j, len, line, ref, sel;
     document.getElementsByTagName('body')[0].contentEditable = false;
     butterfly.bell("copied");
     e.clipboardData.clearData();
     sel = getSelection().toString().replace(/\u00A0/g, ' ').replace(/\u2007/g, ' ');
     data = '';
     ref = sel.split('\n');
-    for (j = 0, len1 = ref.length; j < len1; j++) {
+    for (j = 0, len = ref.length; j < len; j++) {
       line = ref[j];
       if (line.slice(-1) === '\u23CE') {
         end = '';
@@ -185,10 +185,10 @@
   });
 
   walk = function(node, callback) {
-    var child, j, len1, ref, results;
+    var child, j, len, ref, results;
     ref = node.childNodes;
     results = [];
-    for (j = 0, len1 = ref.length; j < len1; j++) {
+    for (j = 0, len = ref.length; j < len; j++) {
       child = ref[j];
       callback.call(child);
       results.push(walk(child, callback));
@@ -661,7 +661,7 @@
     }
     oReq = new XMLHttpRequest();
     oReq.addEventListener('load', function() {
-      var j, len1, out, ref, response, session;
+      var j, len, out, ref, response, session;
       response = JSON.parse(this.responseText);
       out = '<div>';
       out += '<h2>Session list</h2>';
@@ -670,7 +670,7 @@
       } else {
         out += '<ul>';
         ref = response.sessions;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
+        for (j = 0, len = ref.length; j < len; j++) {
           session = ref[j];
           out += "<li><a href=\"/session/" + session + "\">" + session + "</a></li>";
         }
@@ -725,7 +725,7 @@
     }
     oReq = new XMLHttpRequest();
     oReq.addEventListener('load', function() {
-      var builtin_themes, inner, j, k, len1, len2, option, response, theme, theme_list, themes, url;
+      var builtin_themes, inner, j, k, len, len1, option, response, theme, theme_list, themes, url;
       response = JSON.parse(this.responseText);
       builtin_themes = response.builtin_themes;
       themes = response.themes;
@@ -742,7 +742,7 @@
       option("/static/main.css", 'default');
       if (themes.length) {
         inner += '<optgroup label="Local themes">';
-        for (j = 0, len1 = themes.length; j < len1; j++) {
+        for (j = 0, len = themes.length; j < len; j++) {
           theme = themes[j];
           url = "/theme/" + theme + "/style.css";
           option(url, theme);
@@ -750,7 +750,7 @@
         inner += '</optgroup>';
       }
       inner += '<optgroup label="Built-in themes">';
-      for (k = 0, len2 = builtin_themes.length; k < len2; k++) {
+      for (k = 0, len1 = builtin_themes.length; k < len1; k++) {
         theme = builtin_themes[k];
         url = "/theme/" + theme + "/style.css";
         option(url, theme.slice('built-in-'.length));
@@ -767,74 +767,6 @@
     oReq.send();
     return cancel(e);
   });
-
-  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-    ctrl = false;
-    alt = false;
-    first = true;
-    virtualInput = document.createElement('input');
-    virtualInput.type = 'password';
-    virtualInput.style.position = 'fixed';
-    virtualInput.style.top = 0;
-    virtualInput.style.left = 0;
-    virtualInput.style.border = 'none';
-    virtualInput.style.outline = 'none';
-    virtualInput.style.opacity = 0;
-    virtualInput.value = '0';
-    document.body.appendChild(virtualInput);
-    virtualInput.addEventListener('blur', function() {
-      return setTimeout(((function(_this) {
-        return function() {
-          return _this.focus();
-        };
-      })(this)), 10);
-    });
-    addEventListener('click', function() {
-      return virtualInput.focus();
-    });
-    addEventListener('touchstart', function(e) {
-      if (e.touches.length === 2) {
-        return ctrl = true;
-      } else if (e.touches.length === 3) {
-        ctrl = false;
-        return alt = true;
-      } else if (e.touches.length === 4) {
-        ctrl = true;
-        return alt = true;
-      }
-    });
-    virtualInput.addEventListener('keydown', function(e) {
-      butterfly.keyDown(e);
-      return true;
-    });
-    virtualInput.addEventListener('input', function(e) {
-      var len;
-      len = this.value.length;
-      if (len === 0) {
-        e.keyCode = 8;
-        butterfly.keyDown(e);
-        this.value = '0';
-        return true;
-      }
-      e.keyCode = this.value.charAt(1).charCodeAt(0);
-      if ((ctrl || alt) && !first) {
-        e.keyCode = this.value.charAt(1).charCodeAt(0);
-        e.ctrlKey = ctrl;
-        e.altKey = alt;
-        if (e.keyCode >= 97 && e.keyCode <= 122) {
-          e.keyCode -= 32;
-        }
-        butterfly.keyDown(e);
-        this.value = '0';
-        ctrl = alt = false;
-        return true;
-      }
-      butterfly.keyPress(e);
-      first = false;
-      this.value = '0';
-      return true;
-    });
-  }
 
 }).call(this);
 
