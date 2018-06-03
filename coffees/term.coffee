@@ -122,10 +122,8 @@ class Terminal
     addEventListener 'keydown', @keyDown.bind(@)
     addEventListener 'keypress', @keyPress.bind(@)
     # Always focus on the inputHelper textarea
-    # Don't do this on mobile, it will mess up the IME
-    unless isMobile()
-      addEventListener 'keyup', => @inputHelper.focus()
-    else
+    addEventListener 'keyup', => @inputHelper.focus()
+    if isMobile()
       addEventListener 'click', => @inputHelper.focus()
     addEventListener 'focus', @focus.bind(@)
     addEventListener 'blur', @blur.bind(@)
@@ -1374,7 +1372,9 @@ class Terminal
       # in which case we just fetch it from the text area
       setTimeout =>
         unless @inComposition || @inputHelper.value.length > 1
-          char = @inputHelper.value.toUpperCase().charCodeAt(0)
+          val = @inputHelper.value
+          @inputHelper.value = "" # Clear the value immediately
+          char = val.toUpperCase().charCodeAt(0)
           if 65 <= char <= 90
             # If the character sent here is a letter
             # allow it to be overridden on mobile
@@ -1382,7 +1382,7 @@ class Terminal
             # on Chrome for Android
             e = new KeyboardEvent 'keydown', keyCode: char
             return if window.mobileKeydown e
-          @send @inputHelper.value
+          @send val
       , 0
       return false
 

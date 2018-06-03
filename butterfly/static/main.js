@@ -203,13 +203,12 @@
       this.inputHelper.addEventListener('compositionend', this.compositionEnd.bind(this));
       addEventListener('keydown', this.keyDown.bind(this));
       addEventListener('keypress', this.keyPress.bind(this));
-      if (!isMobile()) {
-        addEventListener('keyup', (function(_this) {
-          return function() {
-            return _this.inputHelper.focus();
-          };
-        })(this));
-      } else {
+      addEventListener('keyup', (function(_this) {
+        return function() {
+          return _this.inputHelper.focus();
+        };
+      })(this));
+      if (isMobile()) {
         addEventListener('click', (function(_this) {
           return function() {
             return _this.inputHelper.focus();
@@ -1507,9 +1506,11 @@
         ev.stopPropagation();
         setTimeout((function(_this) {
           return function() {
-            var char, e;
+            var char, e, val;
             if (!(_this.inComposition || _this.inputHelper.value.length > 1)) {
-              char = _this.inputHelper.value.toUpperCase().charCodeAt(0);
+              val = _this.inputHelper.value;
+              _this.inputHelper.value = "";
+              char = val.toUpperCase().charCodeAt(0);
               if ((65 <= char && char <= 90)) {
                 e = new KeyboardEvent('keydown', {
                   keyCode: char
@@ -1518,7 +1519,7 @@
                   return;
                 }
               }
-              return _this.send(_this.inputHelper.value);
+              return _this.send(val);
             }
           };
         })(this), 0);
