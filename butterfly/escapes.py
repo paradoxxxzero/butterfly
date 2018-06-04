@@ -1,8 +1,8 @@
 import sys
+import termios
 import tty
 from contextlib import contextmanager
 
-import termios
 from butterfly.utils import ansi_colors as colors  # noqa: F401
 
 
@@ -61,7 +61,7 @@ def geolocation():
             rv = sys.stdin.read(1)
             if rv != 'R':
                 loc += rv
-    except:
+    except Exception:
         return
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)

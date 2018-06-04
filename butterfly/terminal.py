@@ -24,6 +24,7 @@ import signal
 import string
 import struct
 import sys
+import termios
 from logging import getLogger
 
 import tornado.ioloop
@@ -32,7 +33,6 @@ import tornado.process
 import tornado.web
 import tornado.websocket
 
-import termios
 from butterfly import __version__, utils
 
 log = getLogger('butterfly')

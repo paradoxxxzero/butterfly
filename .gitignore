@@ -10,3 +10,4 @@ sass/scss
 build/
 .cache/
 .env*
+.pytest_cache
