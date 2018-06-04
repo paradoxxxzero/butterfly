@@ -1,4 +1,4 @@
-[3.2.3](https://github.com/paradoxxxzero/butterfly/compare/v3.2.2...v3.2.3)
+[3.2.3](https://github.com/paradoxxxzero/butterfly/compare/3.2.2...3.2.3)
 =====
 
 * Complete support for IME & CJK rendering (#168 thanks @PeterCxy)
