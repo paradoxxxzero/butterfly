@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 RUN apt-get update \
  && apt-get install -y -q --no-install-recommends \
@@ -7,8 +7,9 @@ RUN apt-get update \
     libssl-dev \
     python-dev \
     python-setuptools \
- && sudo easy_install pip \
- && sudo pip install --upgrade setuptools \
+    ca-certificates \
+ && easy_install pip \
+ && pip install --upgrade setuptools \
  && apt-get clean \
  && rm -r /var/lib/apt/lists/*
 
