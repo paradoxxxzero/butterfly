@@ -31,10 +31,15 @@ class url(object):
         self.url = url
 
     def __call__(self, cls):
+        if tornado.options.options.uri_root_path:
+            url = tornado.options.options.uri_root_path.rstrip('/') + self.url
+        else:
+            url = self.url
         application.add_handlers(
             r'.*$',
-            (tornado.web.url(self.url, cls, name=cls.__name__),)
+            (tornado.web.url(url, cls, name=cls.__name__),)
         )
+
         return cls
 
 
