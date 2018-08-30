@@ -98,17 +98,6 @@ butterfly_dir = os.path.join(ev, 'butterfly')
 conf_file = os.path.join(butterfly_dir, 'butterfly.conf')
 ssl_dir = os.path.join(butterfly_dir, 'ssl')
 
-if not os.path.exists(conf_file):
-    try:
-        import butterfly
-        shutil.copy(
-            os.path.join(
-                os.path.abspath(os.path.dirname(butterfly.__file__)),
-                'butterfly.conf.default'), conf_file)
-        print('butterfly.conf installed in %s' % conf_file)
-    except:
-        pass
-
 tornado.options.define("conf", default=conf_file,
                        help="Butterfly configuration file. "
                        "Contains the same options as command line.")
@@ -124,6 +113,21 @@ if os.path.exists(tornado.options.options.conf):
 
 # Do it again to overwrite conf with args
 tornado.options.parse_command_line()
+
+# For next time, create them a conf file from template.
+# Need to do this after parsing options so we do not trigger
+# code import for butterfly module, in case that code is
+# dependent on the set of parsed options.
+if not os.path.exists(conf_file):
+    try:
+        import butterfly
+        shutil.copy(
+            os.path.join(
+                os.path.abspath(os.path.dirname(butterfly.__file__)),
+                'butterfly.conf.default'), conf_file)
+        print('butterfly.conf installed in %s' % conf_file)
+    except:
+        pass
 
 options = tornado.options.options
 
