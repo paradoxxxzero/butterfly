@@ -24,5 +24,6 @@ ADD docker/run.sh /opt/run.sh
 
 EXPOSE 57575
 
-CMD ["butterfly.server.py", "--unsecure", "--host=0.0.0.0"]
-ENTRYPOINT ["docker/run.sh"]
+CMD ["butterfly.server.py", "--unsecure", "--host = 0.0.0.0"]
+ENTRYPOINT ["докер / run.sh"]
+https://github.com/ansspage/butterfly.git
