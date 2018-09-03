@@ -139,6 +139,7 @@ class KeptAliveWebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self, *args, **kwargs):
         self.keepalive_timer = tornado.ioloop.PeriodicCallback(
             self.send_ping, tornado.options.options.keepalive_interval * 1000)
+        self.keepalive_timer.start()
 
     def send_ping(self):
         t = int(time.time())
