@@ -22,7 +22,6 @@ check-outdated:
 
 ARGS ?= --port=1212 --unsecure --debug
 run-debug:
-	sleep 0.5 && $(BROWSER) http://localhost:1212&
 	$(PYTHON) ./butterfly.server.py $(ARGS)
 
 build-coffee:

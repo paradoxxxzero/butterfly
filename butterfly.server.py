@@ -375,8 +375,10 @@ ioloop = tornado.ioloop.IOLoop.instance()
 if port == 0:
     port = list(http_server._sockets.values())[0].getsockname()[1]
 
-url = "http%s://%s:%d/" % (
-    "s" if not options.unsecure else "", host, port)
+url = "http%s://%s:%d/%s" % (
+    "s" if not options.unsecure else "", host, port,
+    (options.uri_root_path.strip('/') + '/') if options.uri_root_path else ''
+)
 
 if not options.one_shot or not webbrowser.open(url):
     log.warn('Butterfly is ready, open your browser to: %s' % url)
