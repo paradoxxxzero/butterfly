@@ -23,12 +23,12 @@
     } else {
       wsUrl = 'ws://';
     }
-    rootPath = document.body.getAttribute('data-root-path').replace(/^\/+|\/+$/g, '');
+    rootPath = document.body.getAttribute('data-root-path');
     if (rootPath.length) {
       rootPath = "/" + rootPath;
     }
     wsUrl += document.location.host + rootPath;
-    path = '/';
+    path = location.pathname;
     if (path.indexOf('/session') < 0) {
       path += "session/" + (document.body.getAttribute('data-session-token'));
     }

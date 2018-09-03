@@ -5,7 +5,7 @@ all: install lint check-outdated run-debug
 
 install:
 	test -d $(VENV) || virtualenv $(VENV) -p $(PYTHON_VERSION)
-	$(PIP) install --upgrade --no-cache pip setuptools -e .[lint] devcore
+	$(PIP) install --upgrade --no-cache pip setuptools -e .[lint,themes] devcore
 	$(NPM) install
 
 clean:

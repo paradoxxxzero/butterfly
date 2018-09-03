@@ -1,3 +1,9 @@
+[3.2.4](https://github.com/paradoxxxzero/butterfly/compare/3.2.3...3.2.4)
+=====
+
+* Fix up --uri-root-path so behaves as one would expect for this. Fix #155 (PR #173 thanks @GrahamDumpleton)
+* Fix websocket keepalive. Fix #167 (PR #172 thanks @fzumstein)
+
 [3.2.3](https://github.com/paradoxxxzero/butterfly/compare/3.2.2...3.2.3)
 =====
 
