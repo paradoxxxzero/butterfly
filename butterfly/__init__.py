@@ -31,10 +31,15 @@ class url(object):
         self.url = url
 
     def __call__(self, cls):
+        if tornado.options.options.uri_root_path:
+            url = '/' + tornado.options.options.uri_root_path.strip('/') + self.url
+        else:
+            url = self.url
         application.add_handlers(
             r'.*$',
-            (tornado.web.url(self.url, cls, name=cls.__name__),)
+            (tornado.web.url(url, cls, name=cls.__name__),)
         )
+
         return cls
 
 
@@ -73,7 +78,7 @@ if hasattr(tornado.options.options, 'debug'):
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         debug=tornado.options.options.debug,
         static_url_prefix='%s/static/' % (
-            '/%s' % tornado.options.options.uri_root_path
+            '/%s' % tornado.options.options.uri_root_path.strip('/')
             if tornado.options.options.uri_root_path else '')
     )
 
