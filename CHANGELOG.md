@@ -1,3 +1,9 @@
+[3.2.5](https://github.com/paradoxxxzero/butterfly/compare/3.2.4...3.2.5)
+=====
+
+* Fix #155 again (PR #179)
+
+
 [3.2.4](https://github.com/paradoxxxzero/butterfly/compare/3.2.3...3.2.4)
 =====
 
