@@ -70,37 +70,37 @@
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-ExtraLight.otf") format("woff");
+  src: url("fonts/SourceCodePro-ExtraLight.otf") format("woff");
   font-weight: 100; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-Light.otf") format("woff");
+  src: url("fonts/SourceCodePro-Light.otf") format("woff");
   font-weight: 300; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-Regular.otf") format("woff");
+  src: url("fonts/SourceCodePro-Regular.otf") format("woff");
   font-weight: 400; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-Medium.otf") format("woff");
+  src: url("fonts/SourceCodePro-Medium.otf") format("woff");
   font-weight: 500; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-Semibold.otf") format("woff");
+  src: url("fonts/SourceCodePro-Semibold.otf") format("woff");
   font-weight: 600; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-Bold.otf") format("woff");
+  src: url("fonts/SourceCodePro-Bold.otf") format("woff");
   font-weight: 700; }
 
 @font-face {
   font-family: "SourceCodePro";
-  src: url("/static/fonts/SourceCodePro-Black.otf") format("woff");
+  src: url("fonts/SourceCodePro-Black.otf") format("woff");
   font-weight: 900; }
 
 body {
