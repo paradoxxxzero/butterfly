@@ -173,6 +173,8 @@ class Terminal(object):
         else:
             # May need more?
             env = {}
+
+        env = os.environ # preserve environment, useful with Docker
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "butterfly"
         env["HOME"] = self.callee.dir
@@ -267,6 +269,7 @@ class Terminal(object):
         if sys.platform.startswith('linux') and tornado.options.options.shell:
             args.append('-s')
             args.append(tornado.options.options.shell)
+        args.append('--preserve-environment')
         args.append(self.callee.name)
         os.execvpe(args[0], args, env)
 
