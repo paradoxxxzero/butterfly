@@ -224,7 +224,7 @@ class Terminal(object):
                     sys.exit(1)
 
             if tornado.options.options.cmd:
-                args = tornado.options.options.cmd.split(' ')
+                args = tornado.options.options.cmd.split()
             else:
                 args = [tornado.options.options.shell or self.callee.shell]
                 args.append('-il')
