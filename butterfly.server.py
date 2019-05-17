@@ -381,6 +381,6 @@ url = "http%s://%s:%d/%s" % (
 )
 
 if not options.one_shot or not webbrowser.open(url):
-    log.warn('Butterfly is ready, open your browser to: %s' % url)
+    log.warning('Butterfly is ready, open your browser to: %s' % url)
 
 ioloop.start()
