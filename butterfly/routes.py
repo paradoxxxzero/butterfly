@@ -174,9 +174,12 @@ class TermCtlWebSocket(Route, KeptAliveWebSocketHandler):
             'path', [b''])[0].decode('utf-8')
         secure_user = None
 
-        if not tornado.options.options.unsecure:
+        if tornado.options.options.username is not None:
+            user = utils.User(name=user)
+        elif not tornado.options.options.unsecure:
             user = utils.parse_cert(
                 self.ws_connection.stream.socket.getpeercert())
+
             assert user, 'No user in certificate'
             try:
                 user = utils.User(name=user)
