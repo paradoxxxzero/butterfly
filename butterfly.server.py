@@ -84,6 +84,10 @@ tornado.options.define("generate_user_pkcs", default='',
 tornado.options.define("uri_root_path", default='',
                        help="Sets the servier root path: "
                        "example.com/<uri_root_path>/static/")
+tornado.options.define("username", default=None,
+                       help="The username to use for shell")
+tornado.options.define("client_cert_required", default=True,
+                       help="Require client to present a certificate")
 
 
 if os.getuid() == 0:
@@ -346,8 +350,10 @@ else:
         'certfile': cert % host,
         'keyfile': cert_key % host,
         'ca_certs': ca,
-        'cert_reqs': ssl.CERT_REQUIRED
     }
+    if options.client_cert_required:
+        ssl_opts['cert_reqs'] = ssl.CERT_REQUIRED
+
     if options.ssl_version is not None:
         if not hasattr(
                 ssl, 'PROTOCOL_%s' % options.ssl_version):
