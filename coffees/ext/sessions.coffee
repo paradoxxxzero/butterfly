@@ -1,3 +1,5 @@
+_root_path = document.body.getAttribute('data-root-path')
+
 document.addEventListener 'keydown', (e) ->
   return true unless e.altKey and e.keyCode is 69
   oReq = new XMLHttpRequest()
@@ -10,13 +12,14 @@ document.addEventListener 'keydown', (e) ->
     else
       out += '<ul>'
       for session in response.sessions
-        out += "<li><a href=\"/session/#{session}\">#{session}</a></li>"
+        path = "{_root_path}/session/#{session}"
+        out += "<li><a href=\"{path}\">#{session}</a></li>"
       out += '</ul>'
 
     out += '</div>'
 
     popup.open out
 
-  oReq.open("GET", "/sessions/list.json")
+  oReq.open("GET", _root_path + "/sessions/list.json")
   oReq.send()
   cancel e
