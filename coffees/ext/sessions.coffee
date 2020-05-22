@@ -12,7 +12,8 @@ document.addEventListener 'keydown', (e) ->
     else
       out += '<ul>'
       for session in response.sessions
-        out += "<li><a href=\"{_root_path}/session/#{session}\">#{session}</a></li>"
+        path = "{_root_path}/session/#{session}"
+        out += "<li><a href=\"{path}\">#{session}</a></li>"
       out += '</ul>'
 
     out += '</div>'
