@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 cols = rows = null
+reconnecting = false
 quit = false
 openTs = (new Date()).getTime()
 
@@ -49,13 +50,19 @@ document.addEventListener 'DOMContentLoaded', ->
   ws.ctl = new WebSocket wsUrl + '/ctl' + path
 
   open = ->
-    console.log "WebSocket open", arguments
-
     if term
+      console.log "WebSocket reconnected", arguments
+      reconnecting = false
       term.body.classList.remove 'stopped'
       term.out = ws.shell.send.bind(ws.shell)
-      term.out '\x03\n'
+      term.ctl = ws.ctl.send.bind(ws.ctl)
+      if ws.ctl.readyState is WebSocket.OPEN
+        ws.ctl.send JSON.stringify(
+          cmd: 'size', cols: term.cols, rows: term.rows)
+      # term.out '\x03\n'
       return
+
+    console.log "WebSocket open", arguments
 
     if (ws.shell.readyState is WebSocket.OPEN and
         ws.ctl.readyState is WebSocket.OPEN)
@@ -68,25 +75,44 @@ document.addEventListener 'DOMContentLoaded', ->
       ws.ctl.send JSON.stringify(
         cmd: 'size', cols: term.cols, rows: term.rows)
       openTs = (new Date()).getTime()
+
     console.log "WebSocket open end", arguments
 
   error = ->
     console.error "WebSocket error", arguments
 
-  close = ->
+  retryCtlOnClose = ->
     console.log "WebSocket closed", arguments
     return if quit
-    quit = true
 
-    term.write 'Closed'
-    # Allow quick reload
-    term.skipNextKey = true
-    term.body.classList.add('dead')
-    # Don't autoclose if websocket didn't last 1 minute
-    if (new Date()).getTime() - openTs > 60 * 1000
-      window.open('','_self').close()
+    console.log "WebSocket reconnecting", arguments
 
-  reopenOnClose = ->
+    setTimeout ->
+      return if quit
+      ws.ctl = new WebSocket wsUrl + '/ctl' + path
+      init_ctl_ws()
+    , 100
+
+    if ! reconnecting
+      setTimeout ->
+        return if ! reconnecting
+
+        reconnecting = false
+        quit = true
+
+        term.write 'Closed'
+        # Allow quick reload
+        term.skipNextKey = true
+        term.body.classList.add('dead')
+
+        # Don't autoclose if websocket didn't last 1 minute
+        if (new Date()).getTime() - openTs > 60 * 1000
+          window.open('','_self').close()
+      , 1000
+
+      reconnecting = true
+
+  reopenShellOnClose = ->
     setTimeout ->
       return if quit
       ws.shell = new WebSocket wsUrl + '/ws' + path
@@ -109,13 +135,13 @@ document.addEventListener 'DOMContentLoaded', ->
     ws.shell.addEventListener 'open', open
     ws.shell.addEventListener 'message', write_request
     ws.shell.addEventListener 'error', error
-    ws.shell.addEventListener 'close', reopenOnClose
+    ws.shell.addEventListener 'close', reopenShellOnClose
 
   init_ctl_ws = ->
     ws.ctl.addEventListener 'open', open
     ws.ctl.addEventListener 'message', ctl
     ws.ctl.addEventListener 'error', error
-    ws.ctl.addEventListener 'close', close
+    ws.ctl.addEventListener 'close', retryCtlOnClose
 
   init_shell_ws()
   init_ctl_ws()
